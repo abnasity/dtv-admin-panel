@@ -1,3 +1,4 @@
 .diamond
 __pycache__
-*.pyc
+diamond.db
+migrations/
