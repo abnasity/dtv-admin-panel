@@ -1,0 +1,108 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Edit Device - {{ device.brand }} {{ device.model }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="card-title mb-0">Edit Device</h2>
+                    <a href="{{ url_for('devices.inventory') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.csrf_token }}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">IMEI</label>
+                            <input type="text" class="form-control" value="{{ device.imei }}" disabled>
+                            <small class="text-muted">IMEI cannot be changed</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.brand.label(class="form-label") }}
+                            {{ form.brand(class="form-control") }}
+                            {% if form.brand.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.brand.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.model.label(class="form-label") }}
+                            {{ form.model(class="form-control") }}
+                            {% if form.model.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.model.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+
+                        <div class="mb-3">
+                            {{ form.ram.label(class="form-label") }}
+                            {{ form.ram(class="form-control") }}
+                            {% if form.ram.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.ram.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.rom.label(class="form-label") }}
+                            {{ form.rom(class="form-control") }}
+                            {% if form.rom.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.rom.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.purchase_price.label(class="form-label") }}
+                            {{ form.purchase_price(class="form-control") }}
+                            {% if form.purchase_price.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.purchase_price.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows=3) }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.notes.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-end">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Profile - Diamond Tree Ventures{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-user-circle me-2"></i>User Profile</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.csrf_token }}
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        {{ form.username(class="form-control") }}
+                        {% for error in form.username.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        {{ form.email(class="form-control") }}
+                        {% for error in form.email.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+                    <h5 class="mb-3">Change Password</h5>
+
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        {{ form.current_password(class="form-control") }}
+                        {% for error in form.current_password.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        {{ form.new_password(class="form-control") }}
+                        {% for error in form.new_password.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                        {{ form.confirm_password(class="form-control") }}
+                        {% for error in form.confirm_password.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Leave password fields empty if you don't want to change your password
+                </small>
+            </div>
+        </div>
+
+        <!-- User Stats -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Activity Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Role:</strong> {{ current_user.role.title() }}</p>
+                        <p><strong>Member Since:</strong> {{ current_user.created_at.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Last Login:</strong> {{ current_user.last_seen.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <p><strong>Total Sales:</strong> {{ current_user.sales.count() }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

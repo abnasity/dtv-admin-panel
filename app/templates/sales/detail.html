@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="card-title mb-0">Sale Details</h2>
+                    <a href="{{ url_for('sales.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Sales
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Sale Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h4>Sale Information</h4>
+                            <dl class="row">
+                                <dt class="col-sm-4">Sale Date</dt>
+                                <dd class="col-sm-8">{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</dd>
+                                
+                                <dt class="col-sm-4">Sale Price</dt>
+                                <dd class="col-sm-8">Ksh {{ "%.2f"|format(sale.sale_price) }}</dd>
+                                
+                                <dt class="col-sm-4">Payment Type</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge {% if sale.payment_type == 'cash' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ sale.payment_type|title }}
+                                    </span>
+                                </dd>
+                                
+                                <dt class="col-sm-4">Amount Paid</dt>
+                                <dd class="col-sm-8">Ksh{{ "%.2f"|format(sale.amount_paid) }}</dd>
+                                
+                                {% if not sale.is_fully_paid %}
+                                <dt class="col-sm-4">Balance Due</dt>
+                                <dd class="col-sm-8 text-danger">${{ "%.2f"|format(sale.balance_due) }}</dd>
+                                {% endif %}
+                                
+                                <dt class="col-sm-4">Profit</dt>
+                                <dd class="col-sm-8 text-success">${{ "%.2f"|format(sale.profit) }}</dd>
+                            </dl>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h4>Device Information</h4>
+                            <dl class="row">
+                                <dt class="col-sm-4">IMEI</dt>
+                                <dd class="col-sm-8">{{ sale.device.imei }}</dd>
+                                
+                                <dt class="col-sm-4">Brand</dt>
+                                <dd class="col-sm-8">{{ sale.device.brand }}</dd>
+                                
+                                <dt class="col-sm-4">Model</dt>
+                                <dd class="col-sm-8">{{ sale.device.model }}</dd>
+                                
+                                <dt class="col-sm-4">Ram</dt>
+                                <dd class="col-sm-8">{{ sale.device.ram }}</dd>
+
+                                <dt class="col-sm-4">Rom</dt>
+                                <dd class="col-sm-8">{{ sale.device.rom }}</dd>
+
+                                <dt class="col-sm-4">Purchase Price</dt>
+                                <dd class="col-sm-8">Ksh{{ "%.2f"|format(sale.device.purchase_price) }}</dd>
+                                
+                                <dt class="col-sm-4">Arrival Date</dt>
+                                <dd class="col-sm-8">{{ sale.device.arrival_date.strftime('%Y-%m-%d') }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    {% if sale.notes %}
+                    <div class="mb-4">
+                        <h4>Notes</h4>
+                        <p class="card-text">{{ sale.notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Payment History -->
+                    {% if not sale.is_fully_paid %}
+                    <div class="mt-4">
+                        <h4>Update Payment</h4>
+                        <form id="paymentForm" class="row g-3">
+                            <div class="col-auto">
+                                <label for="paymentAmount" class="visually-hidden">Payment Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Ksh</span>
+                                    <input type="number" step="0.01" min="0.01" 
+                                           class="form-control" id="paymentAmount" 
+                                           placeholder="Enter amount" required>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-primary">Update Payment</button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if not sale.is_fully_paid %}
+<script>
+document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const amount = document.getElementById('paymentAmount').value;
+    
+    try {
+        const response = await fetch(`/sales/update_payment/{{ sale.id }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ amount })
+        });
+        
+        const data = await response.json();
+        if (response.ok) {
+            location.reload(); // Refresh page to show updated data
+        } else {
+            alert(data.error || 'Failed to update payment');
+        }
+    } catch (error) {
+        alert('Error updating payment');
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

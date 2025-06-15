@@ -1,0 +1,143 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Add Device - Phone Sales Management{% endblock %}
+
+{% block extra_css %}
+<style>
+#interactive.viewport {
+    position: relative;
+    width: 100%;
+    height: 300px;
+}
+#interactive.viewport > canvas, #interactive.viewport > video {
+    max-width: 100%;
+    width: 100%;
+}
+canvas.drawing, canvas.drawingBuffer {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="card-title mb-0">Add New Device</h2>
+                    <a href="{{ url_for('devices.inventory') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.csrf_token }}
+                        
+                        <div class="mb-3">
+                            {{ form.imei.label(class="form-label") }}
+                            {{ imei_input(form.imei, "Enter 15-digit IMEI") }}
+                            {% if form.imei.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.imei.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.brand.label(class="form-label") }}
+                            {{ form.brand(class="form-control") }}
+                            {% if form.brand.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.brand.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.model.label(class="form-label") }}
+                            {{ form.model(class="form-control") }}
+                            {% if form.model.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.model.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.ram.label(class="form-label") }}
+                            {{ form.ram(class="form-control") }}
+                            {% if form.ram.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.ram.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.rom.label(class="form-label") }}
+                            {{ form.rom(class="form-control") }}
+                            {% if form.rom.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.rom.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.purchase_price.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">Ksh</span>
+                                {{ form.purchase_price(class="form-control") }}
+                            </div>
+                            {% if form.purchase_price.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.purchase_price.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows=3) }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.notes.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-end">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock %}

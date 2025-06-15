@@ -1,0 +1,81 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Device Details - {{ device.brand }} {{ device.model }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="card-title mb-0">Device Details</h2>
+                    <div>
+                        {% if device.is_available and current_user.is_admin() %}
+                        <a href="{{ url_for('devices.edit_device', imei=device.imei) }}" class="btn btn-warning">
+                            <i class="fas fa-edit me-1"></i>Edit Device
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('devices.inventory') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">IMEI</dt>
+                        <dd class="col-sm-9">{{ device.imei }}</dd>
+
+                        <dt class="col-sm-3">Brand</dt>
+                        <dd class="col-sm-9">{{ device.brand }}</dd>
+
+                        <dt class="col-sm-3">Model</dt>
+                        <dd class="col-sm-9">{{ device.model }}</dd>
+
+                        <dt class="col-sm-3">Ram</dt>
+                        <dd class="col-sm-9">{{ device.ram }}</dd>
+
+                        <dt class="col-sm-3">Rom</dt>
+                        <dd class="col-sm-9">{{ device.rom }}</dd>
+
+                        <dt class="col-sm-3">Purchase Price</dt>
+                        <dd class="col-sm-9">Ksh {{ "%.2f"|format(device.purchase_price) }}</dd>
+
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-{{ 'success' if device.status == 'available' else 'secondary' }}">
+                                {{ device.status }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-3">Arrival Date</dt>
+                        <dd class="col-sm-9">{{ device.arrival_date.strftime('%Y-%m-%d') }}</dd>
+
+                        {% if device.sale %}
+                        <dt class="col-sm-3">Sale Information</dt>
+                        <dd class="col-sm-9">
+                            <p>Sold on: {{ device.sale.sale_date.strftime('%Y-%m-%d') }}</p>
+                            <p>Sale Price: Ksh {{ "%.2f"|format(device.sale.sale_price) }}</p>
+                            <p>Payment Type: {{ device.sale.payment_type.title() }}</p>
+                            <p>Seller: {{ device.sale.seller.username }}</p>
+                        </dd>
+                        {% endif %}
+
+                        {% if device.notes %}
+                        <dt class="col-sm-3">Notes</dt>
+                        <dd class="col-sm-9">{{ device.notes }}</dd>
+                        {% endif %}
+                    </dl>
+
+                    {% if device.is_available %}
+                    <div class="mt-4">
+                        <a href="{{ url_for('sales.new_sale') }}?imei={{ device.imei }}" class="btn btn-success">
+                            <i class="fas fa-shopping-cart me-1"></i>Create Sale
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

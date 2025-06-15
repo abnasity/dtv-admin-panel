@@ -1,0 +1,175 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - Diamond Tree Ventures{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-chart-line me-2"></i>Dashboard</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group">
+            <button class="btn btn-outline-primary" onclick="updateDateRange(30)">30 Days</button>
+            <button class="btn btn-outline-primary" onclick="updateDateRange(90)">90 Days</button>
+            <button class="btn btn-outline-primary" onclick="updateDateRange(365)">1 Year</button>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    {% for card in stat_cards %}
+    <div class="col-md-3">
+        <div class="card bg-{{ card.bg }} text-white">
+            <div class="card-body">
+                <h6 class="card-title">{{ card.title }}</h6>
+                <h3 class="card-text">{{ card.value }}</h3>
+                <p class="mb-0">
+                    <i class="{{ card.icon }} me-1"></i>{{ card.growth }}{% if card.percent %}%{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Charts -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Sales Trend</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Payment Types</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="paymentChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales & Top Products -->
+<div class="row">
+    <!-- Recent Sales -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Recent Sales</h5>
+                <a href="{{ url_for('sales.index') }}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_sales %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Device</th>
+                                <th>Seller</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {{ sale.device.brand if sale.device else 'N/A' }}
+                                    {{ sale.device.model if sale.device else '' }}
+                                </td>
+                                <td>{{ sale.seller.username if sale.seller else 'Unknown' }}</td>
+                                <td>${{ "%.2f"|format(sale.sale_price) }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if sale.is_fully_paid else 'warning' }}">
+                                        {{ 'Paid' if sale.is_fully_paid else 'Partial' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No recent sales available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Top Products</h5>
+            </div>
+            <div class="card-body">
+                {% if top_products %}
+                <div class="list-group list-group-flush">
+                    {% for product in top_products %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">{{ product.brand }} {{ product.model }}</h6>
+                            <small class="text-muted">{{ product.total_sold }} units sold</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${{ "%.2f"|format(product.revenue) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No top-selling products yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Main JS -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<!-- Dashboard JS Init -->
+<script>
+    try {
+        const defaultData = {
+            stats: {
+                total_sales: 0,
+                total_revenue: 0,
+                sales_growth: 0,
+                revenue_growth: 0,
+                available_devices: 0,
+                outstanding_credit: 0
+            },
+            chartData: {
+                dates: [],
+                sales: [],
+                revenue: []
+            },
+            paymentData: {
+                cash_sales: 0,
+                credit_sales: 0
+            }
+        };
+
+        const dashboardData = Object.assign({}, defaultData);
+        initializeDashboard(dashboardData);
+    } catch (err) {
+        console.error('Dashboard JS error:', err);
+    }
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,110 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Sales - Diamond Tree Ventures{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-shopping-cart me-2"></i>Sales Management</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('sales.new_sale') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>New Sale
+        </a>
+    </div>
+</div>
+
+<!-- Sales List -->
+<div class="card">
+    <div class="card-body">
+        {% if sales %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>IMEI</th>
+                        <th>Device</th>
+                        <th>Ram</th>
+                        <th>Rom</th>
+                        <th>Sale Price</th>
+                        <th>Payment Type</th>
+                        <th>Seller</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td>{{ sale.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ sale.device.imei }}</td>
+                        <td>{{ sale.device.brand }} {{ sale.device.model }} </td>
+                        <td>{{ sale.device.ram }} {{ sale.device.rom }}</td>
+                        <td>Ksh {{ "%.2f"|format(sale.sale_price) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if sale.payment_type == 'cash' else 'info' }}">
+                                {{ sale.payment_type.title() }}
+                            </span>
+                        </td>
+                        <td>{{ sale.seller.username }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if sale.is_completed else 'warning' }}">
+                                {{ 'Completed' if sale.is_completed else 'Pending' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('web_sales.view', sale_id=sale.id) }}" 
+                                   class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if not sale.is_completed %}
+                                <button type="button" class="btn btn-sm btn-success"
+                                        onclick="completeSale('{{ sale.id }}')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No sales found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function completeSale(saleId) {
+    if (!confirm('Are you sure you want to mark this sale as complete?')) {
+        return;
+    }
+
+    fetch(`/web_sales/sales/${saleId}/complete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to complete sale');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to complete sale');
+    });
+}
+</script>
+{% endblock %}
