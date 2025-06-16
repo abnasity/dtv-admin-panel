@@ -43,34 +43,34 @@
 </head>
 <body class="bg-light">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="fas fa-mobile-alt me-2"></i>Diamond Tree Ventures
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+    
+<nav class="navbar navbar-expand-lg bg-body-tertiary shadow">
+    <div class="container-fluid">
+      <a class="navbar-brand fs-1" href="#"><span style="font-size: 40px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; font-family: Arial, Helvetica, sans-serif; color: rgb(145, 88, 15);" href="#">DIAMOND TREE </span> <br> <span style="font-size: 24px; letter-spacing: 5px; font-family: Arial, Helvetica, sans-serif; color: rgb(4, 116, 116);">VENTURES</span></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    {% if current_user.is_authenticated %}                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('devices.inventory') }}">
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}           
+                                     <li class="nav-item">
+                                <a class="nav-link hover-effect" href="{{ url_for('devices.inventory') }}">
                                     <i class="fas fa-warehouse me-1"></i>Inventory
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('sales.index') }}">
+                                <a class="nav-link hover-effect" href="{{ url_for('sales.index') }}">
                                     <i class="fas fa-shopping-cart me-1"></i>Sales
                                 </a>
                             </li>
                             {% if current_user.is_admin() %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('reports.dashboard') }}">
+                                <a class="nav-link hover-effect" href="{{ url_for('reports.dashboard') }}">
                                     <i class="fas fa-chart-bar me-1"></i>Reports
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('auth.users') }}">
+                                <a class="nav-link hover-effect" href="{{ url_for('auth.users') }}">
                                     <i class="fas fa-users me-1"></i>Users
                                 </a>
                             </li>
