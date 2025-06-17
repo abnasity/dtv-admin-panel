@@ -32,7 +32,7 @@ def get_devices():
     devices = query.all()
     return jsonify([device.to_dict() for device in devices])
 
-@bp.route('/devices/<imei>', methods=['GET'])
+@bp.route('/<imei>', methods=['GET'])
 
 def get_device(imei):
     """Get device details by IMEI"""
