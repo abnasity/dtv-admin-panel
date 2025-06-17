@@ -3,12 +3,16 @@ from flask_login import login_required, current_user
 from app.models import Device
 from app import db
 from app.decorators import admin_required
-from datetime import datetime
+
+
+
+
+
 
 bp = Blueprint('devices', __name__)
 
 @bp.route('/devices', methods=['GET'])
-@login_required
+
 def get_devices():
     """Get list of all devices with optional filters"""
     # Get query parameters
@@ -29,7 +33,7 @@ def get_devices():
     return jsonify([device.to_dict() for device in devices])
 
 @bp.route('/devices/<imei>', methods=['GET'])
-@login_required
+
 def get_device(imei):
     """Get device details by IMEI"""
     device = Device.query.filter_by(imei=imei).first()
@@ -37,9 +41,8 @@ def get_device(imei):
         return jsonify({'error': 'Device not found'}), 404
     return jsonify(device.to_dict())
 
+
 @bp.route('/devices', methods=['POST'])
-@login_required
-@admin_required
 def create_device():
     """Add new device to inventory"""
     data = request.get_json() or {}
@@ -58,6 +61,8 @@ def create_device():
         imei=data['imei'],
         brand=data['brand'],
         model=data['model'],
+        ram=data['ram'],
+        rom=data['rom'],
         purchase_price=data['purchase_price'],
         notes=data.get('notes', '')
     )
@@ -72,8 +77,8 @@ def create_device():
     return jsonify(device.to_dict()), 201
 
 @bp.route('/devices/<imei>', methods=['PUT'])
-@login_required
-@admin_required
+
+
 def update_device(imei):
     """Update device details"""
     device = Device.query.filter_by(imei=imei).first()
@@ -96,8 +101,8 @@ def update_device(imei):
     return jsonify(device.to_dict())
 
 @bp.route('/devices/<imei>', methods=['DELETE'])
-@login_required
-@admin_required
+
+
 def delete_device(imei):
     """Delete device from inventory"""
     device = Device.query.filter_by(imei=imei).first()
