@@ -1,8 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, EmailField, TextAreaField, SelectField, DecimalField
-from wtforms.validators import DataRequired, Email, Length, ValidationError, NumberRange
+from wtforms.validators import DataRequired, Email, Length, ValidationError, NumberRange, EqualTo, Optional
 from app.models import User
 
+# USER LOGIN FORM
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
@@ -10,7 +11,7 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Login')   
     
-    
+# USER PROFILE FORM  
 class ProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
@@ -36,7 +37,7 @@ class ProfileForm(FlaskForm):
             if user:
                 raise ValidationError('Email already registered. Please use a different one.')
             
-            
+# USER REGISTRATION FORM          
 class RegisterForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
@@ -54,7 +55,22 @@ class RegisterForm(FlaskForm):
         if user:
             raise ValidationError('Email already registered. Please use a different one.')
 
+# CUSTOMER REGISTRATION AND LOGIN FORMS
+class CustomerRegistrationForm(FlaskForm):
+    full_name = StringField('Full Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone_number = StringField('Phone Number')
+    address = StringField('Address')
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    confirm = PasswordField('Confirm Password', validators=[EqualTo('password')])
+    submit = SubmitField('Register')
 
+class CustomerLoginForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
+
+# DEVICE FORM
 class DeviceForm(FlaskForm):
     imei = StringField('IMEI', validators=[
         DataRequired(), Length(min=15, max=15, message='IMEI must be exactly 15 digits long.')
@@ -78,7 +94,8 @@ class DeviceForm(FlaskForm):
             if device:
                 raise ValidationError('This IMEI is already registered in the system.')
             
-            
+ 
+# SALE FORM           
 class SaleForm(FlaskForm):
     imei = StringField('IMEI', validators=[
         DataRequired(),
@@ -111,7 +128,29 @@ class SaleForm(FlaskForm):
         if self.payment_type.data == 'cash' and amount_paid.data < self.sale_price.data:
             raise ValidationError('For cash payments, the amount paid must equal the sale price.')
         
+
+# EDIT CUSTOMER FORM
+class CustomerEditForm(FlaskForm):
+     full_name = StringField('Full Name', validators=[
+        DataRequired(), Length(min=2, max=100)
+    ])
+    
+     email = StringField('Email', validators=[
+        DataRequired(), Email()
+    ])
+    
+     phone_number = StringField('Phone Number', validators=[
+        Optional(), Length(min=10, max=20)
+    ])
+    
+     address = StringField('Address', validators=[
+        Optional(), Length(max=255)
+    ])
+    
+     submit = SubmitField('Update Profile')
+
         
+    #   EDIT USER FORM
 class EditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
