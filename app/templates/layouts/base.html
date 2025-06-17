@@ -7,15 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Diamond Tree Ventures{% endblock %}</title>
-    
-    <!-- Bootstrap 5 CSS -->
+
+    <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-    
-    <!-- Scanner Styles -->
+
     <style>
         #interactive.viewport {
             position: relative;
@@ -33,37 +30,38 @@
         }
     </style>
     {% block extra_css %}{% endblock %}
-    
-    <!-- Bootstrap 5 JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- QuaggaJS -->
-    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
-    <!-- Barcode Scanner -->
-    <script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
 </head>
 <body class="bg-light">
-    <!-- Navigation -->
-    
+
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg bg-body-tertiary shadow">
     <div class="container-fluid">
-      <a class="navbar-brand fs-1" href="#"><span style="font-size: 40px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; font-family: Arial, Helvetica, sans-serif; color: rgb(145, 88, 15);" href="#">DIAMOND TREE </span> <br> <span style="font-size: 24px; letter-spacing: 5px; font-family: Arial, Helvetica, sans-serif; color: rgb(4, 116, 116);">VENTURES</span></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if current_user.is_authenticated %}           
-                                     <li class="nav-item">
-                                <a class="nav-link hover-effect" href="{{ url_for('devices.inventory') }}">
-                                    <i class="fas fa-warehouse me-1"></i>Inventory
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link hover-effect" href="{{ url_for('sales.index') }}">
-                                    <i class="fas fa-shopping-cart me-1"></i>Sales
-                                </a>
-                            </li>
-                            {% if current_user.is_admin() %}
+        <a class="navbar-brand fs-1" href="#">
+            <span style="font-size: 40px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; font-family: Arial, Helvetica, sans-serif; color: rgb(145, 88, 15);">DIAMOND TREE</span><br>
+            <span style="font-size: 24px; letter-spacing: 5px; font-family: Arial, Helvetica, sans-serif; color: rgb(4, 116, 116);">VENTURES</span>
+
+         
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role in ['admin', 'staff'] %}
+                        <!-- Admin and Staff Links -->
+                        <li class="nav-item">
+                            <a class="nav-link hover-effect" href="{{ url_for('devices.inventory') }}">
+                                <i class="fas fa-warehouse me-1"></i>Inventory
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link hover-effect" href="{{ url_for('sales.index') }}">
+                                <i class="fas fa-shopping-cart me-1"></i>Sales
+                            </a>
+                        </li>
+                        {% if current_user.is_admin() %}
                             <li class="nav-item">
                                 <a class="nav-link hover-effect" href="{{ url_for('reports.dashboard') }}">
                                     <i class="fas fa-chart-bar me-1"></i>Reports
@@ -75,82 +73,97 @@
                                 </a>
                             </li>
                         {% endif %}
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav">
-                    {% if current_user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i>{{ current_user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
-                                        <i class="fas fa-id-card me-1"></i>Profile
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                        <i class="fas fa-sign-out-alt me-1"></i>Logout
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    {% else %}
+                    {% elif current_user.role == 'enduser' %}
+                        <!-- End User Link -->
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">
-                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            <a class="nav-link hover-effect" href="{{ url_for('public.products') }}">
+                                <i class="fas fa-mobile-alt me-1"></i>Products
                             </a>
                         </li>
+
+                        <!-- Search Box -->
+                        <form class="d-flex me-3" method="GET" action="{{ url_for('public.search') }}">
+                            <input class="form-control me-2" type="search" name="q" placeholder="Search..." aria-label="Search">
+                            <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                        </form>
+
+                        <!-- Cart Link -->
+                        <li class="nav-item">
+                            <a class="nav-link hover-effect" href="{{ url_for('public.cart') }}">
+                                <i class="fas fa-shopping-cart me-1"></i>Cart
+                            </a>
+                        </li>
+
+                        <!-- Account Status -->
+                        <li class="nav-item">
+                            <span class="nav-link disabled">
+                                <i class="fas fa-user-check me-1"></i>{{ 'Active' if current_user.is_active else 'Inactive' }}
+                            </span>
+                        </li>
                     {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
+                {% endif %}
+            </ul>
 
-    <!-- Flash Messages -->
-    <div class="container mt-3">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+            <!-- Authenticated Profile or Login -->
+            <ul class="navbar-nav">
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>{{ current_user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-id-card me-1"></i>Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
+</nav>
 
-    <!-- Main Content -->
-    <main class="container my-4">
-        {% block content %}{% endblock %}
-    </main>
+<!-- Flash Messages -->
+<div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
 
-    <!-- Common Components -->
-    {{ scanner_modal() }}
+<!-- Main Content -->
+<main class="container my-4">
+    {% block content %}{% endblock %}
+</main>
 
-    <!-- QuaggaJS Scanner Modal -->
-    {% include 'components/scanner-modal.html' %}
+<!-- Modals and Components -->
+{{ scanner_modal() }}
+{% include 'components/scanner-modal.html' %}
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- QuaggaJS -->
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
-    {% block extra_js %}{% endblock %}
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+<script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
+{% block extra_js %}{% endblock %}
 
-    <!-- Footer -->
-    <footer class="footer mt-auto py-3 bg-dark text-white">
-        <div class="container text-center">
-            <span>© 2025 Diamond Tree Ventures. All rights reserved.</span>
-        </div>
-    </footer>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Footer -->
+<footer class="footer mt-auto py-3 bg-dark text-white">
+    <div class="container text-center">
+        <span>© 2025 Diamond Tree Ventures. All rights reserved.</span>
+    </div>
+</footer>
 
 </body>
 </html>
