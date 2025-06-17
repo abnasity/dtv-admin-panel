@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Available Phones - Diamond Tree{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4 text-center">Available Phones</h2>
+
+    <!-- Search Bar -->
+    <form method="GET" action="{{ url_for('public.search') }}" class="d-flex mb-4 justify-content-center">
+        <input class="form-control w-50 me-2" type="search" name="q" placeholder="Search phones..." aria-label="Search" value="{{ request.args.get('q', '') }}">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+    </form>
+
+    <!-- Products Grid -->
+    <div class="row">
+        {% for product in products %}
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.brand }} {{ product.model }}</h5>
+                        <p class="card-text">
+                            <strong>Storage:</strong> {{ product.storage }}<br>
+                            <strong>RAM:</strong> {{ product.ram }}<br>
+                            <strong>IMEI:</strong> {{ product.imei }}<br>
+                            <strong>Price:</strong> Ksh {{ "%.2f"|format(product.sale_price or product.purchase_price) }}
+                        </p>
+                        <form method="POST" action="{{ url_for('public.add_to_cart', device_id=product.id) }}">
+                            {{ csrf_field() }}
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <p class="text-center text-muted">No products available.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
