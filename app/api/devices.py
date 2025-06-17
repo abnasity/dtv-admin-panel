@@ -11,7 +11,7 @@ from app.decorators import admin_required
 
 bp = Blueprint('devices', __name__)
 
-@bp.route('/devices', methods=['GET'])
+@bp.route('/', methods=['GET'])
 
 def get_devices():
     """Get list of all devices with optional filters"""
@@ -42,7 +42,7 @@ def get_device(imei):
     return jsonify(device.to_dict())
 
 
-@bp.route('/devices', methods=['POST'])
+@bp.route('/', methods=['POST'])
 def create_device():
     """Add new device to inventory"""
     data = request.get_json() or {}
@@ -76,7 +76,7 @@ def create_device():
     
     return jsonify(device.to_dict()), 201
 
-@bp.route('/devices/<imei>', methods=['PUT'])
+@bp.route('/<imei>', methods=['PUT'])
 
 
 def update_device(imei):
@@ -100,7 +100,7 @@ def update_device(imei):
     
     return jsonify(device.to_dict())
 
-@bp.route('/devices/<imei>', methods=['DELETE'])
+@bp.route('/<imei>', methods=['DELETE'])
 
 
 def delete_device(imei):
