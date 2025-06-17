@@ -38,12 +38,14 @@ def create_app(config_class=Config):
     from app.routes.devices import bp as devices_bp
     from app.routes.sales import bp as sales_bp
     from app.routes.reports import bp as reports_bp
+    from app.routes.customers import bp as customers_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(devices_bp, url_prefix='/devices', name='devices')
     app.register_blueprint(sales_bp, url_prefix='/sales', name='sales')
     app.register_blueprint(reports_bp, url_prefix='/reports', name='reports')
+    app.register_blueprint(customers_bp, url_prefix='/customers', name='customers')
     
     # Register API blueprints
     from app.api.auth import bp as auth_api_bp
