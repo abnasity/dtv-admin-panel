@@ -4,6 +4,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db 
 from app import bcrypt, login_manager
 
+# USERS MODEL
+# This model represents both admin and staff users in the system.
+# Admins have full access, while staff have limited permissions.
 class User(UserMixin, db.Model): #usermodel for authentication and authorization
     __tablename__ = 'users'
     
@@ -46,6 +49,60 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
         }
         
         
+        
+# CUSTOMERS MODEL
+class Customer(UserMixin, db.Model):
+    __tablename__ = 'customers'
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(128), nullable=False)
+    full_name = db.Column(db.String(100), nullable=False)
+    phone_number = db.Column(db.String(20), nullable=True)
+    address = db.Column(db.String(255), nullable=True)
+   
+
+    role = db.Column(db.String(20), nullable=False, default='enduser')
+    is_active = db.Column(db.Boolean, default=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship: customer purchases (you must add customer_id in Sale model)
+    purchases = db.relationship('Sale', backref='customer', cascade='all, delete-orphan', foreign_keys='Sale.customer_id')
+
+    def set_password(self, password):
+        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def check_password(self, password):
+        return bcrypt.check_password_hash(self.password_hash, password)
+
+    def is_enduser(self):
+        return self.role == 'enduser'
+
+    def get_id(self):
+        return f'customer-{self.id}'  # distinguish from admin/staff users
+
+    def __repr__(self):
+        return f'<Customer {self.email}>'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'full_name': self.full_name,
+            'email': self.email,
+            'phone_number': self.phone_number,
+            'address': self.address,
+            'created_at': self.created_at.isoformat(),
+            'last_seen': self.last_seen.isoformat(),
+            'role': self.role,
+            'is_active': self.is_active
+        }
+
+
+        
+#  DEVICE MODEL
 class Device(db.Model):
     """Device model for mobile phone inventory management"""
     __tablename__ = 'devices'
@@ -91,7 +148,90 @@ class Device(db.Model):
             'notes': self.notes
         }
         
+
+
+
+# PRODUCT MODEL
+# This model represents products in the inventory, which can be devices or other items.
+class Product(db.Model):
+    """Product model for inventory management"""
+    __tablename__ = 'products'
     
+    id = db.Column(db.Integer, primary_key=True)
+    sku = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    unit_price = db.Column(db.Numeric(12, 2), nullable=False)
+    reorder_level = db.Column(db.Integer, default=0, nullable=False)  # Minimum stock level before reorder
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    inventory_transactions = db.relationship('InventoryTransaction', backref='product', cascade='all, delete-orphan')
+    po_items = db.relationship('PurchaseOrderItem', backref='product', cascade='all, delete-orphan')
+    sales = db.relationship('Sale', backref='product', cascade='all, delete-orphan')
+    alerts = db.relationship('Alert', backref='product', cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        """Convert product object to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'sku': self.sku,
+            'name': self.name,
+            'description': self.description,
+            'unit_price': str(self.unit_price),
+            'reorder_level': self.reorder_level,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }
+
+# INVENTORY TRANSACTION MODEL
+# This model tracks all inventory transactions for products, including purchases, sales, adjustments, and stock movements.
+class InventoryTransaction(db.Model):
+    __tablename__ = 'inventory_transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False)
+    staff_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
+    type = db.Column(db.String(20), nullable=False)  # 'purchase', 'sale', 'adjustment', 'add', 'remove'. 'loss'
+    quantity = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    
+    
+    def to_dict(self):
+        """Convert inventory transaction object to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'product_id': self.product_id,
+            'staff_id': self.staff_id,
+            'type': self.type,
+            'quantity': self.quantity,
+            'timestamp': self.timestamp.isoformat()
+        }
+    
+   
+    # PURCHASE ORDER ITEM MODEL
+# This model represents items in purchase orders, linking products to purchase orders.
+class  PurchaseOrderItem(db.Model):
+    """Purchase Order Item model for tracking items in purchase orders"""
+    __tablename__ = 'purchase_order_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False)
+    purchase_order_id = db.Column(db.Integer, db.ForeignKey('purchase_orders.id', ondelete='CASCADE'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_cost = db.Column(db.Numeric(12, 2), nullable=False) 
+    
+    def to_dict(self):
+        """Convert purchase order item object to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'product_id': self.product_id,
+            'purchase_order_id': self.purchase_order_id,
+            'quantity': self.quantity,
+            'unit_cost': str(self.unit_cost)
+        } 
+
+# SALE MODEL FOR DEVICES ONLY
+# This model tracks sales of devices, linking them to the device and seller.
 class Sale(db.Model):
     """Sale model for tracking device sales"""
     __tablename__ = 'sales'
@@ -107,6 +247,9 @@ class Sale(db.Model):
     # Foreign Keys
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), unique=True, nullable=False)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True)
+
 
     @property
     def profit(self):
@@ -139,7 +282,52 @@ class Sale(db.Model):
             'modified_at': self.modified_at.isoformat(),
             'notes': self.notes
         }
+        
+# SALE ITEM MODEL 
+# meant for product-based (non-IMEI) sales
+class SaleItem(db.Model):
+    __tablename__ = 'sale_items'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(db.Numeric(12, 2), nullable=False)
+    sold_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    
+    
+    def to_dict(self):
+        """Convert sale item object to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'product_id': self.product_id,
+            'seller_id': self.seller_id,
+            'quantity': self.quantity,
+            'unit_price': str(self.unit_price),
+            'sold_at': self.sold_at.isoformat()
+        }
 
+        
+# ALERT MODEL
+# This model tracks alerts for products, such as low stock or new product arrivals.
+class Alert(db.Model):
+    """Alert model for tracking product alerts"""
+    __tablename__ = 'alerts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False)
+    type = db.Column(db.String(30), nullable=False)  # e.g., 'low_stock', 'new_product'
+    triggered_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    status = db.Column(db.String(20), nullable=False)  # active, resolved, dismissed, unread, sent
+    
+    def to_dict(self):
+        """Convert alert object to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'product_id': self.product_id,
+            'type': self.type,
+            'triggered_at': self.triggered_at.isoformat(),
+            'status': self.status           
+        }
 @login_manager.user_loader
 def load_user(user_id):
     """Flask-Login user loader callback"""
