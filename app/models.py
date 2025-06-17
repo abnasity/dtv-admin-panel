@@ -207,6 +207,34 @@ class InventoryTransaction(db.Model):
             'timestamp': self.timestamp.isoformat()
         }
     
+# PURCHASE ORDER MODEL
+# This model represents purchase orders made to suppliers for products.
+# It tracks the supplier, order date, status, and items in the order.
+class PurchaseOrder(db.Model):
+    __tablename__ = 'purchase_orders'
+    id = db.Column(db.Integer, primary_key=True)
+    supplier = db.Column(db.String(150), nullable=False)
+    order_date = db.Column(db.Date, nullable=False)
+    status = db.Column(db.String(20), nullable=False) #
+    'pending','received','cancelled'
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id',
+    ondelete='CASCADE'), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True),
+    default=datetime.utcnow)
+    items = db.relationship('PurchaseOrderItem',
+    backref='purchase_order', cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'supplier': self.supplier_name,
+            'order_date': self.order_date.isoformat(),
+            'status': self.status,
+            'created_by': self.created_by,
+            'created_at': self.created_at.isoformat(),
+            'items': self.items_to_dict()
+        }
+    
    
     # PURCHASE ORDER ITEM MODEL
 # This model represents items in purchase orders, linking products to purchase orders.
