@@ -55,5 +55,8 @@ def create_app(config_class=Config):
     app.register_blueprint(devices_api_bp, url_prefix='/api/devices', name='api_devices')
     app.register_blueprint(sales_api_bp, url_prefix='/api/sales', name='api_sales')
     app.register_blueprint(reports_api_bp, url_prefix='/api/reports', name='api_reports')
+     # Exempt blueprint or individual view
+    csrf.exempt(devices_api_bp)
+    
 
     return app
