@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, EmailField, TextAreaField, SelectField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, NumberRange, EqualTo, Optional
-from app.models import User
+from app.models import User, Customer
 
 # USER LOGIN FORM
 class LoginForm(FlaskForm):
@@ -70,6 +70,27 @@ class CustomerLoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
+    
+# CUSTOMER PROFILE FORM
+class CustomerProfileForm(FlaskForm):
+    full_name = StringField('Full Name', validators=[DataRequired(), Length(min=2, max=100)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    
+    current_password = PasswordField('Current Password')
+    new_password = PasswordField('New Password', validators=[Length(min=6)])
+    confirm_password = PasswordField('Confirm New Password', validators=[EqualTo('new_password', message='Passwords must match.')])
+    
+    submit = SubmitField('Update Profile')
+
+    def __init__(self, original_email, *args, **kwargs):
+        super(CustomerProfileForm, self).__init__(*args, **kwargs)
+        self.original_email = original_email
+
+    def validate_email(self, email):
+        if email.data != self.original_email:
+            existing = Customer.query.filter_by(email=email.data).first()
+            if existing:
+                raise ValidationError('Email is already registered. Please use a different one.')
 
 # DEVICE FORM
 class DeviceForm(FlaskForm):
