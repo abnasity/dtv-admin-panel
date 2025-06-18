@@ -55,7 +55,7 @@ class RegisterForm(FlaskForm):
         if user:
             raise ValidationError('Email already registered. Please use a different one.')
 
-# CUSTOMER REGISTRATION AND LOGIN FORMS
+# CUSTOMER REGISTRATION FORM
 class CustomerRegistrationForm(FlaskForm):
     full_name = StringField('Full Name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -65,6 +65,7 @@ class CustomerRegistrationForm(FlaskForm):
     confirm = PasswordField('Confirm Password', validators=[EqualTo('password')])
     submit = SubmitField('Register')
 
+# CUSTOMER LOGIN FORM
 class CustomerLoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
