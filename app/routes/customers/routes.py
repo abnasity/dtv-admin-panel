@@ -40,7 +40,8 @@ def login():
         if customer and customer.check_password(form.password.data):
             customer.last_seen = datetime.utcnow()
             db.session.commit()
-            login_user(customer, remember=form.remember_me.data)
+            remember = getattr(form, 'remember_me', False)
+            login_user(customer, remember=remember.data if remember else False)
             next_page = request.args.get('next')
             return redirect(next_page or url_for('main.index'))
         flash('Invalid email or password.', 'danger')
