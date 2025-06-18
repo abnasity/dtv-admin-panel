@@ -32,27 +32,31 @@ def create_app(config_class=Config):
         from datetime import datetime
         return {'now': datetime.utcnow()}
 
-    # Register web route blueprints
+    # Import web route blueprints
     from app.routes.main import bp as main_bp
     from app.routes.auth import bp as auth_bp
     from app.routes.devices import bp as devices_bp
     from app.routes.sales import bp as sales_bp
     from app.routes.reports import bp as reports_bp
     from app.routes.customers import bp as customers_bp
+    from app.routes.public import bp as public_bp
     
+     # Register web route blueprints
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(devices_bp, url_prefix='/devices', name='devices')
     app.register_blueprint(sales_bp, url_prefix='/sales', name='sales')
     app.register_blueprint(reports_bp, url_prefix='/reports', name='reports')
     app.register_blueprint(customers_bp, url_prefix='/customers', name='customers')
+    app.register_blueprint(public_bp, url_prefix='/public', name='public')
     
-    # Register API blueprints
+    # Import API blueprints
     from app.api.auth import bp as auth_api_bp
     from app.api.devices import bp as devices_api_bp
     from app.api.sales import bp as sales_api_bp
     from app.api.reports import bp as reports_api_bp
     
+    # Register API blueprints
     app.register_blueprint(auth_api_bp, url_prefix='/api/auth', name='api_auth')
     app.register_blueprint(devices_api_bp, url_prefix='/api/devices', name='api_devices')
     app.register_blueprint(sales_api_bp, url_prefix='/api/sales', name='api_sales')
