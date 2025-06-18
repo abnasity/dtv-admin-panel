@@ -1,0 +1,47 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Diamond Tree Ventures - Flash Deals{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Banner -->
+    <div class="text-center bg-danger text-white p-4 rounded">
+        <h2 class="mb-0">Diamond Tree Flash Deals</h2>
+        <small class="fw-light">Affordable Mobile Devices & Accessories</small>
+    </div>
+
+    <!-- Flash Sale Timers -->
+    <div class="d-flex justify-content-around text-center mt-4 flex-wrap">
+        {% for time, status in [('00:00', 'Over'), ('08:00', 'Over'), ('10:00', 'Over'), ('12:00', 'Over'), ('14:00', 'On Going'), ('16:00', 'Coming Up')] %}
+        <div>
+            <div class="p-3 rounded text-white {% if status == 'On Going' %}bg-danger{% elif status == 'Coming Up' %}bg-warning{% else %}bg-dark{% endif %}">
+                <strong>{{ time }}</strong>
+            </div>
+            <small>{{ status }}</small>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Category Filters -->
+    <div class="mt-4 d-flex flex-wrap gap-2">
+        {% for category in ['All', 'Phones', 'Accessories', 'Smart Devices', 'Wearables', 'TV & Audio'] %}
+        <button class="btn btn-outline-secondary">{{ category }}</button>
+        {% endfor %}
+    </div>
+
+    <!-- Placeholder Product Grid -->
+    <div class="row mt-5">
+        {% for i in range(6) %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <img src="https://via.placeholder.com/350x200" class="card-img-top" alt="Product Image">
+                <div class="card-body">
+                    <h5 class="card-title">Product {{ i + 1 }}</h5>
+                    <p class="card-text">High-quality device from Diamond Tree Ventures.</p>
+                    <span class="badge bg-success">Ksh 14,999</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
