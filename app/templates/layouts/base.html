@@ -86,16 +86,44 @@
                             </button>
                         </form>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="bi bi-question-circle"></i> Help Center</a>
+                    
+                    
+               <!-- PUBLIC USER ACCOUNT CREATION -->
+                                    <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle hover-effect" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>
+                        {% if current_user.is_authenticated and current_user.get_id().startswith('customer-') %}
+                            {{ current_user.full_name.split(' ')[0] }}
+                        {% else %}
+                            My Account
+                        {% endif %}
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        {% if current_user.is_authenticated and current_user.get_id().startswith('customer-') %}
+                            <li><a class="dropdown-item" href="{{ url_for('customers.profile') }}"><i class="fas fa-id-card me-1"></i> Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('customers.logout') }}"><i class="fas fa-sign-out-alt me-1"></i> Logout</a></li>
+                        {% else %}
+                            <li><a class="dropdown-item" href="{{ url_for('customers.login') }}"><i class="fas fa-sign-in-alt me-1"></i> Login</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('customers.register') }}"><i class="fas fa-user-plus me-1"></i> Register</a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+
+
+<!-- END PUBLIC USER ACCOUNT CREATION -->
+
+
+                    <li>
+                    <a class="nav-link hover-effect" href="#">
+                            <i class="fas fa-shopping-cart me-1"></i>Cart
+                        </a>
                     </li>
-                    <li class="nav-item">
-                        <span class="nav-link"><img src="{{ url_for('static', filename='img/flag-ke.png') }}" width="24"> Kenya</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="bi bi-cart"></i> Cart</a>
-                    </li>
+                   
                 {% endif %}
+
+
 
                 <!-- User account/login (shown to all except login page) -->
                 {% if not request.endpoint == 'auth.login' %}
