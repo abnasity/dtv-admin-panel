@@ -48,7 +48,7 @@ def create_app(config_class=Config):
     app.register_blueprint(sales_bp, url_prefix='/sales', name='sales')
     app.register_blueprint(reports_bp, url_prefix='/reports', name='reports')
     app.register_blueprint(customers_bp, url_prefix='/customers', name='customers')
-    app.register_blueprint(public_bp, url_prefix='/public', name='public')
+    app.register_blueprint(public_bp)
     
     # Import API blueprints
     from app.api.auth import bp as auth_api_bp
