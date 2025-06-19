@@ -12,7 +12,6 @@ from app.decorators import admin_required
 bp = Blueprint('devices', __name__)
 
 @bp.route('/', methods=['GET'])
-
 def get_devices():
     """Get list of all devices with optional filters"""
     # Get query parameters
@@ -32,8 +31,8 @@ def get_devices():
     devices = query.all()
     return jsonify([device.to_dict() for device in devices])
 
-@bp.route('/<imei>', methods=['GET'])
 
+@bp.route('/<imei>', methods=['GET'])
 def get_device(imei):
     """Get device details by IMEI"""
     device = Device.query.filter_by(imei=imei).first()
@@ -76,9 +75,33 @@ def create_device():
     
     return jsonify(device.to_dict()), 201
 
+# PARTIALLY UPDATE A DEVICE
+@bp.route('/<imei>', methods=['PATCH'])
+def patch_device(imei):
+    """Partially update a device by IMEI"""
+    device = Device.query.filter_by(imei=imei).first()
+    if not device:
+        return jsonify({'error': 'Device not found'}), 404
+
+    data = request.get_json() or {}
+
+    # Update only allowed fields if provided
+    allowed_fields = ['brand', 'model', 'ram', 'rom', 'purchase_price', 'notes']
+    for field in allowed_fields:
+        if field in data:
+            setattr(device, field, data[field])
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Database error occurred'}), 500
+
+    return jsonify(device.to_dict())
+
+
+
 @bp.route('/<imei>', methods=['PUT'])
-
-
 def update_device(imei):
     """Update device details"""
     device = Device.query.filter_by(imei=imei).first()
@@ -101,8 +124,6 @@ def update_device(imei):
     return jsonify(device.to_dict())
 
 @bp.route('/<imei>', methods=['DELETE'])
-
-
 def delete_device(imei):
     """Delete device from inventory"""
     device = Device.query.filter_by(imei=imei).first()
