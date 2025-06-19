@@ -50,19 +50,29 @@ def create_app(config_class=Config):
     app.register_blueprint(customers_bp, url_prefix='/customers', name='customers')
     app.register_blueprint(public_bp)
     
+    
     # Import API blueprints
     from app.api.auth import bp as auth_api_bp
     from app.api.devices import bp as devices_api_bp
     from app.api.sales import bp as sales_api_bp
     from app.api.reports import bp as reports_api_bp
+    from app.api.users import bp as users_api_bp
+    from app.api.customers import bp as customers_api_bp
+
     
     # Register API blueprints
     app.register_blueprint(auth_api_bp, url_prefix='/api/auth', name='api_auth')
     app.register_blueprint(devices_api_bp, url_prefix='/api/devices', name='api_devices')
     app.register_blueprint(sales_api_bp, url_prefix='/api/sales', name='api_sales')
     app.register_blueprint(reports_api_bp, url_prefix='/api/reports', name='api_reports')
-     # Exempt blueprint or individual view
+    app.register_blueprint(users_api_bp, url_prefix='/api/users', name='api_users')
+    app.register_blueprint(customers_api_bp, url_prefix='/api/customers', name='api_customers')
+    
+    # Exempt CSRF protection for API routes
     csrf.exempt(devices_api_bp)
+    csrf.exempt(users_api_bp)
+    csrf.exempt(auth_api_bp)
+    csrf.exempt(customers_api_bp)
     
 
     return app
