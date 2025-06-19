@@ -62,7 +62,7 @@ class Customer(UserMixin, db.Model):
     address = db.Column(db.String(255), nullable=True)
    
 
-    role = db.Column(db.String(20), nullable=False, default='enduser')
+    role = db.Column(db.String(20), nullable=False, default='customer')
     is_active = db.Column(db.Boolean, default=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -78,8 +78,8 @@ class Customer(UserMixin, db.Model):
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
 
-    def is_enduser(self):
-        return self.role == 'enduser'
+    def is_customer(self):
+        return self.role == 'customer'
 
     def get_id(self):
         return f'customer-{self.id}'  # distinguish from admin/staff users
