@@ -78,6 +78,7 @@ class Customer(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationship: customer purchases (you must add customer_id in Sale model)
+    cart_items = db.relationship('CartItem', back_populates='customer', lazy=True)
     purchases = db.relationship('Sale', backref='customer', cascade='all, delete-orphan', foreign_keys='Sale.customer_id')
 
     def set_password(self, password):
@@ -169,8 +170,8 @@ class CartItem(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
-    customer = db.relationship('Customer', backref='cart_items')
-    device = db.relationship('Device')
+    customer = db.relationship('Customer', back_populates='cart_items')
+    device = db.relationship('Device', backref='cart_items')
 
     def __repr__(self):
         return f"<CartItem customer={self.customer_id} device={self.device_id}>"
