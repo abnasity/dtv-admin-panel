@@ -201,3 +201,17 @@ class EditUserForm(FlaskForm):
             if user:
                 raise ValidationError('Email already registered. Please use a different one.')
 
+
+# CHECKOUT FORM
+class CheckoutForm(FlaskForm):
+    payment_type = SelectField(
+        'Payment Method',
+        choices=[('cash', 'Cash'), ('credit', 'Credit')],
+        validators=[DataRequired()]
+    )
+    amount_paid = DecimalField(
+        'Amount Paid (Ksh)',
+        validators=[DataRequired(), NumberRange(min=0)],
+        places=2
+    )
+    submit = SubmitField('Confirm Order')
