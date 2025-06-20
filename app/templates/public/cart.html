@@ -1,0 +1,65 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}My Cart - Diamond Tree{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">My Cart</h2>
+
+    {% if products %}
+        <form method="POST" action="{{ url_for('public.place_order') }}">
+            {{ csrf_token() }}
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Device</th>
+                        <th>IMEI</th>
+                        <th>RAM</th>
+                        <th>Storage</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in products %}
+                        <tr>
+                            <td>{{ device.brand }} {{ device.model }}</td>
+                            <td>{{ device.imei }}</td>
+                            <td>{{ device.ram }}</td>
+                            <td>{{ device.storage }}</td>
+                            <td>Ksh {{ "%.2f"|format(device.sale_price or device.purchase_price) }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('public.remove_from_cart', device_id=device.id) }}">
+                                    {{ csrf_token() }}
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash-alt"></i> Remove
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="text-end mt-3">
+                {% if current_user.is_authenticated and current_user.is_customer() %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-credit-card"></i> Place Order
+                    </button>
+                {% else %}
+                    <a href="{{ url_for('customers.login', next=url_for('public.view_cart')) }}" class="btn btn-success">
+                        <i class="fas fa-sign-in-alt"></i> Login to Checkout
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    {% else %}
+        <p class="text-center text-muted">Your cart is empty.</p>
+        <div class="text-center mt-3">
+            <a href="{{ url_for('customers.dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Continue Shopping
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
