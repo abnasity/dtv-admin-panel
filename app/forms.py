@@ -168,6 +168,10 @@ class CustomerEditForm(FlaskForm):
      address = StringField('Address', validators=[
         Optional(), Length(max=255)
     ])
+     
+     current_password = PasswordField('Current Password')
+     new_password = PasswordField('New Password')
+     confirm_password = PasswordField('Confirm New Password', validators=[EqualTo('new_password')])
     
      submit = SubmitField('Update Profile')
 
