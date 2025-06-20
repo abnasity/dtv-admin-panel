@@ -1,7 +1,7 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify, abort
+from flask import render_template, redirect, url_for, flash, request, jsonify, abort, session
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db, bcrypt
-from app.models import Customer
+from app.models import Customer, Device, CartItem
 from app.forms import CustomerRegistrationForm, CustomerLoginForm, CustomerEditForm
 from datetime import datetime
 from app.routes.customers import bp
@@ -13,9 +13,17 @@ def register():
         return redirect(url_for('main.index'))
 
     form = CustomerRegistrationForm()
+
     if form.validate_on_submit():
+        # Check for existing email
+        existing_customer = Customer.query.filter_by(email=form.email.data).first()
+        if existing_customer:
+            flash('Email already registered.', 'danger')
+            return redirect(url_for('customers.login'))
+
+        # Create and save new customer
         customer = Customer(
-            email=form.email.data,
+            email=form.email.data.lower(),
             full_name=form.full_name.data,
             phone_number=form.phone_number.data,
             address=form.address.data
@@ -23,27 +31,39 @@ def register():
         customer.set_password(form.password.data)
         db.session.add(customer)
         db.session.commit()
-        flash('Registration successful! You can now log in.', 'success')
-        return redirect(url_for('customers.login'))
+        login_user(customer, remember=True)
+        flash('Registration successful! Welcome!', 'success')
+        return redirect(url_for('customers.dashboard'))
 
     return render_template('customers/register.html', form=form)
+
 
 # LOGIN
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('customers.dashboard'))
 
     form = CustomerLoginForm()
     if form.validate_on_submit():
-        customer = Customer.query.filter_by(email=form.email.data).first()
+        customer = Customer.query.filter_by(email=form.email.data.lower()).first()
         if customer and customer.check_password(form.password.data):
             customer.last_seen = datetime.utcnow()
             db.session.commit()
             remember = getattr(form, 'remember_me', False)
             login_user(customer, remember=remember.data if remember else False)
+           
+
+            # ✅ Merge session cart (after login)
+            cart = session.pop('cart', [])
+            for device_id in cart:
+                existing = CartItem.query.filter_by(customer_id=customer.id, device_id=device_id).first()
+                if not existing:
+                    db.session.add(CartItem(customer_id=customer.id, device_id=device_id))
+            db.session.commit()
+
             next_page = request.args.get('next')
-            return redirect(next_page or url_for('main.index'))
+            return redirect(next_page or url_for('customers.dashboard'))
         flash('Invalid email or password.', 'danger')
 
     return render_template('customers/login.html', form=form)
@@ -99,7 +119,7 @@ def profile():
 
         db.session.commit()
         flash('Profile updated successfully.', 'success')
-        return redirect(url_for('customers.profile'))
+        return redirect(url_for('customers.dashboard'))
 
     return render_template('customers/profile.html', form=form)
 
@@ -118,3 +138,27 @@ def get_my_info():
 def get_customer(customer_id):
     customer = Customer.query.get_or_404(customer_id)
     return jsonify(customer.to_dict())
+
+
+
+# CUSTOMER DASHBOARD
+@bp.route('/dashboard')
+@login_required
+def dashboard():
+    # Ensure only customers access this route
+    if not isinstance(current_user, Customer):
+        abort(403, description="Unauthorized access: Customers only.")
+    products = Device.query.all()
+
+    return render_template('customers/dashboard.html', products=products)
+
+
+# CUSTOMER CARTS
+@bp.route('/cart')
+@login_required
+def view_cart():
+    if not isinstance(current_user, Customer):
+        abort(403)
+
+    cart_items = CartItem.query.filter_by(customer_id=current_user.id).all()
+    return render_template('customers/cart.html', cart_items=cart_items)
