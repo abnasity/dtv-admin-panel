@@ -1,0 +1,77 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Checkout - Diamond Tree{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Checkout</h2>
+
+    {% if products %}
+        <div class="row">
+            <div class="col-md-8">
+                <table class="table table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Device</th>
+                            <th>IMEI</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for device in products %}
+                        <tr>
+                            <td>{{ device.brand }} {{ device.model }}</td>
+                            <td>{{ device.imei }}</td>
+                            <td>Ksh {{ "%.2f"|format(device.sale_price or device.purchase_price) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Order Summary</h5>
+                        <p><strong>Total Items:</strong> {{ products|length }}</p>
+                        <p><strong>Total Price:</strong> Ksh {{ "%.2f"|format(total_price) }}</p>
+                        <hr>
+
+                        <form method="POST" action="{{ url_for('public.place_order') }}">
+                            {{ csrf_token() }}
+
+                            <div class="mb-3">
+                                <label for="payment_type" class="form-label">Payment Method</label>
+                                <select name="payment_type" class="form-select" required>
+                                    <option value="cash">Cash</option>
+                                    <option value="credit">Credit</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="amount_paid" class="form-label">Amount Paid (Ksh)</label>
+                                <input type="number" name="amount_paid" min="0" step="0.01" class="form-control" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-check-circle me-1"></i> Confirm Order
+                            </button>
+                        </form>
+
+                        <a href="{{ url_for('public.cart') }}" class="btn btn-link mt-3 w-100">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Cart
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <p class="text-center text-muted">Your cart is empty.</p>
+        <div class="text-center mt-3">
+            <a href="{{ url_for('public.home') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Continue Shopping
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
