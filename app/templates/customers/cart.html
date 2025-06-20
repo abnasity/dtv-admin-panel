@@ -1,0 +1,58 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}My Cart - Diamond Tree{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">My Cart</h2>
+
+    {% if cart_items %}
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Device</th>
+                    <th>IMEI</th>
+                    <th>RAM</th>
+                    <th>Storage</th>
+                    <th>Price</th>
+                    <th>Added</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.device.brand }} {{ item.device.model }}</td>
+                        <td>{{ item.device.imei }}</td>
+                        <td>{{ item.device.ram }}</td>
+                        <td>{{ item.device.storage }}</td>
+                        <td>Ksh {{ "%.2f"|format(item.device.sale_price or item.device.purchase_price) }}</td>
+                        <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('public.remove_from_cart', item_id=item.id) }}">
+                                {{ csrf_token() }}
+                                <button class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash-alt"></i> Remove
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="text-end">
+            <a href="{{ url_for('public.checkout') }}" class="btn btn-success">
+                <i class="fas fa-credit-card"></i> Proceed to Checkout
+            </a>
+        </div>
+    {% else %}
+        <p class="text-center text-muted">Your cart is empty.</p>
+        <div class="text-center mt-3">
+            <a href="{{ url_for('customers.dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Continue Shopping
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
