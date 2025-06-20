@@ -51,25 +51,35 @@ def add_to_cart(device_id):
     return redirect(request.referrer or url_for('public.home'))
 
 
-
-# CART VIEW
+# VIEW CART
 @bp.route('/cart')
+@login_required
 def view_cart():
-    cart_ids = session.get('cart', [])
-    products = Device.query.filter(Device.id.in_(cart_ids)).all()
-    return render_template('public/cart.html', products=products)
+    if not isinstance(current_user, Customer):
+        abort(403)
+
+    cart_items = CartItem.query.filter_by(customer_id=current_user.id).all()
+    return render_template('customers/cart.html', cart_items=cart_items)
+
 
 # REMOVE FROM CART
 @bp.route('/remove-from-cart/<int:device_id>', methods=['POST'])
 def remove_from_cart(device_id):
-    cart = session.get('cart', [])
-    if device_id in cart:
-        cart.remove(device_id)
-        session['cart'] = cart
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        CartItem.query.filter_by(customer_id=current_user.id, device_id=device_id).delete()
+        db.session.commit()
         flash("Item removed from cart.", "info")
     else:
-        flash("Item not found in cart.", "warning")
+        cart = session.get('cart', [])
+        if device_id in cart:
+            cart.remove(device_id)
+            session['cart'] = cart
+            flash("Item removed from cart.", "info")
+        else:
+            flash("Item not found in cart.", "warning")
+
     return redirect(url_for('public.view_cart'))
+
 
 # PROCEED TO CHECKOUT
 @bp.route('/checkout', methods=['GET', 'POST'])
@@ -79,22 +89,16 @@ def checkout():
         flash("Only customers can checkout.", "danger")
         return redirect(url_for('public.view_cart'))
 
-    cart_ids = session.get('cart', [])
-    if not cart_ids:
+    cart_items = CartItem.query.filter_by(customer_id=current_user.id).all()
+    if not cart_items:
         flash("Your cart is empty.", "info")
         return redirect(url_for('public.view_cart'))
 
-    devices = Device.query.filter(Device.id.in_(cart_ids)).all()
-    total_price = sum(float(d.sale_price or d.purchase_price) for d in devices)
+    devices = [Device.query.get(item.device_id) for item in cart_items]
+    total_price = sum(float(d.purchase_price) for d in devices if d)
     form = CheckoutForm()
 
-    return render_template(
-        'public/checkout.html',
-        products=devices,
-        total_price=total_price,
-        form=form
-    )
-
+    return render_template('public/checkout.html', products=devices, total_price=total_price, form=form)
 
 # PLACING AN ORDER
 @bp.route('/place_order', methods=['POST'])
@@ -104,17 +108,18 @@ def place_order():
         abort(403)
 
     form = CheckoutForm()
-
     if not form.validate_on_submit():
         flash("Please fill the form correctly.", "danger")
         return redirect(url_for('public.checkout'))
 
-    cart_ids = session.get('cart', [])
-    if not cart_ids:
+    cart_items = CartItem.query.filter_by(customer_id=current_user.id).all()
+    if not cart_items:
         flash("Your cart is empty.", "warning")
         return redirect(url_for('public.cart'))
 
-    devices = Device.query.filter(Device.id.in_(cart_ids), Device.status == 'available').all()
+    devices = [Device.query.get(item.device_id) for item in cart_items]
+    devices = [d for d in devices if d.status == 'available']
+
     if not devices:
         flash("No available devices found in your cart.", "danger")
         return redirect(url_for('public.cart'))
@@ -123,9 +128,6 @@ def place_order():
     amount_paid = float(form.amount_paid.data)
 
     for device in devices:
-        if device.status != 'available':
-            continue
-
         sale_price = float(device.sale_price or device.purchase_price)
         sale = Sale(
             device_id=device.id,
@@ -138,11 +140,12 @@ def place_order():
         device.mark_as_sold()
         db.session.add(sale)
 
+    # Clear user's DB cart
+    CartItem.query.filter_by(customer_id=current_user.id).delete()
+
     db.session.commit()
-    session.pop('cart', None)
     flash("Your order has been placed successfully!", "success")
     return redirect(url_for('public.order_success'))
-
 
 # SUCCESSFUL ORDER
 @bp.route('/order-success')
