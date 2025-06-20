@@ -20,13 +20,13 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ product.brand }} {{ product.model }}</h5>
                         <p class="card-text">
-                            <strong>Storage:</strong> {{ product.storage }}<br>
+                            
                             <strong>RAM:</strong> {{ product.ram }}<br>
-                            <strong>IMEI:</strong> {{ product.imei }}<br>
+                            <strong>Storage:</strong> {{ product.rom }}<br>
                             <strong>Price:</strong> Ksh {{ "%.2f"|format(product.sale_price or product.purchase_price) }}
                         </p>
                         <form method="POST" action="{{ url_for('public.add_to_cart', device_id=product.id) }}">
-                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="fas fa-cart-plus me-1"></i>Add to Cart
