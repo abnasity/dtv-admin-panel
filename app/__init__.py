@@ -2,9 +2,6 @@ from flask import Flask
 from config import Config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf
 from flask_wtf.csrf import generate_csrf
-    
-
-
 
 
 
@@ -40,7 +37,7 @@ def create_app(config_class=Config):
     # This makes {{ csrf_token() }} available in all templates.
     @app.context_processor
     def inject_csrf_token():
-     return dict(csrf_token=generate_csrf)
+     return dict(csrf_token=generate_csrf())
 
     # Import web route blueprints
     from app.routes.main import bp as main_bp
