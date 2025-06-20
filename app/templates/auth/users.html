@@ -254,7 +254,7 @@
             </div>
             <div class="modal-body">
                 <form id="editUserForm" method="POST" onsubmit="return handleEditSubmit(event)">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <input type="hidden" id="edit_user_id" name="user_id">
                     <div class="mb-3">
                         <label for="edit_username" class="form-label">Username*</label>
