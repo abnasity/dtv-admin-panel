@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from datetime import datetime
 from app.routes.public import bp
 from app.models import Device, CartItem, Customer, SaleItem, Sale
+from app.forms import CheckoutForm
 from app import db
 
 # PUBLIC ROUTE
@@ -28,17 +29,27 @@ def search():
 def add_to_cart(device_id):
     device = Device.query.get_or_404(device_id)
 
-    # Use session to hold cart if user not logged in
-    cart = session.get('cart', [])
-
-    if device_id in cart:
-        flash("Item already in cart.", "info")
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        # FIX: Filter by both device AND customer
+        exists = CartItem.query.filter_by(customer_id=current_user.id, device_id=device_id).first()
+        if exists:
+            flash("Item already in cart.", "info")
+        else:
+            db.session.add(CartItem(customer_id=current_user.id, device_id=device.id))
+            db.session.commit()
+            flash(f"{device.brand} {device.model} added to cart!", "success")
     else:
-        cart.append(device_id)
-        session['cart'] = cart  # Save updated cart to session
-        flash(f"{device.brand} {device.model} added to cart!", "success")
+        # Anonymous users - session-based cart
+        cart = session.get('cart', [])
+        if device_id in cart:
+            flash("Item already in cart.", "info")
+        else:
+            cart.append(device_id)
+            session['cart'] = cart
+            flash(f"{device.brand} {device.model} added to cart!", "success")
 
     return redirect(request.referrer or url_for('public.home'))
+
 
 
 # CART VIEW
@@ -74,16 +85,16 @@ def checkout():
         return redirect(url_for('public.view_cart'))
 
     devices = Device.query.filter(Device.id.in_(cart_ids)).all()
+    total_price = sum(float(d.sale_price or d.purchase_price) for d in devices)
+    form = CheckoutForm()
 
-    # Here you can convert the session cart into database records
-    for device in devices:
-        cart_item = CartItem(customer_id=current_user.id, device_id=device.id)
-        db.session.add(cart_item)
+    return render_template(
+        'public/checkout.html',
+        products=devices,
+        total_price=total_price,
+        form=form
+    )
 
-    db.session.commit()
-    session.pop('cart', None)  # Clear the session cart
-    flash("Checkout successful!", "success")
-    return redirect(url_for('customers.dashboard'))  # or a 'thank you' page
 
 # PLACING AN ORDER
 @bp.route('/place_order', methods=['POST'])
@@ -91,6 +102,12 @@ def checkout():
 def place_order():
     if not isinstance(current_user, Customer):
         abort(403)
+
+    form = CheckoutForm()
+
+    if not form.validate_on_submit():
+        flash("Please fill the form correctly.", "danger")
+        return redirect(url_for('public.checkout'))
 
     cart_ids = session.get('cart', [])
     if not cart_ids:
@@ -102,14 +119,8 @@ def place_order():
         flash("No available devices found in your cart.", "danger")
         return redirect(url_for('public.cart'))
 
-    try:
-        payment_type = request.form.get('payment_type')
-        amount_paid = float(request.form.get('amount_paid'))
-        if not payment_type or amount_paid < 0:
-            raise ValueError("Invalid payment data")
-    except (TypeError, ValueError):
-        flash("Please provide valid payment details.", "danger")
-        return redirect(url_for('public.checkout'))
+    payment_type = form.payment_type.data
+    amount_paid = float(form.amount_paid.data)
 
     for device in devices:
         if device.status != 'available':
@@ -122,16 +133,16 @@ def place_order():
             sale_price=sale_price,
             amount_paid=min(amount_paid, sale_price),
             payment_type=payment_type,
-            seller_id=None  # To be assigned by admin/staff later
+            seller_id=None
         )
-        device.mark_as_sold()  # Updates status and timestamp
+        device.mark_as_sold()
         db.session.add(sale)
 
     db.session.commit()
     session.pop('cart', None)
-
     flash("Your order has been placed successfully!", "success")
     return redirect(url_for('public.order_success'))
+
 
 # SUCCESSFUL ORDER
 @bp.route('/order-success')
