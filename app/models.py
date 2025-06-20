@@ -154,7 +154,7 @@ class Device(db.Model):
             'notes': self.notes
         }
     def __repr__(self):
-     return f"<Device {self.brand} {self.model} - IMEI: {self.imei}>"
+     return f"<Device {self.brand} {self.model}"
 
 # CARTITEM MODEL FOR DEVICES ONLY
 class CartItem(db.Model):
