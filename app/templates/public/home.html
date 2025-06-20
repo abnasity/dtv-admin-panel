@@ -9,8 +9,6 @@
         <small class="fw-light">Affordable Mobile Devices & Accessories</small>
     </div>
 
-   
-
     <!-- Category Filters -->
     <div class="mt-4 d-flex flex-wrap gap-2">
         {% for category in ['All', 'Phones', 'Accessories', 'Smart Devices', 'Wearables', 'TV & Audio'] %}
@@ -18,16 +16,28 @@
         {% endfor %}
     </div>
 
-    <!-- Placeholder Product Grid -->
+    <!-- Simulated Product Grid -->
     <div class="row mt-5">
         {% for i in range(6) %}
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
-                <img src="https://media.istockphoto.com/id/1316900406/photo/samsung-galaxy-a32-5g.jpg?s=1024x1024&w=is&k=20&c=GP0jSAEBc6AVOqS9tgHTP2ZabhC_vvWVzjznLmkJ60Q=" class="card-img-top" alt="Product Image">
+                <img src="https://source.unsplash.com/400x300/?smartphone,phone-{{ i }}" class="card-img-top" alt="Product Image">
                 <div class="card-body">
-                    <h5 class="card-title">Samsung A32</h5>
-                    <p class="card-text">High-quality device from Diamond Tree Ventures.</p>
-                    <span class="badge bg-success">Ksh 30,999</span>
+                    <h5 class="card-title">Device Model {{ i + 1 }}</h5>
+                    <p class="card-text">Premium smartphone with top-tier features.</p>
+                    <span class="badge bg-success mb-2">Ksh {{ 20000 + i * 2500 }}</span>
+
+                    {% if current_user.is_authenticated and current_user.is_customer() %}
+                        <form method="POST" action="#">
+                            <button type="submit" class="btn btn-sm btn-primary w-100" disabled>
+                                <i class="fas fa-cart-plus me-1"></i> Add to Cart (Demo)
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="{{ url_for('customers.login') }}"class="btn btn-sm btn-warning w-100">
+                            <i class="fas fa-lock me-1"></i> Login to Access Available Devices
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
