@@ -45,6 +45,12 @@ def login():
         return redirect(url_for('customers.dashboard'))
 
     form = CustomerLoginForm()
+
+    # ✅ Show flash message if redirected for device access
+    reason = request.args.get('reason')
+    if reason == 'access_devices':
+        flash("Please login to access available devices.", "warning")
+
     if form.validate_on_submit():
         customer = Customer.query.filter_by(email=form.email.data.lower()).first()
         if customer and customer.check_password(form.password.data):
@@ -53,7 +59,6 @@ def login():
             remember = getattr(form, 'remember_me', False)
             login_user(customer, remember=remember.data if remember else False)
            
-
             # ✅ Merge session cart (after login)
             cart = session.pop('cart', [])
             for device_id in cart:
@@ -64,17 +69,21 @@ def login():
 
             next_page = request.args.get('next')
             return redirect(next_page or url_for('customers.dashboard'))
+
         flash('Invalid email or password.', 'danger')
 
     return render_template('customers/login.html', form=form)
+
 
 # LOGOUT
 @bp.route('/logout')
 @login_required
 def logout():
     logout_user()
+    session.clear()  # 🔒 optional but safe
     flash('You have been logged out.', 'info')
-    return redirect(url_for('customers.login'))
+    return redirect(url_for('public.home'))
+   
 
 # ACCOUNT STATUS TOGGLE
 # This route allows toggling the account status (active/inactive)
