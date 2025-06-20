@@ -1,7 +1,11 @@
 from flask import Flask
 from config import Config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf
+from flask_wtf.csrf import generate_csrf
     
+
+
+
 
 
 
@@ -26,11 +30,17 @@ def create_app(config_class=Config):
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'info'
 
-    # Add template context processor for current date
+    #CONTEXT PROCESSORS 
+    # Add template context processor for current date   
     @app.context_processor
     def inject_now():
         from datetime import datetime
         return {'now': datetime.utcnow()}
+    
+    # This makes {{ csrf_token() }} available in all templates.
+    @app.context_processor
+    def inject_csrf_token():
+     return dict(csrf_token=generate_csrf)
 
     # Import web route blueprints
     from app.routes.main import bp as main_bp
