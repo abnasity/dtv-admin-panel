@@ -138,11 +138,18 @@
 <!-- END PUBLIC USER ACCOUNT CREATION -->
 
 
-                    <li>
-                    <a class="nav-link hover-effect" href="{{ url_for('customers.login')}}">
-                            <i class="fas fa-shopping-cart me-1"></i>Cart
-                        </a>
+                   <li>
+                        {% if current_user.is_authenticated and current_user.is_customer() %}
+                            <a class="nav-link hover-effect" href="{{ url_for('customers.view_cart') }}">
+                            <i class="fas fa-shopping-cart me-1"></i> Cart
+                            </a>
+                        {% else %}
+                            <a class="nav-link hover-effect" href="{{ url_for('customers.login', next=url_for('customers.view_cart'), reason='access_devices') }}">
+                            <i class="fas fa-shopping-cart me-1"></i> Cart
+                            </a>
+                        {% endif %}
                     </li>
+
                    
                 {% endif %}
 
