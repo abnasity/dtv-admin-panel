@@ -50,7 +50,9 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
             'created_at': self.created_at.isoformat(),
             'last_seen': self.last_seen.isoformat()
         }
-   
+    def __repr__(self):
+        return f"<User {self.username} ({self.role})>"
+
         
         
 # CUSTOMERS MODEL
@@ -102,6 +104,8 @@ class Customer(UserMixin, db.Model):
             'role': self.role,
             'is_active': self.is_active
         }
+    def __repr__(self):
+        return f"<Customer {self.full_name} ({self.email})>"
     
         
 #  DEVICE MODEL
@@ -149,7 +153,9 @@ class Device(db.Model):
             'modified_at': self.modified_at.isoformat(),
             'notes': self.notes
         }
-        
+    def __repr__(self):
+     return f"<Device {self.brand} {self.model} - IMEI: {self.imei}>"
+
 # CARTITEM MODEL FOR DEVICES ONLY
 class CartItem(db.Model):
     __tablename__ = 'cart_items'
@@ -199,6 +205,9 @@ class Product(db.Model):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
+    def __repr__(self):
+     return f"<Product {self.name} (SKU: {self.sku})>"
+
 
 # INVENTORY TRANSACTION MODEL
 # This model tracks all inventory transactions for products, including purchases, sales, adjustments, and stock movements.
@@ -222,6 +231,9 @@ class InventoryTransaction(db.Model):
             'quantity': self.quantity,
             'timestamp': self.timestamp.isoformat()
         }
+    def __repr__(self):
+     return f"<InventoryTransaction {self.type} - Product ID: {self.product_id}, Qty: {self.quantity}>"
+
     
 # PURCHASE ORDER MODEL
 # This model represents purchase orders made to suppliers for products.
@@ -250,7 +262,9 @@ class PurchaseOrder(db.Model):
             'created_at': self.created_at.isoformat(),
             'items': self.items_to_dict()
         }
-    
+    def __repr__(self):
+     return f"<PurchaseOrder {self.id} - Supplier: {self.supplier}, Status: {self.status}>"
+
    
     # PURCHASE ORDER ITEM MODEL
 # This model represents items in purchase orders, linking products to purchase orders.
@@ -272,7 +286,10 @@ class  PurchaseOrderItem(db.Model):
             'purchase_order_id': self.purchase_order_id,
             'quantity': self.quantity,
             'unit_cost': str(self.unit_cost)
-        } 
+        }
+    def __repr__(self):
+     return f"<PurchaseOrderItem Product ID: {self.product_id}, Qty: {self.quantity}>"
+
 
 # SALE MODEL FOR DEVICES ONLY
 # This model tracks sales of devices, linking them to the device and seller.
@@ -326,6 +343,9 @@ class Sale(db.Model):
             'modified_at': self.modified_at.isoformat(),
             'notes': self.notes
         }
+    def __repr__(self):
+     return f"<Sale ID: {self.id} - Device ID: {self.device_id} - Seller ID: {self.seller_id}>"
+
         
 # SALE ITEM MODEL 
 # meant for product-based (non-IMEI) sales
@@ -349,6 +369,8 @@ class SaleItem(db.Model):
             'unit_price': str(self.unit_price),
             'sold_at': self.sold_at.isoformat()
         }
+    def __repr__(self):
+     return f"<SaleItem Product ID: {self.product_id}, Qty: {self.quantity}>"
 
         
 # ALERT MODEL
@@ -372,6 +394,10 @@ class Alert(db.Model):
             'triggered_at': self.triggered_at.isoformat(),
             'status': self.status           
         }
+        
+    def __repr__(self):
+         return f"<Alert Product ID: {self.product_id}, Type: {self.type}, Status: {self.status}>" 
+
 @login_manager.user_loader
 def load_user(user_id):
     """Flask-Login user loader callback for multiple user types"""
