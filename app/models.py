@@ -36,6 +36,9 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
         """Check if user has admin role"""
         return str(self.role).lower() == 'admin'
     
+    def is_customer(self):
+        return False
+    
     def get_id(self):
       return f'user-{self.id}'
     
