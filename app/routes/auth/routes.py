@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db
 from app.models import User
@@ -88,7 +88,13 @@ def users():
 @bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
+    
+       
     form = ProfileForm(current_user.username, current_user.email)
+    
+    if not isinstance(current_user, User):
+        abort(403, message="Access denied: only authenticated users can access this page.")
+        redirect(url_for('customers.login'))
     
     if form.validate_on_submit():
         if form.current_password.data and not current_user.check_password(form.current_password.data):
