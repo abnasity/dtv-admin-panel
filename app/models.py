@@ -36,6 +36,9 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
         """Check if user has admin role"""
         return str(self.role).lower() == 'admin'
     
+    def get_id(self):
+      return f'user-{self.id}'
+    
     def to_dict(self):
         """Convert user object to dictionary for API responses"""
         return {
@@ -47,7 +50,7 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
             'created_at': self.created_at.isoformat(),
             'last_seen': self.last_seen.isoformat()
         }
-        
+   
         
         
 # CUSTOMERS MODEL
@@ -99,8 +102,7 @@ class Customer(UserMixin, db.Model):
             'role': self.role,
             'is_active': self.is_active
         }
-
-
+    
         
 #  DEVICE MODEL
 class Device(db.Model):
@@ -148,7 +150,21 @@ class Device(db.Model):
             'notes': self.notes
         }
         
+# CARTITEM MODEL FOR DEVICES ONLY
+class CartItem(db.Model):
+    __tablename__ = 'cart_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
+    customer = db.relationship('Customer', backref='cart_items')
+    device = db.relationship('Device')
+
+    def __repr__(self):
+        return f"<CartItem customer={self.customer_id} device={self.device_id}>"
 
 
 # PRODUCT MODEL
@@ -358,6 +374,10 @@ class Alert(db.Model):
         }
 @login_manager.user_loader
 def load_user(user_id):
-    """Flask-Login user loader callback"""
-    return User.query.get(int(user_id))
+    """Flask-Login user loader callback for multiple user types"""
+    if user_id.startswith("user-"):
+        return User.query.get(int(user_id.replace("user-", "")))
+    elif user_id.startswith("customer-"):
+        return Customer.query.get(int(user_id.replace("customer-", "")))
+    return None
 
