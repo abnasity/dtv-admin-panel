@@ -8,7 +8,7 @@
 
     {% if products %}
         <form method="POST" action="{{ url_for('public.place_order') }}">
-            {{ csrf_token() }}
+            {{ csrf_token }}
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
@@ -30,7 +30,7 @@
                             <td>Ksh {{ "%.2f"|format(device.sale_price or device.purchase_price) }}</td>
                             <td>
                                 <form method="POST" action="{{ url_for('public.remove_from_cart', device_id=device.id) }}">
-                                    {{ csrf_token() }}
+                                    {{ csrf_token }}
                                     <button class="btn btn-sm btn-danger">
                                         <i class="fas fa-trash-alt"></i> Remove
                                     </button>
