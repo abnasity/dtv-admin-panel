@@ -1,11 +1,13 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db
-from app.models import User
+from app.models import User, CustomerOrder
 from app.forms import LoginForm, ProfileForm, RegisterForm
 from app.decorators  import admin_required
 from app.routes.auth import bp
+from datetime import datetime
 
+# LOGIN
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -32,6 +34,7 @@ def login():
     return render_template('auth/login.html', form=form)
 
 
+# LOGOUT
 @bp.route('/logout')
 @login_required
 def logout():
@@ -39,6 +42,7 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.login'))
 
+# USER MANAGEMENT
 @bp.route('/users')
 @login_required
 @admin_required
@@ -84,7 +88,8 @@ def users():
                          status_filter=status_filter,
                          form=form)
     
-    
+  
+# PROFILE MANAGEMENT   
 @bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -121,6 +126,7 @@ def profile():
     
     return render_template('auth/profile.html', form=form)
 
+# CREATE USER
 @bp.route('/users/create', methods=['POST'])
 @login_required
 @admin_required
@@ -145,6 +151,7 @@ def create_user():
     
     return redirect(url_for('auth.users'))
 
+# TOGGLE USER STATUS
 @bp.route('/users/<int:user_id>/toggle_status', methods=['POST'])
 @login_required
 @admin_required
@@ -166,6 +173,7 @@ def toggle_user_status(user_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': 'Database error occurred'})
 
+# GET USER DATA FOR EDITING
 @bp.route('/users/<int:user_id>', methods=['GET'])
 @login_required
 @admin_required
@@ -179,6 +187,7 @@ def get_user(user_id):
         'role': user.role
     })
 
+# BULK USER STATUS UPDATE
 @bp.route('/users/bulk_status', methods=['POST'])
 @login_required
 @admin_required
@@ -216,6 +225,7 @@ def bulk_update_status():
             'error': f'Database error: {str(e)}'
         }), 500
 
+# EDIT USER
 @bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -279,3 +289,70 @@ def edit_user(user_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+
+# CUSTOMER ORDER MANAGEMENT
+# # ADMIN ORDER APPROVAL  
+@bp.route('/admin/approve-order/<int:order_id>', methods=['POST'])
+@login_required
+@admin_required
+def approve_order(order_id):
+    if not current_user.is_admin():
+        abort(403)
+
+    order = CustomerOrder.query.get_or_404(order_id)
+
+    # Mark devices as sold and update order status
+    for item in order.items:
+        if item.device.status != 'available':
+            flash(f"Device {item.device.imei} is already sold.", "danger")
+            return redirect(url_for('admin.view_order', order_id=order.id))
+
+        item.device.mark_as_sold()
+
+    order.status = 'approved'
+    order.approved_by_id = current_user.id
+    order.approved_at = datetime.utcnow()
+    db.session.commit()
+
+    flash("Order approved and devices marked as sold.", "success")
+    return redirect(url_for('admin.view_orders'))
+
+
+# ADMIN ORDERS
+@bp.route('/admin/orders')
+@login_required
+@admin_required
+def view_orders():
+    orders = CustomerOrder.query.order_by(CustomerOrder.created_at.desc()).all()
+    return render_template('admin/orders.html', orders=orders)
+
+# SINGLE ORDER VIEW
+@bp.route('/admin/order/<int:order_id>')
+@login_required
+@admin_required
+def view_order(order_id):
+    order = CustomerOrder.query.get_or_404(order_id)
+    return render_template('admin/order_detail.html', order=order)
+
+# ADMIN CANCEL ORDER
+@bp.route('/admin/orders/<int:order_id>/cancel', methods=['POST'])
+@login_required
+@admin_required
+def cancel_order(order_id):
+    order = CustomerOrder.query.get_or_404(order_id)
+
+    if order.status != 'pending':
+        flash("Only pending orders can be cancelled.", "warning")
+        return redirect(url_for('admin.view_order', order_id=order.id))
+
+    # Set status to 'cancelled'
+    order.status = 'cancelled'
+    order.approved_by_id = current_user.id
+    order.approved_at = datetime.utcnow()
+    order.notes = "Cancelled by admin"
+
+    db.session.commit()
+
+    flash("Order has been cancelled successfully.", "success")
+    return redirect(url_for('admin.view_orders'))
