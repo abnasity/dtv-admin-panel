@@ -11,9 +11,8 @@
             <thead class="table-light">
                 <tr>
                     <th>Device</th>
-                    <th>IMEI</th>
                     <th>RAM</th>
-                    <th>Storage</th>
+                    <th>ROM</th>
                     <th>Price</th>
                     <th>Added</th>
                     <th>Action</th>
@@ -22,19 +21,25 @@
             <tbody>
                 {% for item in cart_items %}
                     <tr>
-                        <td>{{ item.device.brand }} {{ item.device.model }}</td>
-                        <td>{{ item.device.imei }}</td>
+                        <td>{{ item.device.brand }} {{ item.device.model }}</td>                      
                         <td>{{ item.device.ram }}</td>
-                        <td>{{ item.device.storage }}</td>
+                        <td>{{ item.device.rom  }}</td>
                         <td>Ksh {{ "%.2f"|format(item.device.sale_price or item.device.purchase_price) }}</td>
                         <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td>
-                            <form method="POST" action="{{ url_for('customers.remove_from_cart', device_id=item.device.id) }}">
-                                {{ csrf_token }}
-                                <button class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash-alt"></i> Remove
-                                </button>
-                            </form>
+                        
+
+                      
+
+                        <form method="POST" action="{{ url_for('customers.remove_from_cart', device_id=item.device.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash-alt"></i> Remove
+                        </button>
+                        </form>
+
+
+
                         </td>
                     </tr>
                 {% endfor %}
