@@ -375,6 +375,51 @@ class SaleItem(db.Model):
         }
     def __repr__(self):
      return f"<SaleItem Product ID: {self.product_id}, Qty: {self.quantity}>"
+ 
+#  CUSTOMERORDER MODEL
+# This model represents customer orders, which can include multiple products.
+class CustomerOrder(db.Model):
+    __tablename__ = 'customer_orders'
+
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete='CASCADE'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected, completed
+    
+    def to_dict(self):              
+        """Convert customer order object to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'customer_id': self.customer_id,
+            'created_at': self.created_at.isoformat(),
+            'status': self.status,
+            'items': [item.to_dict() for item in self.items]
+        }
+    def __repr__(self):
+        return f"<CustomerOrder ID: {self.id} - Customer ID: {self.customer_id} - Status: {self.status}>"
+    
+# CUSTOMER ORDER ITEM MODEL
+# This model represents items in customer orders, linking products to customer orders.
+class CustomerOrderItem(db.Model):
+    __tablename__ = 'customer_order_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False)
+    customer_order_id = db.Column(db.Integer, db.ForeignKey('customer_orders.id', ondelete='CASCADE'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(db.Numeric(12, 2), nullable=False)  # Price at the time of order
+    
+    def to_dict(self):
+        """Convert customer order item object to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'product_id': self.product_id,
+            'customer_order_id': self.customer_order_id,
+            'quantity': self.quantity,
+            'unit_price': str(self.unit_price)
+        }
+    def __repr__(self):
+     return f"<CustomerOrderItem Product ID: {self.product_id}, Qty: {self.quantity}>"
 
         
 # ALERT MODEL
