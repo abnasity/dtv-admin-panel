@@ -176,50 +176,43 @@ def view_cart():
 # The user is a customer
 # ADD TO CART
 @bp.route('/add-to-cart/<int:device_id>', methods=['POST'])
+@login_required
 def add_to_cart(device_id):
+    if not isinstance(current_user, Customer):
+        abort(403)
+
     device = Device.query.get_or_404(device_id)
 
-    if current_user.is_authenticated and isinstance(current_user, Customer):
-        # FIX: Filter by both device AND customer
-        exists = CartItem.query.filter_by(customer_id=current_user.id, device_id=device_id).first()
-        if exists:
-            flash("Item already in cart.", "info")
-        else:
-            db.session.add(CartItem(customer_id=current_user.id, device_id=device.id))
-            db.session.commit()
-            flash(f"{device.brand} {device.model} added to cart!", "success")
+    # Check if item already exists in cart
+    cart_item = CartItem.query.filter_by(customer_id=current_user.id, device_id=device.id).first()
+    if cart_item:
+        flash("Item already in cart.", "info")
     else:
-        # Anonymous users - session-based cart
-        cart = session.get('cart', [])
-        if device_id in cart:
-            flash("Item already in cart.", "info")
-        else:
-            cart.append(device_id)
-            session['cart'] = cart
-            flash(f"{device.brand} {device.model} added to cart!", "success")
+        new_item = CartItem(customer_id=current_user.id, device_id=device.id)
+        db.session.add(new_item)
+        flash(f"{device.brand} {device.model} added to cart!", "success")
 
-    return redirect(request.referrer or url_for('public.home'))
+    db.session.commit()
+    return redirect(request.referrer or url_for('customers.dashboard'))
+
+
 
 
 
 
 # REMOVE FROM CART
 @bp.route('/remove-from-cart/<int:device_id>', methods=['POST'])
+@login_required
 def remove_from_cart(device_id):
-    if current_user.is_authenticated and isinstance(current_user, Customer):
+    if isinstance(current_user, Customer):
         CartItem.query.filter_by(customer_id=current_user.id, device_id=device_id).delete()
         db.session.commit()
         flash("Item removed from cart.", "info")
     else:
-        cart = session.get('cart', [])
-        if device_id in cart:
-            cart.remove(device_id)
-            session['cart'] = cart
-            flash("Item removed from cart.", "info")
-        else:
-            flash("Item not found in cart.", "warning")
+        flash("Unauthorized access.", "danger")
 
     return redirect(url_for('customers.view_cart'))
+
 
 
 # PROCEED TO CHECKOUT
