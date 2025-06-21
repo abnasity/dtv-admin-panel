@@ -385,22 +385,33 @@ class CustomerOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete='CASCADE'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(20), default='pending')  # pending, approved, etc.
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'approved', 'cancelled', 'rejected'
+    approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
+    notes = db.Column(db.Text)
 
-    # Relationship to items
+# relationships
+    customer = db.relationship('Customer', backref='orders')
     items = db.relationship('CustomerOrderItem', backref='order', cascade='all, delete-orphan')
+    approved_by = db.relationship('User', foreign_keys=[approved_by_id])
 
-    def to_dict(self):              
+    def is_pending(self):
+        return self.status == 'pending'
+
+    def to_dict(self):
         return {
             'id': self.id,
             'customer_id': self.customer_id,
             'created_at': self.created_at.isoformat(),
             'status': self.status,
-            'items': [item.to_dict() for item in self.items]
+            'approved_by': self.approved_by.to_dict() if self.approved_by else None,
+            'approved_at': self.approved_at.isoformat() if self.approved_at else None,
+            'items': [item.to_dict() for item in self.items],
+            'notes': self.notes
         }
 
     def __repr__(self):
-        return f"<CustomerOrder ID: {self.id} - Customer ID: {self.customer_id} - Status: {self.status}>"
+        return f"<CustomerOrder ID: {self.id} - Status: {self.status}>"
 
     
 # CUSTOMER ORDER ITEM MODEL
