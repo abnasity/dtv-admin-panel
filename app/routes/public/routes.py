@@ -2,7 +2,7 @@ from flask import render_template, request, session, url_for, flash, redirect, a
 from flask_login import login_required, current_user
 from datetime import datetime
 from app.routes.public import bp
-from app.models import Device, CartItem, Customer, SaleItem, Sale
+from app.models import Device, CartItem, Customer, Sale
 from app.forms import CheckoutForm
 from app import db
 
@@ -128,7 +128,7 @@ def place_order():
     amount_paid = float(form.amount_paid.data)
 
     for device in devices:
-        sale_price = float(device.sale_price or device.purchase_price)
+        sale_price = float(device.purchase_price)
         sale = Sale(
             device_id=device.id,
             customer_id=current_user.id,
