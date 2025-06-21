@@ -1,0 +1,47 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<h2>Customer Orders</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.customer.full_name }}</td>
+            <td>{{ order.status }}</td>
+            <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+                <a href="{{ url_for('auth.view_order', order_id=order.id) }}" class="btn btn-primary btn-sm">View</a>
+                {% if order.status == 'pending' %}
+                <form method="POST" action="{{ url_for('auth.approve_order', order_id=order.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button class="btn btn-success btn-sm">Approve</button>
+                </form>
+                {% endif %}
+
+               
+
+                {% if order.status == 'pending' %}
+                <form method="POST" action="{{ url_for('auth.cancel_order', order_id=order.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this order?');">
+                    Cancel
+                </button>
+            </form>
+              {% endif %}
+
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
