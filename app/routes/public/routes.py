@@ -2,7 +2,7 @@ from flask import render_template, request, session, url_for, flash, redirect, a
 from flask_login import login_required, current_user
 from datetime import datetime
 from app.routes.public import bp
-from app.models import Device, CartItem, Customer, Sale
+from app.models import Device, CartItem, Customer, CustomerOrder, CustomerOrderItem
 from app.forms import CheckoutForm
 from app import db
 
@@ -117,35 +117,32 @@ def place_order():
         flash("Your cart is empty.", "warning")
         return redirect(url_for('public.cart'))
 
-    devices = [Device.query.get(item.device_id) for item in cart_items]
-    devices = [d for d in devices if d.status == 'available']
+    # Create order
+    order = CustomerOrder(customer_id=current_user.id)
+    db.session.add(order)
+    db.session.flush()  # get order.id before committing
 
-    if not devices:
-        flash("No available devices found in your cart.", "danger")
-        return redirect(url_for('public.cart'))
-
-    payment_type = form.payment_type.data
-    amount_paid = float(form.amount_paid.data)
-
-    for device in devices:
-        sale_price = float(device.purchase_price)
-        sale = Sale(
-            device_id=device.id,
-            customer_id=current_user.id,
-            sale_price=sale_price,
-            amount_paid=min(amount_paid, sale_price),
-            payment_type=payment_type,
-            seller_id=None
-        )
+    for item in cart_items:
+        device = Device.query.get(item.device_id)
+        if not device or device.status != 'available':
+            continue
+        
         device.mark_as_sold()
-        db.session.add(sale)
 
-    # Clear user's DB cart
+        order_item = CustomerOrderItem(
+            customer_order_id=order.id,
+            device_id=device.id,
+            unit_price=device.purchase_price  # or sale_price if you have it
+        )
+        db.session.add(order_item)
+
+    # Clear cart
     CartItem.query.filter_by(customer_id=current_user.id).delete()
 
     db.session.commit()
     flash("Your order has been placed successfully!", "success")
     return redirect(url_for('public.order_success'))
+
 
 # SUCCESSFUL ORDER
 @bp.route('/order-success')
