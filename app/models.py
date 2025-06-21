@@ -3,6 +3,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db 
 from app import bcrypt, login_manager
+from sqlalchemy import text
 
 # USERS MODEL
 # This model represents both admin and staff users in the system.
@@ -166,7 +167,7 @@ class CartItem(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
-    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)   
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
