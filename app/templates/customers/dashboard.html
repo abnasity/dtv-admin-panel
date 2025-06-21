@@ -25,7 +25,7 @@
                             <strong>Storage:</strong> {{ product.rom }}<br>
                             <strong>Price:</strong> Ksh {{ "%.2f"|format(product.sale_price or product.purchase_price) }}
                         </p>
-                        <form method="POST" action="{{ url_for('public.add_to_cart', device_id=product.id) }}">
+                        <form method="POST" action="{{ url_for('customers.add_to_cart', device_id=product.id) }}">
                           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
                             <button type="submit" class="btn btn-primary w-100">
