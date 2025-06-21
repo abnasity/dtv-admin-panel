@@ -29,7 +29,7 @@
                         <td>Ksh {{ "%.2f"|format(item.device.sale_price or item.device.purchase_price) }}</td>
                         <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td>
-                            <form method="POST" action="{{ url_for('public.remove_from_cart', device_id=item.device.id) }}">
+                            <form method="POST" action="{{ url_for('customers.remove_from_cart', device_id=item.device.id) }}">
                                 {{ csrf_token }}
                                 <button class="btn btn-sm btn-danger">
                                     <i class="fas fa-trash-alt"></i> Remove
@@ -41,8 +41,14 @@
             </tbody>
         </table>
 
+        <div class="text-start">
+            <a href="{{ url_for('customers.dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Continue Shopping
+            </a>
+        </div>
+
         <div class="text-end">
-            <a href="{{ url_for('public.checkout') }}" class="btn btn-success">
+            <a href="{{ url_for('customers.checkout') }}" class="btn btn-success">
                 <i class="fas fa-credit-card"></i> Proceed to Checkout
             </a>
         </div>
