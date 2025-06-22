@@ -39,6 +39,17 @@
             </form>
               {% endif %}
 
+              {% if order.status in ['approved', 'cancelled'] %}
+                    <form method="POST" action="{{ url_for('auth.delete_order', order_id=order.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button class="btn btn-outline-danger btn-sm"
+                                onclick="return confirm('Delete this order permanently?');">
+                            <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                    </form>
+             {% endif %}
+
+
             </td>
         </tr>
     {% endfor %}
