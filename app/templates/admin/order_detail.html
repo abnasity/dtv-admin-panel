@@ -4,6 +4,7 @@
 <p><strong>Customer:</strong> {{ order.customer.full_name }}</p>
 <p><strong>Status:</strong> {{ order.status }}</p>
 <p><strong>Created At:</strong> {{ order.created_at }}</p>
+<p><strong>Delivery Address:</strong> {{ order.delivery_address }}</p>
 
 <h4>Ordered Devices</h4>
 <table class="table">
@@ -22,7 +23,7 @@
             <td>{{ item.device.imei }}</td>
             <td>{{ item.device.brand }}</td>
             <td>{{ item.device.model }}</td>
-            <td>KES {{ item.unit_price }}</td>
+            <td>KES {{ item.device.unit_price }}</td>
             <td>{{ item.device.status }}</td>
         </tr>
     {% endfor %}
@@ -34,6 +35,12 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <button class="btn btn-success">Approve Order</button>
 </form>
+
+<div class="text-center mt-3">
+            <a href="{{ url_for('auth.view_orders') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Customer Orders
+            </a>
+</div>
 {% endif %}
 
 {% endblock %}
