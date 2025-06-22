@@ -74,7 +74,22 @@
                                 <i class="fas fa-users me-1"></i>Users
                             </a>
                         </li>
-                        <li><a href="{{ url_for('auth.view_orders') }}">Customer Orders</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link hover-effect" href="{{ url_for('auth.view_orders') }}">
+                             <i class="fas fa-shopping-bag me-1"></i>Customer Orders
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.pending_orders') }}">
+                            <i class="fas fa-hourglass-half me-1"></i>Pending Orders
+                        </a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.approved_orders') }}">
+                            <i class="fas fa-check-circle me-1"></i>Approved Orders
+                        </a>
+                        </li>
+
 
                     {% endif %}
 
