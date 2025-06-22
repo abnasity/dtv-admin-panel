@@ -14,6 +14,7 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    address = db.Column(db.String(255), nullable=True)
     password_hash = db.Column(db.String(128))
     role = db.Column(db.String(20), nullable=False, default='staff')  # 'admin' or 'staff'
     is_active = db.Column(db.Boolean, default=True)
@@ -32,7 +33,8 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
     def check_password(self, password):
         """Verify password against hash using bcrypt"""
         return bcrypt.check_password_hash(self.password_hash, password)
-
+    def is_staff(self):
+        return self.role == 'staff'
     def is_admin(self):
         """Check if user has admin role"""
         return str(self.role).lower() == 'admin'
@@ -69,7 +71,8 @@ class Customer(UserMixin, db.Model):
     full_name = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(20), nullable=True)
     address = db.Column(db.String(255), nullable=True)
-   
+    # Customer-specific
+    delivery_address = db.Column(db.String(255), nullable=True)
 
     role = db.Column(db.String(20), nullable=False, default='customer')
     is_active = db.Column(db.Boolean, default=True)
@@ -104,6 +107,7 @@ class Customer(UserMixin, db.Model):
             'email': self.email,
             'phone_number': self.phone_number,
             'address': self.address,
+            'delivery_address' : self.delivery_address,
             'created_at': self.created_at.isoformat(),
             'last_seen': self.last_seen.isoformat(),
             'role': self.role,
@@ -388,6 +392,7 @@ class CustomerOrder(db.Model):
     status = db.Column(db.String(20), default='pending')  # 'pending', 'approved', 'cancelled', 'rejected'
     approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     approved_at = db.Column(db.DateTime, nullable=True)
+    delivery_address = db.Column(db.String(255))
     notes = db.Column(db.Text)
 
 # relationships
@@ -406,6 +411,7 @@ class CustomerOrder(db.Model):
             'status': self.status,
             'approved_by': self.approved_by.to_dict() if self.approved_by else None,
             'approved_at': self.approved_at.isoformat() if self.approved_at else None,
+            'delivery_address' : self.delivery_address,
             'items': [item.to_dict() for item in self.items],
             'notes': self.notes
         }
