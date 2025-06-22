@@ -251,11 +251,17 @@ def place_order():
         flash("Your cart is empty.", "warning")
         return redirect(url_for('customers.cart'))
 
-    # Create order
-    order = CustomerOrder(customer_id=current_user.id)
+    # Create order with delivery address
+    order = CustomerOrder(
+        customer_id=current_user.id,
+        delivery_address=form.delivery_address.data,
+        status='pending',
+        created_at=datetime.utcnow()
+    )
     db.session.add(order)
     db.session.flush()  # get order.id before committing
 
+    # Add each item to the order
     for item in cart_items:
         device = Device.query.get(item.device_id)
         if not device or device.status != 'available':
@@ -266,11 +272,11 @@ def place_order():
         order_item = CustomerOrderItem(
             customer_order_id=order.id,
             device_id=device.id,
-            unit_price=device.purchase_price  # or sale_price if you have it
+            unit_price=device.purchase_price
         )
         db.session.add(order_item)
 
-    # Clear cart
+    # ✅ Clear cart
     CartItem.query.filter_by(customer_id=current_user.id).delete()
 
     db.session.commit()
