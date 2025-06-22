@@ -214,4 +214,8 @@ class CheckoutForm(FlaskForm):
         validators=[DataRequired(), NumberRange(min=0)],
         places=2
     )
+    delivery_address = StringField(
+        'Delivery Address',
+        validators=[DataRequired(), Length(min=5, max=255)]
+    )
     submit = SubmitField('Confirm Order')
