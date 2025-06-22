@@ -33,6 +33,43 @@ def login():
             
     return render_template('auth/login.html', form=form)
 
+# PROFILE MANAGEMENT   
+@bp.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    
+       
+    form = ProfileForm(current_user.username, current_user.email)
+    
+    if not isinstance(current_user, User):
+        abort(403, message="Access denied: only authenticated users can access this page.")
+        redirect(url_for('customers.login'))
+    
+    if form.validate_on_submit():
+        if form.current_password.data and not current_user.check_password(form.current_password.data):
+            flash('Current password is incorrect', 'danger')
+            return render_template('auth/profile.html', form=form)
+        
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        
+        if form.new_password.data:
+            if form.new_password.data != form.confirm_password.data:
+                flash('New passwords do not match', 'danger')
+                return render_template('auth/profile.html', form=form)
+            current_user.set_password(form.new_password.data)
+        
+        db.session.commit()
+        flash('Your profile has been updated', 'success')
+        return redirect(url_for('auth.profile'))
+    
+    # Pre-populate form with current data
+    if request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+    
+    return render_template('auth/profile.html', form=form)
+
 
 # LOGOUT
 @bp.route('/logout')
@@ -42,6 +79,8 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.login'))
 
+
+# ADMIN DASHBOARD
 # USER MANAGEMENT
 @bp.route('/users')
 @login_required
@@ -89,42 +128,7 @@ def users():
                          form=form)
     
   
-# PROFILE MANAGEMENT   
-@bp.route('/profile', methods=['GET', 'POST'])
-@login_required
-def profile():
-    
-       
-    form = ProfileForm(current_user.username, current_user.email)
-    
-    if not isinstance(current_user, User):
-        abort(403, message="Access denied: only authenticated users can access this page.")
-        redirect(url_for('customers.login'))
-    
-    if form.validate_on_submit():
-        if form.current_password.data and not current_user.check_password(form.current_password.data):
-            flash('Current password is incorrect', 'danger')
-            return render_template('auth/profile.html', form=form)
-        
-        current_user.username = form.username.data
-        current_user.email = form.email.data
-        
-        if form.new_password.data:
-            if form.new_password.data != form.confirm_password.data:
-                flash('New passwords do not match', 'danger')
-                return render_template('auth/profile.html', form=form)
-            current_user.set_password(form.new_password.data)
-        
-        db.session.commit()
-        flash('Your profile has been updated', 'success')
-        return redirect(url_for('auth.profile'))
-    
-    # Pre-populate form with current data
-    if request.method == 'GET':
-        form.username.data = current_user.username
-        form.email.data = current_user.email
-    
-    return render_template('auth/profile.html', form=form)
+
 
 # CREATE USER
 @bp.route('/users/create', methods=['POST'])
@@ -291,7 +295,7 @@ def edit_user(user_id):
         return jsonify({'success': False, 'error': str(e)}), 500
     
 
-# CUSTOMER ORDER MANAGEMENT
+# CUSTOMER MANAGEMENT (ADMIN DASHBOARD)
 # # ADMIN ORDER APPROVAL  
 @bp.route('/admin/approve-order/<int:order_id>', methods=['POST'])
 @login_required
@@ -306,7 +310,7 @@ def approve_order(order_id):
     for item in order.items:
         if item.device.status != 'available':
             flash(f"Device {item.device.imei} is already sold.", "danger")
-            return redirect(url_for('admin.view_order', order_id=order.id))
+            return redirect(url_for('auth.view_order', order_id=order.id))
 
         item.device.mark_as_sold()
 
@@ -316,10 +320,10 @@ def approve_order(order_id):
     db.session.commit()
 
     flash("Order approved and devices marked as sold.", "success")
-    return redirect(url_for('admin.view_orders'))
+    return redirect(url_for('auth.view_orders'))
 
 
-# ADMIN ORDERS
+# CUSTOMER ORDERS 
 @bp.route('/admin/orders')
 @login_required
 @admin_required
@@ -344,7 +348,7 @@ def cancel_order(order_id):
 
     if order.status != 'pending':
         flash("Only pending orders can be cancelled.", "warning")
-        return redirect(url_for('admin.view_order', order_id=order.id))
+        return redirect(url_for('auth.view_order', order_id=order.id))
 
     # Set status to 'cancelled'
     order.status = 'cancelled'
@@ -355,4 +359,37 @@ def cancel_order(order_id):
     db.session.commit()
 
     flash("Order has been cancelled successfully.", "success")
-    return redirect(url_for('admin.view_orders'))
+    return redirect(url_for('auth.view_orders'))
+
+# ADMIN DELETE ORDER
+@bp.route('/admin/orders/<int:order_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_order(order_id):
+    order = CustomerOrder.query.get_or_404(order_id)
+
+    if order.status != 'cancelled':
+        flash("Only cancelled orders can be deleted.", "warning")
+        return redirect(url_for('auth.view_order', order_id=order.id))
+
+    db.session.delete(order)
+    db.session.commit()
+    flash("Cancelled order deleted successfully.", "success")
+    return redirect(url_for('auth.view_orders'))
+
+# PENDING ORDERS
+@bp.route('/orders/pending')
+@login_required
+@admin_required
+def pending_orders():
+    orders = CustomerOrder.query.filter_by(status='pending').order_by(CustomerOrder.created_at.desc()).all()
+    return render_template('admin/orders_pending.html', orders=orders)
+
+# APPROVED ORDERS
+@bp.route('/orders/approved')
+@login_required
+@admin_required
+def approved_orders():
+    orders = CustomerOrder.query.filter_by(status='approved').order_by(CustomerOrder.created_at.desc()).all()
+    return render_template('admin/orders_approved.html', orders=orders)
+
