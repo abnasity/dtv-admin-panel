@@ -38,7 +38,8 @@
                         <h5 class="card-title">Order Summary</h5>
                         <p><strong>Total Items:</strong> {{ products|length }}</p>
                         <p><strong>Total Price:</strong> Ksh {{ "%.2f"|format(total_price) }}</p>
-                        <hr>
+                       <hr>
+                        
 
                         <!-- ✅ Form bound to WTForm -->
                         <form method="POST" action="{{ url_for('customers.place_order') }}">
@@ -52,6 +53,11 @@
                             <div class="mb-3">
                                 {{ form.amount_paid.label(class="form-label") }}
                                 {{ form.amount_paid(class="form-control", step="0.01", min="0") }}
+                            </div>
+
+                            <div class="class mb-3">
+                                {{ form.delivery_address.label(class="form-label") }}
+                                {{ form.delivery_address(class="form-control", placeholder="Enter your delivery address") }}
                             </div>
 
                             <button type="submit" class="btn btn-success w-100">
