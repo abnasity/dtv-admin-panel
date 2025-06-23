@@ -20,6 +20,7 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    address = db.Column(db.String(255), nullable=True)
     
     # Relationships
     sales = db.relationship('Sale', backref='seller', lazy='dynamic')
@@ -51,6 +52,7 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
             'username': self.username,
             'email': self.email,
             'role': self.role,
+            'address' : self.address,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat(),
             'last_seen': self.last_seen.isoformat()
@@ -72,13 +74,14 @@ class Customer(UserMixin, db.Model):
     address = db.Column(db.String(255), nullable=True)
     # Customer-specific
     delivery_address = db.Column(db.String(255), nullable=True)
-
     role = db.Column(db.String(20), nullable=False, default='customer')
     is_active = db.Column(db.Boolean, default=True)
-
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    assigned_staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    assigned_staff = db.relationship('User', backref='assigned_customers', foreign_keys=[assigned_staff_id])
+
 
     # Relationship: customer purchases (you must add customer_id in Sale model)
     cart_items = db.relationship('CartItem', back_populates='customer', lazy=True)
@@ -107,6 +110,7 @@ class Customer(UserMixin, db.Model):
             'phone_number': self.phone_number,
             'address': self.address,
             'delivery_address' : self.delivery_address,
+            'assigned_staff': self.assigned_staff.username if self.assigned_staff else None,
             'created_at': self.created_at.isoformat(),
             'last_seen': self.last_seen.isoformat(),
             'role': self.role,
