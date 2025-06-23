@@ -14,7 +14,6 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    address = db.Column(db.String(255), nullable=True)
     password_hash = db.Column(db.String(128))
     role = db.Column(db.String(20), nullable=False, default='staff')  # 'admin' or 'staff'
     is_active = db.Column(db.Boolean, default=True)
@@ -69,7 +68,7 @@ class Customer(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
-    phone_number = db.Column(db.String(20), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=True, unique=True)
     address = db.Column(db.String(255), nullable=True)
     # Customer-specific
     delivery_address = db.Column(db.String(255), nullable=True)
@@ -148,20 +147,18 @@ class Device(db.Model):
         self.modified_at = datetime.utcnow()
     
     def to_dict(self):
-        """Convert device object to dictionary for API responses"""
-        return {
-            'id': self.id,
-            'imei': self.imei,
-            'brand': self.brand,
-            'model': self.model,
-            'ram' : self.ram,
-            'rom' : self.rom,
-            'purchase_price': str(self.purchase_price),
-            'status': self.status,
-            'arrival_date': self.arrival_date.isoformat(),
-            'modified_at': self.modified_at.isoformat(),
-            'notes': self.notes
-        }
+     return {
+        'id': self.id,
+        'imei': self.imei,
+        'brand': self.brand,
+        'model': self.model,
+        'ram': self.ram,
+        'rom': self.rom,
+        'status': self.status,
+        'purchase_price': str(self.purchase_price),
+        'arrival_date': self.arrival_date.isoformat(),
+    }
+
     def __repr__(self):
      return f"<Device {self.brand} {self.model}"
 
@@ -434,12 +431,11 @@ class CustomerOrderItem(db.Model):
     device = db.relationship("Device", backref="order_items")
 
     def to_dict(self):
-        return {
-            'id': self.id,
-            'order_id': self.customer_order_id,
-            'device_id': self.device_id,
-            'unit_price': str(self.unit_price)
-        }
+     return {
+        'device': self.device.to_dict() if self.device else None
+    }
+
+        
 
     def __repr__(self):
         return f"<CustomerOrderItem Device ID: {self.device_id}, Price: {self.unit_price}>"
