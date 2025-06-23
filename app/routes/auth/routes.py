@@ -94,6 +94,7 @@ def users():
     
     query = User.query
     
+    
     # Apply search filter
     if search:
         query = query.filter(
@@ -393,3 +394,15 @@ def approved_orders():
     orders = CustomerOrder.query.filter_by(status='approved').order_by(CustomerOrder.created_at.desc()).all()
     return render_template('admin/orders_approved.html', orders=orders)
 
+# ASSIGN STAFF TO CUSTOMER
+def assign_staff_to_customer(customer):
+
+    if not customer.address:
+        return None  # Can't match without address
+
+    matching_staff = User.query.filter_by(role='staff', address=customer.address).first()
+    if matching_staff:
+        customer.assigned_staff = matching_staff
+        db.session.commit()
+        return matching_staff
+    return None
