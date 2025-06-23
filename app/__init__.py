@@ -1,15 +1,21 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from config import Config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf
 from flask_wtf.csrf import generate_csrf
-
-
+from flask_login import current_user
+from app.models import CartItem, User, Customer
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    from app.models import User
-    return User.query.get(int(user_id))
+    
+    if user_id.startswith('user-'):
+        user_id = user_id.replace('user-', '')
+        return User.query.get(int(user_id))
+    elif user_id.startswith('customer-'):
+        user_id = user_id.replace('customer-', '')
+        return Customer.query.get(int(user_id))
+    return None
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -38,6 +44,16 @@ def create_app(config_class=Config):
     @app.context_processor
     def inject_csrf_token():
      return dict(csrf_token=generate_csrf())
+ 
+    @app.context_processor
+    def inject_cart_count():
+     if hasattr(current_user, 'is_customer') and current_user.is_authenticated and current_user.is_customer():
+        cart_count = CartItem.query.filter_by(customer_id=current_user.id).count()
+     else:
+        cart_count = 0
+
+     return dict(cart_count=cart_count)
+
 
     # Import web route blueprints
     from app.routes.main import bp as main_bp
@@ -65,7 +81,8 @@ def create_app(config_class=Config):
     from app.api.reports import bp as reports_api_bp
     from app.api.users import bp as users_api_bp
     from app.api.customers import bp as customers_api_bp
-
+    from app.api.orders import bp as orders_api_bp
+    
     
     # Register API blueprints
     app.register_blueprint(auth_api_bp, url_prefix='/api/auth', name='api_auth')
@@ -74,12 +91,16 @@ def create_app(config_class=Config):
     app.register_blueprint(reports_api_bp, url_prefix='/api/reports', name='api_reports')
     app.register_blueprint(users_api_bp, url_prefix='/api/users', name='api_users')
     app.register_blueprint(customers_api_bp, url_prefix='/api/customers', name='api_customers')
+    app.register_blueprint(orders_api_bp, url_prefix='/api/orders', name='api_orders')
     
     # Exempt CSRF protection for API routes
     csrf.exempt(devices_api_bp)
     csrf.exempt(users_api_bp)
     csrf.exempt(auth_api_bp)
     csrf.exempt(customers_api_bp)
+    csrf.exempt(orders_api_bp)
+      
+
     
 
     return app
