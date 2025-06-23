@@ -28,7 +28,8 @@ def create_admin_user(username, email, password):
                 is_active=True
             )
             db.session.add(user)
-            print(f"Admin user '{username}' has been created successfully.")
+            db.session.commit()  # 🔥 This was missing!
+            print(f"✅ Admin user '{username}' has been created successfully.")
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
