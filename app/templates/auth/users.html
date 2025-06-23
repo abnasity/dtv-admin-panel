@@ -89,6 +89,25 @@
                         </td>
                         <td>{{ user.username }}</td>
                         <td>{{ user.email }}</td>
+
+                        {% if user.role == 'staff' %}
+                        <td>
+                            <strong>Assigned Customers:</strong>
+                            {% if user.assigned_customers %}
+                                <ul class="mb-0 ps-3">
+                                    {% for customer in user.assigned_customers %}
+                                        <li>{{ customer.full_name }} ({{ customer.delivery_address }})</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="text-muted">None</span>
+                            {% endif %}
+                        </td>
+                        {% else %}
+                        <td class="text-muted">—</td>
+                        {% endif %}
+
+
                         <td>
                             <span class="badge bg-{{ 'primary' if user.role == 'admin' else 'secondary' }}">
                                 {{ user.role.title() }}
