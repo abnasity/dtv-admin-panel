@@ -82,7 +82,7 @@ def logout():
     logout_user()
     session.clear()  # 🔒 optional but safe
     flash('You have been logged out.', 'info')
-    return redirect(url_for('public.home'))
+    return render_template('public/home.html', public_view=True)
    
 
 # ACCOUNT STATUS TOGGLE
