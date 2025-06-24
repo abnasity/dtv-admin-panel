@@ -1,10 +1,11 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify, abort, session
+from flask import render_template, redirect, url_for, flash, request, jsonify, abort, session, make_response
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db, bcrypt
 from app.models import Customer, Device, CartItem, CustomerOrder, CustomerOrderItem
 from app.forms import CustomerRegistrationForm, CustomerLoginForm, CustomerEditForm, CheckoutForm
 from datetime import datetime
 from app.routes.customers import bp
+from app.utils.helpers import assign_staff_to_customer
 
 # REGISTER
 @bp.route('/register', methods=['GET', 'POST'])
@@ -79,10 +80,24 @@ def login():
 @bp.route('/logout')
 @login_required
 def logout():
+    # 1. First logout the user
     logout_user()
-    session.clear()  # 🔒 optional but safe
-    flash('You have been logged out.', 'info')
-    return render_template('public/home.html', public_view=True)
+    
+    # 2. Clear all session data (recommended for security)
+    session.clear()
+    
+    # 3. Create response before flashing to ensure headers are set
+    response = make_response(redirect(url_for('public.home')))
+    
+    # 4. Add cache-control headers to prevent back-button access
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    
+    # 5. Flash message after response is created
+    flash('You have been successfully logged out.', 'success')
+    
+    return response
    
 
 # ACCOUNT STATUS TOGGLE
@@ -169,7 +184,7 @@ def view_cart():
     if not isinstance(current_user, Customer):
         abort(403)
 
-    cart_items = CartItem.query.filter_by(customer_id=current_user.id).all()
+    cart_items = CartItem.query.filter_by(customer_id=current_user.id, status='active').all()
     return render_template('customers/cart.html', cart_items=cart_items)
 
 # CUSTOMERS CART ROUTES
@@ -246,12 +261,13 @@ def place_order():
         flash("Please fill the form correctly.", "danger")
         return redirect(url_for('customers.checkout'))
 
-    cart_items = CartItem.query.filter_by(customer_id=current_user.id).all()
+    # Only fetch cart items that are not already ordered
+    cart_items = CartItem.query.filter_by(customer_id=current_user.id, status='active').all()
     if not cart_items:
         flash("Your cart is empty.", "warning")
-        return redirect(url_for('customers.cart'))
+        return redirect(url_for('customers.view_cart'))
 
-    # Create order with delivery address
+    # Create the new customer order
     order = CustomerOrder(
         customer_id=current_user.id,
         delivery_address=form.delivery_address.data,
@@ -259,16 +275,17 @@ def place_order():
         created_at=datetime.utcnow()
     )
     db.session.add(order)
-    db.session.flush()  # get order.id before committing
+    db.session.flush()  # Ensure order.id is available
 
-    # Add each item to the order
+    # Automatically assign staff based on address
+    assign_staff_to_customer(current_user)
+
     for item in cart_items:
-        device = Device.query.get(item.device_id)
+        device = item.device
         if not device or device.status != 'available':
             continue
-        
-        device.mark_as_sold()
 
+        # Create the order item
         order_item = CustomerOrderItem(
             customer_order_id=order.id,
             device_id=device.id,
@@ -276,10 +293,9 @@ def place_order():
         )
         db.session.add(order_item)
 
-    # ✅ Clear cart
-    CartItem.query.filter_by(customer_id=current_user.id).delete()
 
     db.session.commit()
+
     flash("Your order has been placed successfully!", "success")
     return redirect(url_for('customers.order_success'))
 
