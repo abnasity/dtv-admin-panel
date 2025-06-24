@@ -51,6 +51,7 @@ async function editUser(userId) {
         document.getElementById('edit_email').value = user.email;
         document.getElementById('edit_role').value = user.role;
         document.getElementById('edit_password').value = ''; // Clear password field
+        document.getElementById('edit_address').value = user.address || '';
 
         // Show the modal
         const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
@@ -73,7 +74,8 @@ document.getElementById('editUserForm').addEventListener('submit', async functio
         username: document.getElementById('edit_username').value,
         email: document.getElementById('edit_email').value,
         role: document.getElementById('edit_role').value,
-        password: document.getElementById('edit_password').value
+        password: document.getElementById('edit_password').value,
+        address: document.getElementById('edit_address').value
     };
     
     try {
@@ -369,3 +371,62 @@ function showAlert(type, message) {
     // Auto-dismiss after 5 seconds
     setTimeout(() => alertDiv.remove(), 5000);
 }
+
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const roleSelect = document.querySelector('#addUserModal select[name="role"]');
+    const staffAddressFields = document.getElementById('staffAddressFields');
+    const addressSelect = document.getElementById('address');
+    const newAddressField = document.getElementById('newAddressField');
+
+    function toggleAddressFields() {
+        if (roleSelect.value === 'staff') {
+            staffAddressFields.style.display = 'block';
+        } else {
+            staffAddressFields.style.display = 'none';
+        }
+    }
+
+    function toggleNewAddressField() {
+        if (addressSelect.value === '__new__') {
+            newAddressField.style.display = 'block';
+        } else {
+            newAddressField.style.display = 'none';
+        }
+    }
+
+    if (roleSelect && staffAddressFields && addressSelect) {
+        roleSelect.addEventListener('change', toggleAddressFields);
+        addressSelect.addEventListener('change', toggleNewAddressField);
+
+        toggleAddressFields();
+        toggleNewAddressField();
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const addressSelect = document.querySelector('#addUserModal select[name="address"]');
+    const newAddressField = document.querySelector('#addUserModal #newAddressField');
+
+    if (addressSelect && newAddressField) {
+        function toggleNewAddressField() {
+            const show = addressSelect.value === '__new__';
+            newAddressField.style.display = show ? 'block' : 'none';
+            if (!show) {
+                const newInput = newAddressField.querySelector('input[name="new_address"]');
+                if (newInput) newInput.value = '';
+            }
+        }
+
+        // Initial check in case it's pre-selected
+        toggleNewAddressField();
+
+        // Listen for changes
+        addressSelect.addEventListener('change', toggleNewAddressField);
+    }
+});
+
+
