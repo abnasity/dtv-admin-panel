@@ -95,7 +95,11 @@ class Customer(UserMixin, db.Model):
 
     def is_customer(self):
         return self.role == 'customer'
-
+   
+    def is_admin(self):
+        return False
+ 
+     
     def get_id(self):
         return f'customer-{self.id}'  # distinguish from admin/staff users
 
@@ -172,7 +176,8 @@ class CartItem(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
-    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)   
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)  
+    status = db.Column(db.String(20), default='active')  # active, ordered, received 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -403,6 +408,9 @@ class CustomerOrder(db.Model):
 
     def is_pending(self):
         return self.status == 'pending'
+
+    def get_total(self):
+         return sum(item.device.purchase_price or 0 for item in self.items)
 
     def to_dict(self):
         return {
