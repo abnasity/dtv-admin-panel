@@ -5,6 +5,8 @@ from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
 from app.models import CartItem, User, Customer
 
+login_manager.session_protection = "strong"
+login_manager.login_view = 'auth.login'
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -20,6 +22,11 @@ def load_user(user_id):
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    app.config.update(
+    SESSION_COOKIE_SECURE=True,  # Only send cookies over HTTPS
+    SESSION_COOKIE_HTTPONLY=True,  # Prevent JavaScript cookie access
+    SESSION_COOKIE_SAMESITE='Lax'  # CSRF protection
+)
     
     # Initialize Flask extensions with app
     db.init_app(app)
