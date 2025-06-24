@@ -43,6 +43,8 @@ class RegisterForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     password = PasswordField('Password', validators=[DataRequired()])
     role = SelectField('Role', choices=[('staff', 'Staff'), ('admin', 'Admin')], validators=[DataRequired()])
+    address = SelectField('Address', validators=[Optional()])
+    new_address = StringField('New Address', validators=[Optional(), Length(max=255)])
     submit = SubmitField('Create User')
 
     def validate_username(self, username):
