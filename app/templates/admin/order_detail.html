@@ -23,11 +23,22 @@
             <td>{{ item.device.imei }}</td>
             <td>{{ item.device.brand }}</td>
             <td>{{ item.device.model }}</td>
-            <td>KES {{ item.device.unit_price }}</td>
+            <td>KES {{ item.device.purchase_price }}</td>
             <td>{{ item.device.status }}</td>
+            <p><strong>Total:</strong> KES 
+            {{ order.get_total() }}
+            </p>
+
         </tr>
     {% endfor %}
     </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="3"></td>
+        <th>Total:</th>
+        <th>KES {{ order.get_total() }}</th>
+    </tr>
+</tfoot>
 </table>
 
 {% if order.status == 'pending' %}
