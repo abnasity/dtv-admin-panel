@@ -257,7 +257,8 @@ def edit_user(user_id):
             'id': user.id,
             'username': user.username,
             'email': user.email,
-            'role': user.role
+            'role': user.role,
+            'address': user.address
         })
 
     data = request.get_json()
@@ -289,6 +290,8 @@ def edit_user(user_id):
         user.username = data['username']
         user.email = data['email']
         user.role = data['role']
+        user.address = data.get('address', user.address)
+
         
         if data.get('password'):
             user.set_password(data['password'])
@@ -333,12 +336,12 @@ def approve_order(order_id):
     order.approved_by_id = current_user.id
     order.approved_at = datetime.utcnow()
 
-    # 🔔 Notify assigned staff
+    #  Notify assigned staff
     assigned_staff = order.customer.assigned_staff
     if assigned_staff:
         print(f"Notify {assigned_staff.username}: Order #{order.id} for {order.customer.full_name} approved.")
 
-    # 🧹 Delete cart items after approval
+    #  Delete cart items after approval
     for item in order.items:
         cart_item = CartItem.query.filter_by(
             customer_id=order.customer_id,
