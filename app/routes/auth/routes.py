@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db
-from app.models import User, CustomerOrder
+from app.models import User, CustomerOrder, Customer, CartItem
 from app.forms import LoginForm, ProfileForm, RegisterForm
 from app.decorators  import admin_required
 from app.routes.auth import bp
@@ -119,14 +119,18 @@ def users():
     )
     
     form = RegisterForm()  # Form for the add user modal
-    
+    customers = Customer.query.order_by(Customer.full_name).all()
+    form.address.choices = [(c.address, f"{c.full_name} - {c.address}") for c in customers]
+    form.address.choices.append(('__new__', 'Other (Add new address)'))
     return render_template('auth/users.html',
                          users=pagination.items,
                          pagination=pagination,
                          search=search,
                          role_filter=role_filter,
                          status_filter=status_filter,
-                         form=form)
+                         form=form,
+                         customers=customers
+                         )
     
   
 
@@ -137,12 +141,22 @@ def users():
 @admin_required
 def create_user():
     form = RegisterForm()
+     # Dynamically populate address choices
+    customers = Customer.query.all()
+    form.address.choices = [(customer.address, f"{customer.full_name} - {customer.address}") for customer in customers]
+    form.address.choices.append(('__new__', 'Other (Add new address)'))
     
     if form.validate_on_submit():
+        
+        address = form.address.data
+        if address == '__new__':
+            address = form.new_address.data
+            
         user = User(
             username=form.username.data,
             email=form.email.data,
-            role=form.role.data
+            role=form.role.data,
+            address=address
         )
         user.set_password(form.password.data)
         db.session.add(user)
@@ -298,6 +312,7 @@ def edit_user(user_id):
 
 # CUSTOMER MANAGEMENT (ADMIN DASHBOARD)
 # # ADMIN ORDER APPROVAL  
+# # ADMIN ORDER APPROVAL  
 @bp.route('/admin/approve-order/<int:order_id>', methods=['POST'])
 @login_required
 @admin_required
@@ -307,17 +322,31 @@ def approve_order(order_id):
 
     order = CustomerOrder.query.get_or_404(order_id)
 
-    # Mark devices as sold and update order status
+    # Mark devices as sold
     for item in order.items:
         if item.device.status != 'available':
             flash(f"Device {item.device.imei} is already sold.", "danger")
             return redirect(url_for('auth.view_order', order_id=order.id))
-
         item.device.mark_as_sold()
 
     order.status = 'approved'
     order.approved_by_id = current_user.id
     order.approved_at = datetime.utcnow()
+
+    # 🔔 Notify assigned staff
+    assigned_staff = order.customer.assigned_staff
+    if assigned_staff:
+        print(f"Notify {assigned_staff.username}: Order #{order.id} for {order.customer.full_name} approved.")
+
+    # 🧹 Delete cart items after approval
+    for item in order.items:
+        cart_item = CartItem.query.filter_by(
+            customer_id=order.customer_id,
+            device_id=item.device_id
+        ).first()
+        if cart_item:
+            db.session.delete(cart_item)
+
     db.session.commit()
 
     flash("Order approved and devices marked as sold.", "success")
