@@ -403,11 +403,15 @@ class CustomerOrder(db.Model):
 
 # relationships
     customer = db.relationship('Customer', backref='orders')
-    items = db.relationship('CustomerOrderItem', backref='order', cascade='all, delete-orphan')
+    items = db.relationship('CustomerOrderItem', backref='order', lazy=True, cascade='all, delete-orphan', foreign_keys='CustomerOrderItem.order_id')
+
     approved_by = db.relationship('User', foreign_keys=[approved_by_id])
 
     def is_pending(self):
         return self.status == 'pending'
+    
+    def total_amount(self):
+        return sum(item.unit_price for item in self.items)
 
     def get_total(self):
          return sum(item.device.purchase_price or 0 for item in self.items)
@@ -435,7 +439,7 @@ class CustomerOrderItem(db.Model):
     __tablename__ = 'customer_order_items'
 
     id = db.Column(db.Integer, primary_key=True)
-    customer_order_id = db.Column(db.Integer, db.ForeignKey('customer_orders.id', ondelete='CASCADE'), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('customer_orders.id', ondelete='CASCADE'), nullable=False)
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='CASCADE'), nullable=False)
     unit_price = db.Column(db.Numeric(12, 2), nullable=False)
 
@@ -447,7 +451,12 @@ class CustomerOrderItem(db.Model):
         'device': self.device.to_dict() if self.device else None
     }
 
-        
+    def to_dict(self):
+     return {
+        'device': self.device.to_dict() if self.device else None,
+        'unit_price': float(self.unit_price)  # ensure it's serializable
+    }
+
 
     def __repr__(self):
         return f"<CustomerOrderItem Device ID: {self.device_id}, Price: {self.unit_price}>"
