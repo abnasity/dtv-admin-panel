@@ -266,6 +266,11 @@ def place_order():
     if not cart_items:
         flash("Your cart is empty.", "warning")
         return redirect(url_for('customers.view_cart'))
+    
+    print(f"Cart items for customer {current_user.id}:")
+    for item in cart_items:
+     print(f"- {item.device.brand} {item.device.model} (IMEI: {item.device.imei})")
+
 
     # Create the new customer order
     order = CustomerOrder(
@@ -287,7 +292,7 @@ def place_order():
 
         # Create the order item
         order_item = CustomerOrderItem(
-            customer_order_id=order.id,
+            order_id=order.id,
             device_id=device.id,
             unit_price=device.purchase_price
         )
@@ -297,7 +302,20 @@ def place_order():
     db.session.commit()
 
     flash("Your order has been placed successfully!", "success")
-    return redirect(url_for('customers.order_success'))
+    return redirect(url_for('customers.order_detail', order_id=order.id))
+
+
+# ORDER DETAIL ROUTE
+@bp.route('/order/<int:order_id>')
+@login_required
+def order_detail(order_id):
+    order = CustomerOrder.query.get_or_404(order_id)
+
+    if order.customer_id != current_user.id:
+        abort(403)
+
+    return render_template('customers/order_detail.html', order=order)
+
 
 
 # SUCCESSFUL ORDER
