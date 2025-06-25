@@ -46,12 +46,21 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <button class="btn btn-success">Approve Order</button>
 </form>
+{% endif %}
+
+ <form method="POST" action="{{ url_for('auth.cancel_order', order_id=order.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-danger btn-sm m-2" onclick="return confirm('Are you sure you want to cancel this order?');">
+                    Cancel Order
+                </button>
+            </form>
+         
 
 <div class="text-center mt-3">
             <a href="{{ url_for('auth.view_orders') }}" class="btn btn-primary">
                 <i class="fas fa-arrow-left"></i> Customer Orders
             </a>
 </div>
-{% endif %}
+
 
 {% endblock %}
