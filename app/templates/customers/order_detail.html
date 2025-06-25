@@ -1,0 +1,59 @@
+{% extends "layouts/base.html" %}
+{% block title %}Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Order #{{ order.id }}</h2>
+
+    <p><strong>Status:</strong> {{ order.status }}</p>
+    <p><strong>Placed on:</strong> {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>Delivery Address:</strong> {{ order.delivery_address }}</p>
+
+    {% set items = order.items %}
+
+    {% if items %}
+    <div class="row">
+        <!-- Ordered Items -->
+        <div class="col-md-8">
+            <table class="table table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>Device</th>
+                        <th>IMEI</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.device.brand }} {{ item.device.model }}</td>
+                        <td>{{ item.device.imei }}</td>
+                        <td>Ksh {{ "%.2f"|format(item.unit_price) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Summary -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Order Summary</h5>
+                    <p><strong>Total Items:</strong> {{ items|length }}</p>
+                    <p><strong>Total Price:</strong> Ksh {{ "%.2f"|format(order.total_amount()) }}</p>
+
+                    {% if order.approved_by %}
+                    <hr>
+                    <p><strong>Approved By:</strong> {{ order.approved_by.name }}</p>
+                    <p><strong>Approved At:</strong> {{ order.approved_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-muted">No items found in this order.</p>
+    {% endif %}
+</div>
+{% endblock %}
