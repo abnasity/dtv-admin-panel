@@ -1,0 +1,37 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Order Assignments</h2>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Delivery Address</th>
+                <th>Assigned Staff</th>
+                <th>Order Items</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>#{{ order.id }}</td>
+                <td>{{ order.customer.full_name }}</td>
+                <td>{{ order.delivery_address }}</td>
+                <td>{{ order.assigned_staff.username }}</td>
+                <td>
+                    {% for item in order.items %}
+                        {{ item.device.brand }} {{ item.device.model }} (IMEI: {{ item.device.imei }})<br>
+                    {% endfor %}
+                </td>
+                <td>{{ order.status }}</td>
+                <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
