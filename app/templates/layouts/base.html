@@ -51,44 +51,86 @@
             <ul class="navbar-nav ms-auto">
                 {% if current_user.is_authenticated and current_user.role in ['admin', 'staff'] %}
                     <!-- Admin/Staff Navbar Items -->
-                    <li class="nav-item">
-                        <a class="nav-link hover-effect" href="{{ url_for('devices.inventory') }}">
-                            <i class="fas fa-warehouse me-1"></i>Inventory
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link hover-effect" href="{{ url_for('sales.index') }}">
-                            <i class="fas fa-shopping-cart me-1"></i>Sales
-                        </a>
-                    </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle hover-effect" href="#" id="storeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-store me-1"></i> Stock & Sales
+                            </a>
+                         <ul class="dropdown-menu" aria-labelledby="storeDropdown">
+                                <li>
+                                    <a class="dropdown-item hover-effect" href="{{ url_for('devices.inventory') }}">
+                                        <i class="fas fa-warehouse me-1"></i> Inventory
+                                    </a>
+                                </li>
+                          <li>
+                                    <a class="dropdown-item hover-effect" href="{{ url_for('sales.index') }}">
+                                        <i class="fas fa-shopping-cart me-1"></i> Sales
+                                    </a>
+                                </li>
+
+
+
+
+                            </ul>
+                        </li>
+
 
                     <!-- ADMIN ONLY -->
                     {% if current_user.is_admin() %}
-                        <li class="nav-item">
-                            <a class="nav-link hover-effect" href="{{ url_for('reports.dashboard') }}">
-                                <i class="fas fa-chart-bar me-1"></i>Reports
+                       <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle hover-effect" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-briefcase me-1"></i> Management
                             </a>
+                            <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                <li>
+                                    <a class="dropdown-item hover-effect" href="{{ url_for('reports.dashboard') }}">
+                                        <i class="fas fa-chart-bar me-1"></i> Reports
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item hover-effect" href="{{ url_for('auth.users') }}">
+                                        <i class="fas fa-users me-1"></i> Users
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link hover-effect" href="{{ url_for('auth.users') }}">
-                                <i class="fas fa-users me-1"></i>Users
-                            </a>
+
+                    
+
+
+                        <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle hover-effect" href="#" id="customerOrdersDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-shopping-bag me-1"></i> Customer Orders
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="customerOrdersDropdown">
+                            <li>
+                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.pending_orders') }}">
+                                    <i class="fas fa-hourglass-half me-1"></i> Pending Orders
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.approved_orders') }}">
+                                    <i class="fas fa-check-circle me-1"></i> Approved Orders
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.view_orders') }}">
+                                    <i class="fas fa-list me-1"></i> All Orders
+                                </a>
+                            </li>
+                        </ul>
                         </li>
+
+
+
+
+
                         <li class="nav-item">
-                            <a class="nav-link hover-effect" href="{{ url_for('auth.view_orders') }}">
-                             <i class="fas fa-shopping-bag me-1"></i>Customer Orders
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                        <a class="nav-link hover-effect" href="{{ url_for('auth.pending_orders') }}">
-                            <i class="fas fa-hourglass-half me-1"></i>Pending Orders
+                        <a class="nav-link hover-effect" href="{{ url_for('auth.view_assignments') }}">
+                           <i class="fas fa-tasks"></i>Staff Assignments
+ 
                         </a>
                         </li>
-                        <li class="nav-item">
-                        <a class="nav-link hover-effect" href="{{ url_for('auth.approved_orders') }}">
-                            <i class="fas fa-check-circle me-1"></i>Approved Orders
-                        </a>
-                        </li>
+
 
 
                     {% endif %}
