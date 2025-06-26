@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, abort, session, make_response
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db, bcrypt
-from app.models import Customer, Device, CartItem, CustomerOrder, CustomerOrderItem
+from app.models import Customer, Device, CartItem, CustomerOrder, CustomerOrderItem, User
 from app.forms import CustomerRegistrationForm, CustomerLoginForm, CustomerEditForm, CheckoutForm
 from datetime import datetime
 from app.routes.customers import bp
@@ -27,7 +27,6 @@ def register():
             email=form.email.data.lower(),
             full_name=form.full_name.data,
             phone_number=form.phone_number.data,
-            address=form.address.data
         )
         customer.set_password(form.password.data)
         db.session.add(customer)
@@ -231,23 +230,33 @@ def remove_from_cart(device_id):
 
 
 # PROCEED TO CHECKOUT
-@bp.route('/checkout', methods=['GET', 'POST'])
+@bp.route('/checkout')
 @login_required
 def checkout():
     if not isinstance(current_user, Customer):
-        flash("Only customers can checkout.", "danger")
-        return redirect(url_for('customers.view_cart'))
+        abort(403)
 
-    cart_items = CartItem.query.filter_by(customer_id=current_user.id).all()
-    if not cart_items:
-        flash("Your cart is empty.", "info")
-        return redirect(url_for('customers.view_cart'))
-
-    devices = [Device.query.get(item.device_id) for item in cart_items]
-    total_price = sum(float(d.purchase_price) for d in devices if d)
     form = CheckoutForm()
 
-    return render_template('customers/checkout.html', products=devices, total_price=total_price, form=form)
+    # Get unique addresses from staff
+    staff_addresses = db.session.query(User.address).filter(
+        User.role == 'staff',
+        User.address.isnot(None)
+    ).distinct().all()
+
+    form.delivery_address.choices = [(addr.address, addr.address) for addr in staff_addresses]
+
+    # Optional: preselect customer's last used address
+    if current_user.delivery_address:
+        form.delivery_address.data = current_user.delivery_address
+
+    # Cart setup
+    cart_items = CartItem.query.filter_by(customer_id=current_user.id, status='active').all()
+    products = [item.device for item in cart_items]
+    total_price = sum(device.purchase_price for device in products)
+
+    return render_template('customers/checkout.html', form=form, products=products, total_price=total_price)
+
 
 # PLACING AN ORDER
 @bp.route('/place_order', methods=['POST'])
@@ -257,6 +266,14 @@ def place_order():
         abort(403)
 
     form = CheckoutForm()
+
+    # Re-populate delivery address choices
+    staff_addresses = db.session.query(User.address).filter(
+        User.role == 'staff',
+        User.address.isnot(None)
+    ).distinct().all()
+    form.delivery_address.choices = [(addr.address, addr.address) for addr in staff_addresses]
+
     if not form.validate_on_submit():
         flash("Please fill the form correctly.", "danger")
         return redirect(url_for('customers.checkout'))
@@ -267,10 +284,8 @@ def place_order():
         flash("Your cart is empty.", "warning")
         return redirect(url_for('customers.view_cart'))
 
-    # Build a list of device IDs from the cart
     cart_item_ids = sorted([item.device_id for item in cart_items if item.device_id])
 
-    # Get all previous non-cancelled orders (pending or approved)
     existing_orders = CustomerOrder.query.filter(
         CustomerOrder.customer_id == current_user.id,
         CustomerOrder.status.in_(['pending', 'approved'])
@@ -279,36 +294,34 @@ def place_order():
     for order in existing_orders:
         order_items = CustomerOrderItem.query.filter_by(order_id=order.id).all()
         order_item_ids = sorted([item.device_id for item in order_items if item.device_id])
-
         if cart_item_ids == order_item_ids:
             flash("You already have an identical order that is pending or confirmed.", "danger")
             return redirect(url_for('customers.view_cart'))
 
-    # Debug: print cart items
-    print(f"Cart items for customer {current_user.id}:")
-    for item in cart_items:
-        print(f"- {item.device.brand} {item.device.model} (IMEI: {item.device.imei})")
+    # Save delivery address to customer if it's not already saved
+    selected_address = form.delivery_address.data.strip()
+    if current_user.delivery_address != selected_address:
+        current_user.delivery_address = selected_address
+        db.session.add(current_user)
 
-    # Create new order
+    # Create the order
     order = CustomerOrder(
         customer_id=current_user.id,
-        delivery_address=form.delivery_address.data,
+        delivery_address=selected_address,
         status='pending',
         created_at=datetime.utcnow()
     )
     db.session.add(order)
     db.session.flush()
 
-    # Assign staff to the order
+    # Assign staff based on delivery address
     assigned = assign_staff_to_order(order)
     if assigned:
         print(f"[SUCCESS] Assigned staff: {assigned.username}")
     else:
         print("[WARNING] No matching staff found.")
 
-    db.session.add(order)  # Ensure any changes are tracked
-
-    # Add order items from cart
+    # Add items to order
     for item in cart_items:
         device = item.device
         if not device or device.status != 'available':
@@ -321,10 +334,15 @@ def place_order():
         )
         db.session.add(order_item)
 
+        # Optional: mark cart item as 'ordered'
+        item.status = 'ordered'
+        db.session.add(item)
+
     db.session.commit()
 
     flash("Your order has been placed successfully!", "success")
     return redirect(url_for('customers.order_detail', order_id=order.id))
+
 
 
 
