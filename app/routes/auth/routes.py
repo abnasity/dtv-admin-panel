@@ -4,6 +4,7 @@ from app.extensions import db
 from app.models import User, CustomerOrder, Customer, CartItem
 from app.forms import LoginForm, ProfileForm, RegisterForm
 from app.decorators  import admin_required
+from app.utils.helpers import assign_staff_to_order
 from app.routes.auth import bp
 from datetime import datetime
 
@@ -336,12 +337,15 @@ def approve_order(order_id):
     order.approved_by_id = current_user.id
     order.approved_at = datetime.utcnow()
 
-    #  Notify assigned staff
-    assigned_staff = order.customer.assigned_staff
-    if assigned_staff:
-        print(f"Notify {assigned_staff.username}: Order #{order.id} for {order.customer.full_name} approved.")
+    # Assign staff if not already assigned
+    if not order.assigned_staff:       
+        assign_staff_to_order(order)
 
-    #  Delete cart items after approval
+    # Notify assigned staff
+    if order.assigned_staff:
+        print(f"Notify {order.assigned_staff.username}: Order #{order.id} for {order.customer.full_name} approved.")
+
+    # Delete cart items after approval
     for item in order.items:
         cart_item = CartItem.query.filter_by(
             customer_id=order.customer_id,
@@ -354,6 +358,7 @@ def approve_order(order_id):
 
     flash("Order approved and devices marked as sold.", "success")
     return redirect(url_for('auth.view_orders'))
+
 
 
 # CUSTOMER ORDERS 
@@ -427,14 +432,16 @@ def approved_orders():
     return render_template('admin/orders_approved.html', orders=orders)
 
 # ASSIGN STAFF TO CUSTOMER
-def assign_staff_to_customer(customer):
+def assign_staff_to_order(order):
+    if not order.delivery_address:
+        return None  # Can't match without delivery address
 
-    if not customer.address:
-        return None  # Can't match without address
+    matching_staff = User.query.filter_by(role='staff', address=order.delivery_address).first()
 
-    matching_staff = User.query.filter_by(role='staff', address=customer.address).first()
     if matching_staff:
-        customer.assigned_staff = matching_staff
+        order.assigned_staff = matching_staff  # Make sure this relationship exists
         db.session.commit()
         return matching_staff
+
     return None
+
