@@ -38,14 +38,6 @@
                         </div>
 
                         <div class="mb-3">
-                            {{ form.address.label(class="form-label") }}
-                            {{ form.address(class="form-control", placeholder="Address") }}
-                            {% for error in form.address.errors %}
-                                <div class="text-danger small">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-
-                        <div class="mb-3">
                             {{ form.password.label(class="form-label") }}
                             {{ form.password(class="form-control", placeholder="Password") }}
                             {% for error in form.password.errors %}
