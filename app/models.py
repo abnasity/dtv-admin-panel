@@ -71,7 +71,6 @@ class Customer(UserMixin, db.Model):
     password_hash = db.Column(db.String(128), nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(20), nullable=True, unique=True)
-    address = db.Column(db.String(255), nullable=True)
     # Customer-specific
     delivery_address = db.Column(db.String(255), nullable=True)
     role = db.Column(db.String(20), nullable=False, default='customer')
@@ -84,8 +83,12 @@ class Customer(UserMixin, db.Model):
 
 
     # Relationship: customer purchases (you must add customer_id in Sale model)
-    cart_items = db.relationship('CartItem', back_populates='customer', lazy=True)
+    cart_items = db.relationship('CartItem', back_populates='customer', lazy=True, cascade='all, delete-orphan')
     purchases = db.relationship('Sale', backref='customer', cascade='all, delete-orphan', foreign_keys='Sale.customer_id')
+    orders = db.relationship( 'CustomerOrder', back_populates='customer',cascade='all, delete-orphan',lazy=True
+)
+
+
 
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
@@ -112,9 +115,7 @@ class Customer(UserMixin, db.Model):
             'full_name': self.full_name,
             'email': self.email,
             'phone_number': self.phone_number,
-            'address': self.address,
             'delivery_address' : self.delivery_address,
-            'assigned_staff': self.assigned_staff.username if self.assigned_staff else None,
             'created_at': self.created_at.isoformat(),
             'last_seen': self.last_seen.isoformat(),
             'role': self.role,
@@ -142,7 +143,7 @@ class CustomerOrder(db.Model):
     notes = db.Column(db.Text)
 
 # relationships
-    customer = db.relationship('Customer', backref='orders')
+    customer = db.relationship('Customer', back_populates='orders')
     items = db.relationship('CustomerOrderItem', backref='order', lazy=True, cascade='all, delete-orphan', foreign_keys='CustomerOrderItem.order_id')
 
     approved_by = db.relationship('User', foreign_keys=[approved_by_id])
@@ -172,7 +173,25 @@ class CustomerOrder(db.Model):
     def __repr__(self):
         return f"<CustomerOrder ID: {self.id} - Status: {self.status}>"
 
+
+# CARTITEM MODEL FOR DEVICES ONLY
+class CartItem(db.Model):
+    __tablename__ = 'cart_items'
     
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)  
+    status = db.Column(db.String(20), default='active')  # active, ordered, received 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    customer = db.relationship('Customer', back_populates='cart_items')
+    device = db.relationship('Device', backref='cart_items')
+
+    def __repr__(self):
+        return f"<CartItem customer={self.customer_id} device={self.device_id}>"
+
+
 # CUSTOMER ORDER ITEM MODEL
 # This model represents items in customer orders, linking products to customer orders.
 class CustomerOrderItem(db.Model):
@@ -249,249 +268,97 @@ class Device(db.Model):
     def __repr__(self):
      return f"<Device {self.brand} {self.model}"
 
-# CARTITEM MODEL FOR DEVICES ONLY
-class CartItem(db.Model):
-    __tablename__ = 'cart_items'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
-    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)  
-    status = db.Column(db.String(20), default='active')  # active, ordered, received 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
-    customer = db.relationship('Customer', back_populates='cart_items')
-    device = db.relationship('Device', backref='cart_items')
-
-    def __repr__(self):
-        return f"<CartItem customer={self.customer_id} device={self.device_id}>"
-
-
-# PRODUCT MODEL
-# This model represents products in the inventory, which can be devices or other items.
-class Product(db.Model):
-    """Product model for inventory management"""
-    __tablename__ = 'products'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    sku = db.Column(db.String(50), unique=True, nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    unit_price = db.Column(db.Numeric(12, 2), nullable=False)
-    reorder_level = db.Column(db.Integer, default=0, nullable=False)  # Minimum stock level before reorder
-    created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    inventory_transactions = db.relationship('InventoryTransaction', backref='product', cascade='all, delete-orphan')
-    po_items = db.relationship('PurchaseOrderItem', backref='product', cascade='all, delete-orphan')
-    sales = db.relationship('Sale', backref='product', cascade='all, delete-orphan')
-    alerts = db.relationship('Alert', backref='product', cascade='all, delete-orphan')
-    
-    def to_dict(self):
-        """Convert product object to dictionary for API responses"""
-        return {
-            'id': self.id,
-            'sku': self.sku,
-            'name': self.name,
-            'description': self.description,
-            'unit_price': str(self.unit_price),
-            'reorder_level': self.reorder_level,
-            'created_at': self.created_at.isoformat(),
-            'updated_at': self.updated_at.isoformat()
-        }
-    def __repr__(self):
-     return f"<Product {self.name} (SKU: {self.sku})>"
 
 
 # INVENTORY TRANSACTION MODEL
 # This model tracks all inventory transactions for products, including purchases, sales, adjustments, and stock movements.
 class InventoryTransaction(db.Model):
     __tablename__ = 'inventory_transactions'
+
     id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='CASCADE'), nullable=False)
     staff_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
-    type = db.Column(db.String(20), nullable=False)  # 'purchase', 'sale', 'adjustment', 'add', 'remove'. 'loss'
-    quantity = db.Column(db.Integer, nullable=False)
-    timestamp = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
-    
-    
+    type = db.Column(db.String(20), nullable=False)  # 'arrival', 'sale', 'adjustment'
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)
+
+    # Relationships
+    device = db.relationship('Device', backref='transactions')
+    staff = db.relationship('User', backref='inventory_logs')
+
     def to_dict(self):
-        """Convert inventory transaction object to dictionary for API responses"""
         return {
             'id': self.id,
-            'product_id': self.product_id,
-            'staff_id': self.staff_id,
+            'device_id': self.device_id,
             'type': self.type,
-            'quantity': self.quantity,
-            'timestamp': self.timestamp.isoformat()
+            'staff_id': self.staff_id,
+            'timestamp': self.timestamp.isoformat(),
+            'notes': self.notes
         }
-    def __repr__(self):
-     return f"<InventoryTransaction {self.type} - Product ID: {self.product_id}, Qty: {self.quantity}>"
+
 
     
-# PURCHASE ORDER MODEL
-# This model represents purchase orders made to suppliers for products.
-# It tracks the supplier, order date, status, and items in the order.
-class PurchaseOrder(db.Model):
-    __tablename__ = 'purchase_orders'
-    id = db.Column(db.Integer, primary_key=True)
-    supplier = db.Column(db.String(150), nullable=False)
-    order_date = db.Column(db.Date, nullable=False)
-    status = db.Column(db.String(20), nullable=False) #
-    'pending','received','cancelled'
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id',
-    ondelete='CASCADE'), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True),
-    default=datetime.utcnow)
-    items = db.relationship('PurchaseOrderItem',
-    backref='purchase_order', cascade='all, delete-orphan')
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'supplier': self.supplier_name,
-            'order_date': self.order_date.isoformat(),
-            'status': self.status,
-            'created_by': self.created_by,
-            'created_at': self.created_at.isoformat(),
-            'items': self.items_to_dict()
-        }
-    def __repr__(self):
-     return f"<PurchaseOrder {self.id} - Supplier: {self.supplier}, Status: {self.status}>"
-
-   
-    # PURCHASE ORDER ITEM MODEL
-# This model represents items in purchase orders, linking products to purchase orders.
-class  PurchaseOrderItem(db.Model):
-    """Purchase Order Item model for tracking items in purchase orders"""
-    __tablename__ = 'purchase_order_items'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False)
-    purchase_order_id = db.Column(db.Integer, db.ForeignKey('purchase_orders.id', ondelete='CASCADE'), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    unit_cost = db.Column(db.Numeric(12, 2), nullable=False) 
-    
-    def to_dict(self):
-        """Convert purchase order item object to dictionary for API responses"""
-        return {
-            'id': self.id,
-            'product_id': self.product_id,
-            'purchase_order_id': self.purchase_order_id,
-            'quantity': self.quantity,
-            'unit_cost': str(self.unit_cost)
-        }
-    def __repr__(self):
-     return f"<PurchaseOrderItem Product ID: {self.product_id}, Qty: {self.quantity}>"
+ 
 
 
 # SALE MODEL FOR DEVICES ONLY
 # This model tracks sales of devices, linking them to the device and seller.
 class Sale(db.Model):
-    """Sale model for tracking device sales"""
     __tablename__ = 'sales'
 
     id = db.Column(db.Integer, primary_key=True)
     sale_price = db.Column(db.Numeric(10, 2), nullable=False)
-    payment_type = db.Column(db.String(20), nullable=False)  # cash, credit
+    payment_type = db.Column(db.String(20), nullable=False)  # 'cash', 'credit'
     amount_paid = db.Column(db.Numeric(10, 2), nullable=False)
     sale_date = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     notes = db.Column(db.Text)
-    
+
     # Foreign Keys
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), unique=True, nullable=False)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True)
-
-
-    @property
-    def profit(self):
-        """Calculate profit from sale"""
-        return float(self.sale_price) - float(self.device.purchase_price)
-
-    @property
-    def balance_due(self):
-        """Calculate remaining balance for credit sales"""
-        return float(self.sale_price) - float(self.amount_paid)
-
+        
     @property
     def is_fully_paid(self):
-        """Check if sale is fully paid"""
-        return self.balance_due <= 0
-    
-    def to_dict(self):
-        """Convert sale object to dictionary for API responses"""
-        return {
-            'id': self.id,
-            'device': self.device.to_dict(),
-            'seller': self.seller.to_dict(),
-            'sale_price': str(self.sale_price),
-            'payment_type': self.payment_type,
-            'amount_paid': str(self.amount_paid),
-            'balance_due': str(self.balance_due),
-            'profit': str(self.profit),
-            'is_fully_paid': self.is_fully_paid,
-            'sale_date': self.sale_date.isoformat(),
-            'modified_at': self.modified_at.isoformat(),
-            'notes': self.notes
-        }
-    def __repr__(self):
-     return f"<Sale ID: {self.id} - Device ID: {self.device_id} - Seller ID: {self.seller_id}>"
-
-        
-# SALE ITEM MODEL 
-# meant for product-based (non-IMEI) sales
-class SaleItem(db.Model):
-    __tablename__ = 'sale_items'
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    unit_price = db.Column(db.Numeric(12, 2), nullable=False)
-    sold_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
-    
-    
-    def to_dict(self):
-        """Convert sale item object to dictionary for API responses"""
-        return {
-            'id': self.id,
-            'product_id': self.product_id,
-            'seller_id': self.seller_id,
-            'quantity': self.quantity,
-            'unit_price': str(self.unit_price),
-            'sold_at': self.sold_at.isoformat()
-        }
-    def __repr__(self):
-     return f"<SaleItem Product ID: {self.product_id}, Qty: {self.quantity}>"
-
+      return self.amount_paid >= self.sale_price
+  
 
         
 # ALERT MODEL
 # This model tracks alerts for products, such as low stock or new product arrivals.
 class Alert(db.Model):
-    """Alert model for tracking product alerts"""
     __tablename__ = 'alerts'
-    
+
     id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False)
-    type = db.Column(db.String(30), nullable=False)  # e.g., 'low_stock', 'new_product'
-    triggered_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
-    status = db.Column(db.String(20), nullable=False)  # active, resolved, dismissed, unread, sent
-    
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='CASCADE'), nullable=False)
+    type = db.Column(db.String(30), nullable=False)  # e.g., 'low_stock', 'arrival'
+    status = db.Column(db.String(20), nullable=False, default='active')
+    triggered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    resolved_at = db.Column(db.DateTime, nullable=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    notes = db.Column(db.Text)
+
+    # Relationships
+    device = db.relationship('Device', backref='alerts')
+    created_by = db.relationship('User', backref='created_alerts')
+
     def to_dict(self):
-        """Convert alert object to dictionary for API responses"""
         return {
             'id': self.id,
-            'product_id': self.product_id,
+            'device_id': self.device_id,
             'type': self.type,
             'triggered_at': self.triggered_at.isoformat(),
-            'status': self.status           
+            'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
+            'status': self.status,
+            'notes': self.notes,
+            'created_by': self.created_by.to_dict() if self.created_by else None
         }
-        
+
     def __repr__(self):
-         return f"<Alert Product ID: {self.product_id}, Type: {self.type}, Status: {self.status}>" 
+        return f"<Alert Device ID: {self.device_id}, Type: {self.type}, Status: {self.status}>"
+ 
 
 @login_manager.user_loader
 def load_user(user_id):
