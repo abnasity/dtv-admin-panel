@@ -1,7 +1,7 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from app.models import Customer
 from app import db
-from datetime import datetime
+import logging
 
 bp = Blueprint('api_customers', __name__, url_prefix='/api/customers')
 
@@ -41,7 +41,6 @@ def create_customer():
         email=data['email'],
         full_name=data['full_name'],
         phone_number=data.get('phone_number'),
-        address=data.get('address'),
         role='customer'
     )
     customer.set_password(data['password'])
@@ -62,7 +61,7 @@ def update_customer_partial(customer_id):
     data = request.get_json() or {}
 
     # Update allowed fields if present in request data
-    updatable_fields = ['email', 'full_name', 'phone_number', 'address', 'is_active', 'role']
+    updatable_fields = ['email', 'full_name', 'phone_number', 'is_active', 'role']
 
     for field in updatable_fields:
         if field in data:
@@ -94,7 +93,7 @@ def update_customer(id):
             return jsonify({'error': 'Email already exists'}), 400
         customer.email = data['email']
 
-    for field in ['full_name', 'phone_number', 'address', 'role', 'is_active']:
+    for field in ['full_name', 'phone_number', 'role', 'is_active']:
         if field in data:
             setattr(customer, field, data[field])
 
@@ -119,6 +118,8 @@ def delete_customer(id):
         db.session.delete(customer)
         db.session.commit()
         return '', 204
-    except Exception:
+    except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Delete failed for customer {id}: {e}")
+        print(f"❌ Delete failed for customer {id}: {e}")
         return jsonify({'error': 'Delete failed'}), 500
