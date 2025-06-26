@@ -445,3 +445,12 @@ def assign_staff_to_order(order):
 
     return None
 
+# ASSIGNMENTS
+@bp.route('/assignments')
+@login_required
+@admin_required
+def view_assignments():
+    orders = CustomerOrder.query.filter(CustomerOrder.assigned_staff_id != None).order_by(CustomerOrder.created_at.desc()).all()
+    return render_template('admin/view_assignments.html', orders=orders)
+
+
