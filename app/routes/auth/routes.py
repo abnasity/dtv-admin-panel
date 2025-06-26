@@ -121,7 +121,7 @@ def users():
     
     form = RegisterForm()  # Form for the add user modal
     customers = Customer.query.order_by(Customer.full_name).all()
-    form.address.choices = [(c.address, f"{c.full_name} - {c.address}") for c in customers]
+    form.address.choices = [(c.delivery_address, f"{c.full_name} - {c.delivery_address}") for c in customers]
     form.address.choices.append(('__new__', 'Other (Add new address)'))
     return render_template('auth/users.html',
                          users=pagination.items,
@@ -144,7 +144,7 @@ def create_user():
     form = RegisterForm()
      # Dynamically populate address choices
     customers = Customer.query.all()
-    form.address.choices = [(customer.address, f"{customer.full_name} - {customer.address}") for customer in customers]
+    form.address.choices = [(customer.delivery_address, f"{customer.full_name} - {customer.delivery_address}") for customer in customers]
     form.address.choices.append(('__new__', 'Other (Add new address)'))
     
     if form.validate_on_submit():
@@ -453,4 +453,17 @@ def view_assignments():
     orders = CustomerOrder.query.filter(CustomerOrder.assigned_staff_id != None).order_by(CustomerOrder.created_at.desc()).all()
     return render_template('admin/view_assignments.html', orders=orders)
 
+# DELETE CUSTOMER
+@bp.route('/<int:id>', methods=['DELETE'])
+def delete_customer(id):
+    """Delete a customer by ID"""
+    customer = Customer.query.get_or_404(id)
 
+    try:
+        db.session.delete(customer)
+        db.session.commit()
+        return '', 204
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Delete failed for customer {id}: {e}")
+        return jsonify({'error': 'Delete failed'}), 500
