@@ -62,7 +62,6 @@ class CustomerRegistrationForm(FlaskForm):
     full_name = StringField('Full Name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     phone_number = StringField('Phone Number')
-    address = StringField('Address')
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     confirm = PasswordField('Confirm Password', validators=[EqualTo('password')])
     submit = SubmitField('Register')
@@ -216,8 +215,9 @@ class CheckoutForm(FlaskForm):
         validators=[DataRequired(), NumberRange(min=0)],
         places=2
     )
-    delivery_address = StringField(
+    delivery_address = SelectField(  
         'Delivery Address',
-        validators=[DataRequired(), Length(min=5, max=255)]
+        choices=[], 
+        validators=[DataRequired()]
     )
     submit = SubmitField('Confirm Order')
