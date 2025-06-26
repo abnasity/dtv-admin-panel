@@ -261,15 +261,35 @@ def place_order():
         flash("Please fill the form correctly.", "danger")
         return redirect(url_for('customers.checkout'))
 
+    # Fetch active cart items
     cart_items = CartItem.query.filter_by(customer_id=current_user.id, status='active').all()
     if not cart_items:
         flash("Your cart is empty.", "warning")
         return redirect(url_for('customers.view_cart'))
-    
+
+    # Build a list of device IDs from the cart
+    cart_item_ids = sorted([item.device_id for item in cart_items if item.device_id])
+
+    # Get all previous non-cancelled orders (pending or approved)
+    existing_orders = CustomerOrder.query.filter(
+        CustomerOrder.customer_id == current_user.id,
+        CustomerOrder.status.in_(['pending', 'approved'])
+    ).all()
+
+    for order in existing_orders:
+        order_items = CustomerOrderItem.query.filter_by(order_id=order.id).all()
+        order_item_ids = sorted([item.device_id for item in order_items if item.device_id])
+
+        if cart_item_ids == order_item_ids:
+            flash("You already have an identical order that is pending or confirmed.", "danger")
+            return redirect(url_for('customers.view_cart'))
+
+    # Debug: print cart items
     print(f"Cart items for customer {current_user.id}:")
     for item in cart_items:
         print(f"- {item.device.brand} {item.device.model} (IMEI: {item.device.imei})")
 
+    # Create new order
     order = CustomerOrder(
         customer_id=current_user.id,
         delivery_address=form.delivery_address.data,
@@ -279,18 +299,16 @@ def place_order():
     db.session.add(order)
     db.session.flush()
 
-   
-    # Assign staff to order 
+    # Assign staff to the order
     assigned = assign_staff_to_order(order)
     if assigned:
         print(f"[SUCCESS] Assigned staff: {assigned.username}")
     else:
         print("[WARNING] No matching staff found.")
 
-    # Re-add order in case it's detached or stale in session
-    db.session.add(order)  # this ensures the staff ID change is tracked
+    db.session.add(order)  # Ensure any changes are tracked
 
-
+    # Add order items from cart
     for item in cart_items:
         device = item.device
         if not device or device.status != 'available':
@@ -307,6 +325,7 @@ def place_order():
 
     flash("Your order has been placed successfully!", "success")
     return redirect(url_for('customers.order_detail', order_id=order.id))
+
 
 
 
