@@ -5,7 +5,7 @@ from app.models import Customer, Device, CartItem, CustomerOrder, CustomerOrderI
 from app.forms import CustomerRegistrationForm, CustomerLoginForm, CustomerEditForm, CheckoutForm
 from datetime import datetime
 from app.routes.customers import bp
-from app.utils.helpers import assign_staff_to_customer
+from app.utils.helpers import assign_staff_to_order
 
 # REGISTER
 @bp.route('/register', methods=['GET', 'POST'])
@@ -261,7 +261,6 @@ def place_order():
         flash("Please fill the form correctly.", "danger")
         return redirect(url_for('customers.checkout'))
 
-    # Only fetch cart items that are not already ordered
     cart_items = CartItem.query.filter_by(customer_id=current_user.id, status='active').all()
     if not cart_items:
         flash("Your cart is empty.", "warning")
@@ -269,10 +268,8 @@ def place_order():
     
     print(f"Cart items for customer {current_user.id}:")
     for item in cart_items:
-     print(f"- {item.device.brand} {item.device.model} (IMEI: {item.device.imei})")
+        print(f"- {item.device.brand} {item.device.model} (IMEI: {item.device.imei})")
 
-
-    # Create the new customer order
     order = CustomerOrder(
         customer_id=current_user.id,
         delivery_address=form.delivery_address.data,
@@ -280,17 +277,25 @@ def place_order():
         created_at=datetime.utcnow()
     )
     db.session.add(order)
-    db.session.flush()  # Ensure order.id is available
+    db.session.flush()
 
-    # Automatically assign staff based on address
-    assign_staff_to_customer(current_user)
+   
+    # Assign staff to order 
+    assigned = assign_staff_to_order(order)
+    if assigned:
+        print(f"[SUCCESS] Assigned staff: {assigned.username}")
+    else:
+        print("[WARNING] No matching staff found.")
+
+    # Re-add order in case it's detached or stale in session
+    db.session.add(order)  # this ensures the staff ID change is tracked
+
 
     for item in cart_items:
         device = item.device
         if not device or device.status != 'available':
             continue
 
-        # Create the order item
         order_item = CustomerOrderItem(
             order_id=order.id,
             device_id=device.id,
@@ -298,11 +303,11 @@ def place_order():
         )
         db.session.add(order_item)
 
-
     db.session.commit()
 
     flash("Your order has been placed successfully!", "success")
     return redirect(url_for('customers.order_detail', order_id=order.id))
+
 
 
 # ORDER DETAIL ROUTE
