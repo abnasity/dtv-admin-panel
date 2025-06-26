@@ -79,8 +79,8 @@ class Customer(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
-    assigned_staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    assigned_staff = db.relationship('User', backref='assigned_customers', foreign_keys=[assigned_staff_id])
+    
+    
 
 
     # Relationship: customer purchases (you must add customer_id in Sale model)
@@ -122,6 +122,85 @@ class Customer(UserMixin, db.Model):
         }
     def __repr__(self):
         return f"<Customer {self.full_name} ({self.email})>"
+    
+
+ 
+#  CUSTOMERORDER MODEL
+# This model represents customer orders, which can include multiple products.
+class CustomerOrder(db.Model):
+    __tablename__ = 'customer_orders'
+
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete='CASCADE'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'approved', 'cancelled', 'rejected'
+    approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
+    delivery_address = db.Column(db.String(255))
+    assigned_staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    assigned_staff = db.relationship('User', backref='assigned_customers', foreign_keys=[assigned_staff_id])
+    notes = db.Column(db.Text)
+
+# relationships
+    customer = db.relationship('Customer', backref='orders')
+    items = db.relationship('CustomerOrderItem', backref='order', lazy=True, cascade='all, delete-orphan', foreign_keys='CustomerOrderItem.order_id')
+
+    approved_by = db.relationship('User', foreign_keys=[approved_by_id])
+
+    def is_pending(self):
+        return self.status == 'pending'
+    
+    def total_amount(self):
+        return sum(item.unit_price for item in self.items)
+
+    def get_total(self):
+         return sum(item.device.purchase_price or 0 for item in self.items)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'customer_id': self.customer_id,
+            'created_at': self.created_at.isoformat(),
+            'status': self.status,
+            'approved_by': self.approved_by.to_dict() if self.approved_by else None,
+            'approved_at': self.approved_at.isoformat() if self.approved_at else None,
+            'delivery_address' : self.delivery_address,
+            'items': [item.to_dict() for item in self.items],
+            'notes': self.notes
+        }
+
+    def __repr__(self):
+        return f"<CustomerOrder ID: {self.id} - Status: {self.status}>"
+
+    
+# CUSTOMER ORDER ITEM MODEL
+# This model represents items in customer orders, linking products to customer orders.
+class CustomerOrderItem(db.Model):
+    __tablename__ = 'customer_order_items'
+
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('customer_orders.id', ondelete='CASCADE'), nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='CASCADE'), nullable=False)
+    unit_price = db.Column(db.Numeric(12, 2), nullable=False)
+
+    # Relationship to device
+    device = db.relationship("Device", backref="order_items")
+
+    def to_dict(self):
+     return {
+        'device': self.device.to_dict() if self.device else None
+    }
+
+    def to_dict(self):
+     return {
+        'device': self.device.to_dict() if self.device else None,
+        'unit_price': float(self.unit_price)  # ensure it's serializable
+    }
+
+
+    def __repr__(self):
+        return f"<CustomerOrderItem Device ID: {self.device_id}, Price: {self.unit_price}>"
+
     
         
 #  DEVICE MODEL
@@ -386,80 +465,6 @@ class SaleItem(db.Model):
         }
     def __repr__(self):
      return f"<SaleItem Product ID: {self.product_id}, Qty: {self.quantity}>"
- 
-#  CUSTOMERORDER MODEL
-# This model represents customer orders, which can include multiple products.
-class CustomerOrder(db.Model):
-    __tablename__ = 'customer_orders'
-
-    id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete='CASCADE'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(20), default='pending')  # 'pending', 'approved', 'cancelled', 'rejected'
-    approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    approved_at = db.Column(db.DateTime, nullable=True)
-    delivery_address = db.Column(db.String(255))
-    notes = db.Column(db.Text)
-
-# relationships
-    customer = db.relationship('Customer', backref='orders')
-    items = db.relationship('CustomerOrderItem', backref='order', lazy=True, cascade='all, delete-orphan', foreign_keys='CustomerOrderItem.order_id')
-
-    approved_by = db.relationship('User', foreign_keys=[approved_by_id])
-
-    def is_pending(self):
-        return self.status == 'pending'
-    
-    def total_amount(self):
-        return sum(item.unit_price for item in self.items)
-
-    def get_total(self):
-         return sum(item.device.purchase_price or 0 for item in self.items)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'customer_id': self.customer_id,
-            'created_at': self.created_at.isoformat(),
-            'status': self.status,
-            'approved_by': self.approved_by.to_dict() if self.approved_by else None,
-            'approved_at': self.approved_at.isoformat() if self.approved_at else None,
-            'delivery_address' : self.delivery_address,
-            'items': [item.to_dict() for item in self.items],
-            'notes': self.notes
-        }
-
-    def __repr__(self):
-        return f"<CustomerOrder ID: {self.id} - Status: {self.status}>"
-
-    
-# CUSTOMER ORDER ITEM MODEL
-# This model represents items in customer orders, linking products to customer orders.
-class CustomerOrderItem(db.Model):
-    __tablename__ = 'customer_order_items'
-
-    id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, db.ForeignKey('customer_orders.id', ondelete='CASCADE'), nullable=False)
-    device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='CASCADE'), nullable=False)
-    unit_price = db.Column(db.Numeric(12, 2), nullable=False)
-
-    # Relationship to device
-    device = db.relationship("Device", backref="order_items")
-
-    def to_dict(self):
-     return {
-        'device': self.device.to_dict() if self.device else None
-    }
-
-    def to_dict(self):
-     return {
-        'device': self.device.to_dict() if self.device else None,
-        'unit_price': float(self.unit_price)  # ensure it's serializable
-    }
-
-
-    def __repr__(self):
-        return f"<CustomerOrderItem Device ID: {self.device_id}, Price: {self.unit_price}>"
 
 
         
