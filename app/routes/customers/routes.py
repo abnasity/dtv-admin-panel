@@ -338,10 +338,16 @@ def place_order():
         item.status = 'ordered'
         db.session.add(item)
 
+        # Commit order and items first
+    db.session.commit()
+
+    # Now clear ordered items from cart
+    CartItem.query.filter_by(customer_id=current_user.id, status='ordered').delete()
     db.session.commit()
 
     flash("Your order has been placed successfully!", "success")
     return redirect(url_for('customers.order_detail', order_id=order.id))
+
 
 
 
@@ -367,3 +373,14 @@ def order_success():
     if not isinstance(current_user, Customer):
         abort(403)
     return render_template('customers/order_success.html')
+
+# MY ORDERS
+@bp.route('/my_orders')
+@login_required
+def my_orders():
+    orders = CustomerOrder.query.filter(
+        CustomerOrder.customer_id == current_user.id,
+        CustomerOrder.status.in_(['approved', 'pending'])  # show both
+    ).order_by(CustomerOrder.created_at.desc()).all()
+
+    return render_template('customers/my_orders.html', orders=orders)
