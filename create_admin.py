@@ -16,7 +16,7 @@ def create_admin_user(username, email, password):
             user.role = 'admin'
             user.password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
             db.session.commit()
-            print(f"✅ User '{username}' has been updated to admin role.")
+            print(f" User '{username}' has been updated to admin role.")
         else:
             # Create new admin user
             hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
@@ -28,8 +28,8 @@ def create_admin_user(username, email, password):
                 is_active=True
             )
             db.session.add(user)
-            db.session.commit()  # 🔥 This was missing!
-            print(f"✅ Admin user '{username}' has been created successfully.")
+            db.session.commit()  
+            print(f" Admin user '{username}' has been created successfully.")
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
