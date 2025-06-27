@@ -217,6 +217,22 @@
                     </li>
 
 
+                      {% if current_user.is_authenticated and current_user.is_customer() %}
+                            <li class="nav-item position-relative">
+                                <a class="nav-link hover-effect d-flex align-items-center position-relative" href="{{ url_for('customers.my_orders') }}">
+                                    <i class="fas fa-check-circle me-1 position-relative text-success">
+                                        {% if confirmed_orders_count > 0 %}
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+                                            {{ '99+' if confirmed_orders_count > 99 else confirmed_orders_count }}
+                                        </span>
+                                        {% endif %}
+                                    </i>
+                                    <span class="ms-1">Orders</span>
+                                </a>
+                            </li>
+                    {% endif %}
+
+
 
                    
                 {% endif %}
