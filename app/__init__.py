@@ -3,7 +3,7 @@ from config import Config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf
 from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
-from app.models import CartItem, User, Customer
+from app.models import CartItem, User, Customer, CustomerOrder
 
 login_manager.session_protection = "strong"
 login_manager.login_view = 'auth.login'
@@ -54,12 +54,15 @@ def create_app(config_class=Config):
  
     @app.context_processor
     def inject_cart_count():
+     cart_count = 0
+     confirmed_orders_count = 0
+
      if hasattr(current_user, 'is_customer') and current_user.is_authenticated and current_user.is_customer():
         cart_count = CartItem.query.filter_by(customer_id=current_user.id).count()
-     else:
-        cart_count = 0
+        confirmed_orders_count = CustomerOrder.query.filter_by(customer_id=current_user.id, status='approved').count()
 
-     return dict(cart_count=cart_count)
+     return dict(cart_count=cart_count, confirmed_orders_count=confirmed_orders_count)
+
 
 
     # Import web route blueprints
