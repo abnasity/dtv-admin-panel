@@ -254,22 +254,20 @@
                             </div>
                         {% endif %}
                     </div>
+                                        
+                        <div class="mb-3">
+                            {{ form.address.label(class="form-label") }}
+                            {{ form.address(class="form-control") }}
+                            {% if form.address.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.address.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
 
-                   <div class="mb-3">
-                        <label for="address">Customer Address</label>
-                        <select name="address" id="address" class="form-select">
-                            {% for customer in customers %}
-                                <option value="{{ customer.address }}">{{ customer.fullname }} - {{ customer.address }}</option>
-                            {% endfor %}
-                            <option value="__new__">Other (Add new address)</option>
-                        </select>
-                    </div>
-
-                    <div id="newAddressField" style="display:none;" class="mb-3">
-                        <label for="new_address">New Address</label>
-                        <input type="text" name="new_address" class="form-control">
-                    </div>
-
+                
 
 
                     <div class="modal-footer">
