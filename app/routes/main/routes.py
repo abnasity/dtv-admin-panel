@@ -3,7 +3,7 @@ from flask_login import login_required
 from app.routes.main import bp
 
 @bp.route('/')
-@login_required
+# @login_required
 def index():
     return redirect(url_for('reports.dashboard'))
 
