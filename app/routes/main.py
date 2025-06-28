@@ -28,7 +28,7 @@ def calculate_growth_rate(days=30):
     growth_rate = ((current_sales - previous_sales) / previous_sales) * 100
     return round(growth_rate, 1)
 
-@bp.route('/')
+@bp.route('/home')
 @login_required
 def index():
     if current_user.is_admin():
