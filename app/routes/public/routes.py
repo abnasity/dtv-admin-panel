@@ -8,20 +8,16 @@ from app import db
 
 # PUBLIC ROUTE
 # PUBLIC ROUTE
-@bp.route('/public')
 @bp.route('/')
 def home():
-    # Check if user is authenticated
-    if current_user.is_authenticated:
-        # Redirect based on user role
+    if current_user.is_authenticated and current_user.role:
         if current_user.is_admin():
             return redirect(url_for('reports.dashboard'))
         elif current_user.is_staff():
             return redirect(url_for('staff.dashboard'))
         elif current_user.is_customer():
             return redirect(url_for('customers.dashboard'))
-    
-    # Show public view for unauthenticated users
+
     return render_template('public/home.html', public_view=True)
 
 
