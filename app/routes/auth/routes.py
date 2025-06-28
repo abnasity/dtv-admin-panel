@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db
-from app.models import User, CustomerOrder, Customer, CartItem
+from app.models import User, CustomerOrder, Customer, CartItem, Notification
 from app.forms import LoginForm, ProfileForm, RegisterForm
 from app.decorators  import admin_required
 from app.utils.helpers import assign_staff_to_order
@@ -79,6 +79,15 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.login'))
+
+# STAFF DASHBOARD
+@bp.route('/notifications')
+@login_required
+def notifications():
+    if current_user.role != 'staff':
+        abort(403)
+    notes = Notification.query.filter_by(staff_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    return render_template('staff/notifications.html', notifications=notes)
 
 
 # ADMIN DASHBOARD
@@ -465,5 +474,5 @@ def delete_customer(id):
         return '', 204
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Delete failed for customer {id}: {e}")
+        print(f" Delete failed for customer {id}: {e}")
         return jsonify({'error': 'Delete failed'}), 500
