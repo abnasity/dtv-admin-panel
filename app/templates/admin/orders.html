@@ -7,6 +7,7 @@
         <tr>
             <th>Order ID</th>
             <th>Customer</th>
+            <th>Phone number</th>
             <th>Status</th>
             <th>Created At</th>
             <th>Actions</th>
@@ -17,6 +18,7 @@
         <tr>
             <td>{{ order.id }}</td>
             <td>{{ order.customer.full_name }}</td>
+            <td>{{ order.customer.phone_number }}</td>
             <td>{{ order.status }}</td>
             <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
             <td>
