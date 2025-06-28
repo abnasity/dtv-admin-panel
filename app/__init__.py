@@ -3,7 +3,7 @@ from config import Config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf
 from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
-from app.models import CartItem, User, Customer, CustomerOrder
+from app.models import CartItem, User, Customer, CustomerOrder, Notification
 
 login_manager.session_protection = "strong"
 login_manager.login_view = 'auth.login'
@@ -62,6 +62,21 @@ def create_app(config_class=Config):
         confirmed_orders_count = CustomerOrder.query.filter_by(customer_id=current_user.id, status='approved').count()
 
      return dict(cart_count=cart_count, confirmed_orders_count=confirmed_orders_count)
+ 
+ 
+    @app.context_processor
+    def inject_notifications():
+     unread_count = 0  # Set a default
+
+     if current_user.is_authenticated and getattr(current_user, 'role', None) == 'staff':
+        unread_count = Notification.query.filter_by(
+            staff_id=current_user.id, is_read=False
+        ).count()
+
+     return dict(unread_notifications_count=unread_count)
+
+    
+
 
 
 
