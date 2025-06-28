@@ -299,9 +299,6 @@ class InventoryTransaction(db.Model):
 
 
     
- 
-
-
 # SALE MODEL FOR DEVICES ONLY
 # This model tracks sales of devices, linking them to the device and seller.
 class Sale(db.Model):
@@ -324,6 +321,18 @@ class Sale(db.Model):
     def is_fully_paid(self):
       return self.amount_paid >= self.sale_price
   
+# NOTIFICATION MODEL
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    message = db.Column(db.String(255), nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship
+    staff = db.relationship('User', backref='notifications', lazy=True)
+
 
         
 # ALERT MODEL
