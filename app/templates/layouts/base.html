@@ -73,6 +73,15 @@
                             </ul>
                         </li>
 
+                        {% if current_user.is_staff() %}
+                        <a class="nav-link" href="{{ url_for('auth.notifications') }}">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notifications_count > 0 %}
+                                <span class="badge bg-danger">{{ unread_notifications_count }}</span>
+                            {% endif %}
+                        </a>
+                        {% endif %}
+
 
                     <!-- ADMIN ONLY -->
                     {% if current_user.is_admin() %}
@@ -119,9 +128,6 @@
                             </li>
                         </ul>
                         </li>
-
-
-
 
 
                         <li class="nav-item">
