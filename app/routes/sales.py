@@ -7,7 +7,7 @@ from datetime import datetime
 
 bp = Blueprint('sales', __name__, url_prefix='/sales')
 
-@bp.route('/')
+@bp.route('/sales')
 @login_required
 def index():
     """Display sales dashboard"""
