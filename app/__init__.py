@@ -90,7 +90,7 @@ def create_app(config_class=Config):
     from app.routes.public import bp as public_bp
     
      # Register web route blueprints
-    app.register_blueprint(main_bp)
+    app.register_blueprint(main_bp, url_prefix='/main')
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(devices_bp, url_prefix='/devices', name='devices')
     app.register_blueprint(sales_bp, url_prefix='/sales', name='sales')
