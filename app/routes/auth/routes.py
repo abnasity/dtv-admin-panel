@@ -485,20 +485,41 @@ def view_order(order_id):
 def cancel_order(order_id):
     order = CustomerOrder.query.get_or_404(order_id)
 
-    # Allow cancelling 'pending' or 'awaiting_approval'
     if order.status not in ['pending', 'awaiting_approval']:
         flash("Only pending or awaiting approval orders can be cancelled.", "warning")
         return redirect(url_for('auth.view_order', order_id=order.id))
 
-    # Set status to 'cancelled'
+    reason = request.form.get('cancel_reason', '').strip()
+    if not reason:
+        flash("Cancellation reason is required.", "danger")
+        return redirect(url_for('auth.view_order', order_id=order.id))
+
     order.status = 'cancelled'
     order.approved_by_id = current_user.id
     order.approved_at = datetime.utcnow()
-    order.notes = "Cancelled by admin"
+    order.notes = f"Cancelled by admin: {reason}"
+
+    # Notify staff if assigned
+    if order.assigned_staff_id:
+        notif_link_staff = url_for('auth.view_order_staff', order_id=order.id)
+        Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link_staff).delete()
+        db.session.add(Notification(
+            user_id=order.assigned_staff_id,
+            message=f"Order #{order.id} was cancelled by admin. Reason: {reason}",
+            link=notif_link_staff
+        ))
+
+    # Notify customer
+    if order.customer:
+        notif_link_customer = url_for('customers.order_detail', order_id=order.id)
+        db.session.add(Notification(
+            user_id=order.customer.id,
+            message=f"Your order #{order.id} was cancelled. Reason: {reason}",
+            link=notif_link_customer
+        ))
 
     db.session.commit()
-
-    flash("Order has been cancelled successfully.", "success")
+    flash("Order has been cancelled and notifications sent.", "success")
     return redirect(url_for('auth.view_orders'))
 
 # ADMIN DELETE ORDER
