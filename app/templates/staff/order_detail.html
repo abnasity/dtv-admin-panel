@@ -13,6 +13,8 @@
         <span class="badge bg-success">Approved</span>
     {% elif order.status == 'cancelled' %}
         <span class="badge bg-danger">Cancelled</span>
+    {% elif order.status == 'rejected' %}
+        <span class="badge bg-dark">Rejected</span> 
     {% endif %}
 </p>
 
