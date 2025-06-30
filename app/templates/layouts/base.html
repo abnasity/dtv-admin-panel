@@ -122,6 +122,19 @@
                                     <i class="fas fa-list me-1"></i> All Orders
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.rejected_orders') }}">
+                                    <i class="fas fa-times-circle me-1"></i> Rejected Orders
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.cancelled_orders') }}">
+                                    <i class="fas fa-ban me-1"></i> Cancelled Orders
+                                </a>
+                            </li>
+
+
+
                         </ul>
                         </li>
 
@@ -262,7 +275,6 @@
                                     </a>
                                 </li>
                             {% endif %}
-
 
             </ul>
         </div>
