@@ -1,0 +1,30 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3>Rejected Orders</h3>
+  {% if orders %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Date</th>
+          <th>Reason</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+          <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>{{ order.notes or 'No reason provided' }}</td>
+            <td><span class="badge bg-danger">Rejected</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>You have no rejected orders.</p>
+  {% endif %}
+</div>
+{% endblock %}
