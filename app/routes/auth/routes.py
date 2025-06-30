@@ -467,7 +467,8 @@ def approve_order(order_id):
 @login_required
 @admin_required
 def view_orders():
-    orders = CustomerOrder.query.order_by(CustomerOrder.created_at.desc()).all()
+    orders = CustomerOrder.query.filter_by(is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
+
     return render_template('admin/orders.html', orders=orders)
 
 # SINGLE ORDER VIEW
@@ -533,7 +534,7 @@ def delete_order(order_id):
         flash("Only cancelled orders can be deleted.", "warning")
         return redirect(url_for('auth.view_order', order_id=order.id))
 
-    db.session.delete(order)
+    order.is_deleted = True
     db.session.commit()
     flash("Cancelled order deleted successfully.", "success")
     return redirect(url_for('auth.view_orders'))
@@ -543,7 +544,8 @@ def delete_order(order_id):
 @login_required
 @admin_required
 def pending_orders():
-    orders = CustomerOrder.query.filter_by(status='pending').order_by(CustomerOrder.created_at.desc()).all()
+    orders = CustomerOrder.query.filter_by(status='pending', is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
+
     return render_template('admin/orders_pending.html', orders=orders)
 
 # APPROVED ORDERS
@@ -551,8 +553,38 @@ def pending_orders():
 @login_required
 @admin_required
 def approved_orders():
-    orders = CustomerOrder.query.filter_by(status='approved').order_by(CustomerOrder.created_at.desc()).all()
+    orders = CustomerOrder.query.filter_by(status='approved', is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
+
     return render_template('admin/orders_approved.html', orders=orders)
+
+
+# REJECTED ORDERS
+@bp.route('/orders/rejected')
+@login_required
+@admin_required
+def rejected_orders():
+    orders = CustomerOrder.query.filter_by(status='rejected', is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
+
+    return render_template('admin/orders_rejected.html', orders=orders)
+
+# CANCELLED ORDERS
+@bp.route('/orders/cancelled')
+@login_required
+@admin_required
+def cancelled_orders():
+    orders = CustomerOrder.query.filter_by(status='cancelled', is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
+
+    return render_template('admin/orders_cancelled.html', orders=orders)
+
+
+# DELETED ORDERS
+@bp.route('/orders/deleted')
+@login_required
+@admin_required
+def deleted_orders():
+    orders = CustomerOrder.query.filter_by(is_deleted=True).order_by(CustomerOrder.created_at.desc()).all()
+    return render_template('admin/orders_deleted.html', orders=orders)
+
 
 # ASSIGN STAFF TO CUSTOMER
 def assign_staff_to_order(order):
@@ -573,7 +605,11 @@ def assign_staff_to_order(order):
 @login_required
 @admin_required
 def view_assignments():
-    orders = CustomerOrder.query.filter(CustomerOrder.assigned_staff_id != None).order_by(CustomerOrder.created_at.desc()).all()
+    orders = CustomerOrder.query.filter(
+    CustomerOrder.assigned_staff_id != None,
+    CustomerOrder.is_deleted == False
+).order_by(CustomerOrder.created_at.desc()).all()
+
     return render_template('admin/view_assignments.html', orders=orders)
 
 # DELETE CUSTOMER
@@ -623,18 +659,4 @@ def view_sold_devices():
     sold_devices = Device.query.filter_by(status='sold').order_by(Device.id.desc()).all()
     return render_template('admin/sold_devices.html', devices=sold_devices)
 
-# REJECTED ORDERS
-@bp.route('/orders/rejected')
-@login_required
-@admin_required
-def rejected_orders():
-    orders = CustomerOrder.query.filter_by(status='rejected').order_by(CustomerOrder.created_at.desc()).all()
-    return render_template('admin/orders_rejected.html', orders=orders)
 
-# CANCELLED ORDERS
-@bp.route('/orders/cancelled')
-@login_required
-@admin_required
-def cancelled_orders():
-    orders = CustomerOrder.query.filter_by(status='cancelled').order_by(CustomerOrder.created_at.desc()).all()
-    return render_template('admin/orders_cancelled.html', orders=orders)
