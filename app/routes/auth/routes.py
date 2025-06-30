@@ -1,9 +1,10 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db
-from app.models import User, CustomerOrder, Customer, CartItem, Notification
+from app.models import User, CustomerOrder, Customer, Notification, Device
 from app.forms import LoginForm, ProfileForm, RegisterForm
 from app.decorators  import admin_required
+from app.utils.decorators import staff_required
 from app.utils.helpers import assign_staff_to_order
 from app.routes.auth import bp
 from datetime import datetime
@@ -12,7 +13,7 @@ from datetime import datetime
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('reports.dashboard'))
+        return redirect(url_for('staff.dashboard'))
             
     form = LoginForm()
     if form.validate_on_submit():
@@ -86,8 +87,67 @@ def logout():
 def notifications():
     if current_user.role != 'staff':
         abort(403)
-    notes = Notification.query.filter_by(staff_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    notes = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
     return render_template('staff/notifications.html', notifications=notes)
+
+# MARK AWAITING APPROVAL
+@bp.route('/orders/<int:order_id>/awaiting-approval', methods=['POST'])
+@login_required
+@staff_required
+def mark_awaiting_approval(order_id):
+    order = CustomerOrder.query.get_or_404(order_id)
+    order.status = 'awaiting_approval'
+    db.session.commit()
+
+    # notify admin again that it's ready for approval
+    admin_users = User.query.filter_by(role='admin').all()
+    for admin in admin_users:
+        note = Notification(
+            user_id=admin.id,
+            message=f"Order #{order.id} by {order.customer.full_name} is ready for approval",
+            link=url_for('auth.view_order', order_id=order.id)
+        )
+        db.session.add(note)
+    db.session.commit()
+
+    flash("Order marked as awaiting approval.", "info")
+    return render_template ('staff/notifications.html')
+
+# VIEW ORDER FOR STAFF
+@bp.route('/orders/<int:order_id>')
+@login_required
+@staff_required
+def view_order_staff(order_id):
+    order = CustomerOrder.query.get_or_404(order_id)
+
+    # Ensure staff is only seeing orders assigned to them
+    if order.assigned_staff_id != current_user.id:
+        flash("You are not assigned to this order.", "danger")
+        return redirect(url_for('auth.notifications'))
+
+    # Mark related notification as read (if exists)
+    notif_link = url_for('auth.view_order_staff', order_id=order.id)
+    notification = Notification.query.filter_by(
+        user_id=current_user.id,
+        link=notif_link,
+        is_read=False
+    ).first()
+
+    if notification:
+        notification.is_read = True
+        db.session.commit()
+
+    return render_template('staff/order_detail.html', order=order)
+
+
+# ASSIGNED ORDERS
+@bp.route('/orders/assigned')
+@login_required
+@staff_required
+def assigned_orders():
+    orders = CustomerOrder.query.filter_by(assigned_staff_id=current_user.id).order_by(CustomerOrder.created_at.desc()).all()
+    return render_template('staff/assigned_orders.html', orders=orders)
+
 
 
 # ADMIN DASHBOARD
@@ -326,47 +386,82 @@ def edit_user(user_id):
 # CUSTOMER MANAGEMENT (ADMIN DASHBOARD)
 # # ADMIN ORDER APPROVAL  
 # # ADMIN ORDER APPROVAL  
-@bp.route('/admin/approve-order/<int:order_id>', methods=['POST'])
+@bp.route('/orders/<int:order_id>/approve', methods=['POST'])
 @login_required
 @admin_required
 def approve_order(order_id):
-    if not current_user.is_admin():
-        abort(403)
-
     order = CustomerOrder.query.get_or_404(order_id)
 
-    # Mark devices as sold
-    for item in order.items:
-        if item.device.status != 'available':
-            flash(f"Device {item.device.imei} is already sold.", "danger")
-            return redirect(url_for('auth.view_order', order_id=order.id))
-        item.device.mark_as_sold()
+    if order.status not in ['pending', 'awaiting_approval']:
+        flash("This order cannot be approved.", "warning")
+        return redirect(url_for('auth.view_orders', order_id=order.id))
 
+    # Step 1: Conflict check - ensure no device is already sold
+    sold_devices = [
+        item.device for item in order.items
+        if item.device and item.device.status == 'sold'
+    ]
+
+    if sold_devices:
+        sold_names = [f"{d.brand} {d.model}" for d in sold_devices]
+        sold_names_str = ', '.join(sold_names)
+
+        # Mark order as rejected
+        order.status = 'rejected'
+        order.notes = f"The following device(s) are no longer available: {sold_names_str}"
+        order.approved_by_id = current_user.id
+        order.approved_at = datetime.utcnow()
+
+        notif_link_staff = url_for('auth.view_order_staff', order_id=order.id)
+        notif_link_customer = url_for('customers.order_detail', order_id=order.id)
+
+        # Notify assigned staff
+        if order.assigned_staff_id:
+            Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link_staff).delete()
+            db.session.add(Notification(
+                user_id=order.assigned_staff_id,
+                message=f"Order #{order.id} was rejected. Sold device(s): {sold_names_str}",
+                link=notif_link_staff
+            ))
+
+        # ✅ FIXED: Notify the customer (use .id not .user_id)
+        if order.customer:
+            db.session.add(Notification(
+                user_id=order.customer.id,
+                message=f"Your order #{order.id} was rejected. Device(s) unavailable: {sold_names_str}",
+                link=notif_link_customer
+            ))
+
+        db.session.commit()
+        flash(f"Order #{order.id} rejected. Device(s) already sold: {sold_names_str}", "danger")
+        return redirect(url_for('auth.view_order', order_id=order.id))
+
+    # Step 2: Approve the order
     order.status = 'approved'
     order.approved_by_id = current_user.id
     order.approved_at = datetime.utcnow()
 
-    # Assign staff if not already assigned
-    if not order.assigned_staff:       
-        assign_staff_to_order(order)
-
-    # Notify assigned staff
-    if order.assigned_staff:
-        print(f"Notify {order.assigned_staff.username}: Order #{order.id} for {order.customer.full_name} approved.")
-
-    # Delete cart items after approval
     for item in order.items:
-        cart_item = CartItem.query.filter_by(
-            customer_id=order.customer_id,
-            device_id=item.device_id
-        ).first()
-        if cart_item:
-            db.session.delete(cart_item)
+        if item.device:
+            item.device.status = 'sold'
+
+    # Step 3: Notify staff
+    if order.assigned_staff_id:
+        notif_link = url_for('auth.view_order_staff', order_id=order.id)
+        Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link).delete()
+        db.session.add(Notification(
+            user_id=order.assigned_staff_id,
+            message=f"Order #{order.id} has been approved and marked as sold.",
+            link=notif_link
+        ))
 
     db.session.commit()
+    flash(f"Order #{order.id} approved. Devices marked as sold.", "success")
+    return redirect(url_for('auth.view_orders', order_id=order.id))
 
-    flash("Order approved and devices marked as sold.", "success")
-    return redirect(url_for('auth.view_orders'))
+
+
+
 
 
 
@@ -476,3 +571,35 @@ def delete_customer(id):
         db.session.rollback()
         print(f" Delete failed for customer {id}: {e}")
         return jsonify({'error': 'Delete failed'}), 500
+    
+# ADMIN NOTIFICATIONS
+@bp.route('/admin/notifications')
+@login_required
+@admin_required
+def admin_notifications():
+    notes = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    return render_template('admin/notifications.html', notifications=notes)
+
+# MARK ALL AS READ
+@bp.route('/notifications/mark_all_read', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    if current_user.role not in ['staff', 'admin']:
+        abort(403)
+
+    Notification.query.filter_by(user_id=current_user.id, is_read=False).update({Notification.is_read: True})
+    db.session.commit()
+    flash("All notifications marked as read.", "info")
+    
+    if current_user.role == 'staff':
+        return redirect(url_for('auth.notifications'))
+    return redirect(url_for('auth.admin_notifications'))
+
+
+# Show all sold devices
+@bp.route('/devices/sold')
+@login_required
+@admin_required
+def view_sold_devices():
+    sold_devices = Device.query.filter_by(status='sold').order_by(Device.id.desc()).all()
+    return render_template('admin/sold_devices.html', devices=sold_devices)
