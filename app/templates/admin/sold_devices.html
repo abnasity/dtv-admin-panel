@@ -1,0 +1,28 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="container">
+    <h3 class="mb-4">Sold Devices</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>IMEI</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>Purchase Price</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for device in devices %}
+            <tr>
+                <td>{{ device.imei }}</td>
+                <td>{{ device.brand }}</td>
+                <td>{{ device.model }}</td>
+                <td>Ksh {{ device.purchase_price }}</td>
+                <td><span class="badge bg-success">{{ device.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
