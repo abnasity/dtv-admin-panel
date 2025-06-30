@@ -6,12 +6,13 @@ from app.forms import CustomerRegistrationForm, CustomerLoginForm, CustomerEditF
 from datetime import datetime
 from app.routes.customers import bp
 from app.utils.helpers import assign_staff_to_order
+from sqlalchemy import and_
 
 # REGISTER
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+    # if current_user.is_authenticated:
+    #     return redirect(url_for('main.index'))
 
     form = CustomerRegistrationForm()
 
@@ -168,10 +169,10 @@ def get_customer(customer_id):
 @bp.route('/dashboard')
 @login_required
 def dashboard():
-    # Ensure only customers access this route
     if not isinstance(current_user, Customer):
         abort(403, description="Unauthorized access: Customers only.")
-    products = Device.query.all()
+
+    products = Device.query.filter_by(status='available').all()
 
     return render_template('customers/dashboard.html', products=products)
 
@@ -208,9 +209,6 @@ def add_to_cart(device_id):
 
     db.session.commit()
     return redirect(request.referrer or url_for('customers.dashboard'))
-
-
-
 
 
 
@@ -350,9 +348,6 @@ def place_order():
 
 
 
-
-
-
 # ORDER DETAIL ROUTE
 @bp.route('/order/<int:order_id>')
 @login_required
@@ -384,3 +379,28 @@ def my_orders():
     ).order_by(CustomerOrder.created_at.desc()).all()
 
     return render_template('customers/my_orders.html', orders=orders)
+
+
+# BOUGHT DEVICES 
+@bp.route('/my_devices')
+@login_required
+def my_devices():
+    if not isinstance(current_user, Customer):
+        abort(403)
+
+    approved_orders = CustomerOrder.query.filter_by(
+        customer_id=current_user.id,
+        status='approved'
+    ).all()
+
+    # Flatten all purchased devices
+    purchased_items = []
+    for order in approved_orders:
+        for item in order.items:
+            if item.device and item.device.status == 'sold':
+                purchased_items.append({
+                    'device': item.device,
+                    'order': order
+                })
+
+    return render_template('customers/my_devices.html', purchased_items=purchased_items)
