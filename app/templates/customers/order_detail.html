@@ -45,7 +45,7 @@
 
                     {% if order.approved_by %}
                     <hr>
-                    <p><strong>Approved By:</strong> {{ order.approved_by.name }}</p>
+                    <p><strong>Approved By:</strong> {{ order.approved_by.username }}</p>
                     <p><strong>Approved At:</strong> {{ order.approved_at.strftime('%Y-%m-%d %H:%M') }}</p>
                     {% endif %}
                 </div>
