@@ -101,8 +101,10 @@ class Customer(UserMixin, db.Model):
    
     def is_admin(self):
         return False
- 
-     
+    
+    def is_staff(self):
+     return False
+
     def get_id(self):
         return f'customer-{self.id}'  # distinguish from admin/staff users
 
