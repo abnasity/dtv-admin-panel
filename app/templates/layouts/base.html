@@ -61,9 +61,14 @@
                                         <i class="fas fa-warehouse me-1"></i> Inventory
                                     </a>
                                 </li>
-                          <li>
+                                <li>
                                     <a class="dropdown-item hover-effect" href="{{ url_for('sales.index') }}">
                                         <i class="fas fa-shopping-cart me-1"></i> Sales
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for('auth.view_sold_devices') }}">
+                                        <i class="fas fa-mobile-alt me-1"></i> Sold Devices
                                     </a>
                                 </li>
 
@@ -73,14 +78,26 @@
                             </ul>
                         </li>
 
-                        {% if current_user.is_staff() %}
-                        <a class="nav-link" href="{{ url_for('auth.notifications') }}">
-                            <i class="fas fa-bell"></i>
-                            {% if unread_notifications_count > 0 %}
-                                <span class="badge bg-danger">{{ unread_notifications_count }}</span>
-                            {% endif %}
-                        </a>
+                         {% if current_user.is_authenticated and current_user.role in ['staff', 'admin'] %}
+                            <li class="nav-item position-relative">
+                                <a class="nav-link hover-effect position-relative" href="{{ 
+                                    url_for('auth.notifications') if current_user.is_staff() 
+                                    else url_for('auth.admin_notifications') 
+                                }}">
+                                    <i class="fas fa-bell"></i>
+                                    {% if unread_notifications_count and unread_notifications_count > 0 %}
+                                        <span class="custom-badge badge bg-danger pulse-badge">
+                                            {{ unread_notifications_count }}
+                                            <span class="visually-hidden">unread notifications</span>
+                                        </span>
+                                    {% endif %}
+                                </a>
+                            </li>
                         {% endif %}
+
+
+
+
 
 
                     <!-- ADMIN ONLY -->
@@ -102,9 +119,6 @@
                                 </li>
                             </ul>
                         </li>
-
-                    
-
 
                         <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle hover-effect" href="#" id="customerOrdersDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -236,6 +250,12 @@
                                     <span class="ms-1">Orders</span>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('customers.my_devices') }}">
+                                    <i class="fas fa-mobile-alt me-1"></i> My Purchases
+                                </a>
+                            </li>
+
                     {% endif %}
 
 
