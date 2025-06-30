@@ -548,6 +548,15 @@ def pending_orders():
 
     return render_template('admin/orders_pending.html', orders=orders)
 
+# ORDERS AWAITING APPROVAL
+@bp.route('/orders/awaiting_approval')
+@login_required
+@admin_required
+def awaiting_approval_orders():
+    orders = CustomerOrder.query.filter_by(status='awaiting_approval', is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
+    return render_template('admin/orders_awaiting_approval.html', orders=orders)
+
+
 # APPROVED ORDERS
 @bp.route('/orders/approved')
 @login_required
