@@ -8,12 +8,13 @@
         <table class="table table-striped table-hover align-middle">
             <thead class="table-dark">
                 <tr>
-                    <th scope="col">#Order ID</th>
-                    <th scope="col">Customer</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Created At</th>
-                    <th scope="col">Delivery Address</th>
-                    <th scope="col">Action</th>
+                    <th scope="col" class="text-primary">#Order ID</th>
+                    <th scope="col" class="text-primary">Customer</th>
+                    <th scope="col" class="text-primary">Customer</th>
+                    <th scope="col" class="text-primary">Status</th>
+                    <th scope="col" class="text-primary">Created At</th>
+                    <th scope="col" class="text-primary">Delivery Address</th>
+                    <th scope="col" class="text-primary">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -26,7 +27,7 @@
                                 'secondary' if order.status == 'pending' else 
                                 'info' if order.status == 'awaiting_approval' else 
                                 'success' if order.status == 'approved' else 
-                                'danger' if order.status == 'cancelled' else 'light'
+                                'danger' if order.status == 'cancelled' else 'dark'
                             }}">{{ order.status | capitalize }}</span>
                         </td>
                         <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
