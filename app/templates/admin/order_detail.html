@@ -1,9 +1,16 @@
 {% extends 'layouts/base.html' %}
 {% block content %}
 <h2>Order #{{ order.id }}</h2>
+
+{% if order.status == 'rejected' and order.notes %}
+<div class="alert alert-warning">
+    <strong>Order Rejected:</strong> {{ order.notes }}
+</div>
+{% endif %}
+
 <p><strong>Customer:</strong> {{ order.customer.full_name }}</p>
 <p><strong>Status:</strong> {{ order.status }}</p>
-<p><strong>Assigned Staff:</strong> {{ order.assigned_staff.username }} </p>
+<p><strong>Assigned Staff:</strong> {{ order.assigned_staff.username }}</p>
 <p><strong>Created At:</strong> {{ order.created_at }}</p>
 <p><strong>Delivery Address:</strong> {{ order.delivery_address }}</p>
 
@@ -26,40 +33,37 @@
             <td>{{ item.device.model }}</td>
             <td>KES {{ item.device.purchase_price }}</td>
             <td>{{ item.device.status }}</td>
-            
-
         </tr>
     {% endfor %}
     </tbody>
     <tfoot>
-    <tr>
-        <td colspan="3"></td>
-        <th>Total:</th>
-        <th>KES {{ order.get_total() }}</th>
-    </tr>
-</tfoot>
+        <tr>
+            <td colspan="3"></td>
+            <th>Total:</th>
+            <th>KES {{ order.get_total() }}</th>
+        </tr>
+    </tfoot>
 </table>
 
-{% if order.status == 'pending' %}
+{% if order.status in ['pending', 'awaiting_approval'] %}
 <form method="POST" action="{{ url_for('auth.approve_order', order_id=order.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <button class="btn btn-success">Approve Order</button>
 </form>
 {% endif %}
 
- <form method="POST" action="{{ url_for('auth.cancel_order', order_id=order.id) }}" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <button type="submit" class="btn btn-danger btn-sm m-2" onclick="return confirm('Are you sure you want to cancel this order?');">
-                    Cancel Order
-                </button>
-            </form>
-         
+{% if order.status not in ['approved', 'rejected'] %}
+<form method="POST" action="{{ url_for('auth.cancel_order', order_id=order.id) }}" style="display:inline;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="btn btn-danger btn-sm m-2" onclick="return confirm('Are you sure you want to cancel this order?');">
+        Cancel Order
+    </button>
+</form>
+{% endif %}
 
 <div class="text-center mt-3">
-            <a href="{{ url_for('auth.view_orders') }}" class="btn btn-primary">
-                <i class="fas fa-arrow-left"></i> Customer Orders
-            </a>
+    <a href="{{ url_for('auth.view_orders') }}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Customer Orders
+    </a>
 </div>
-
-
 {% endblock %}
