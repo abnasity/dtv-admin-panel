@@ -209,11 +209,7 @@ class CheckoutForm(FlaskForm):
         choices=[('cash', 'Cash'), ('credit', 'Credit')],
         validators=[DataRequired()]
     )
-    amount_paid = DecimalField(
-        'Amount Paid (Ksh)',
-        validators=[DataRequired(), NumberRange(min=0)],
-        places=2
-    )
+ 
     delivery_address = SelectField(  
         'Delivery Address',
         choices=[], 
