@@ -269,6 +269,15 @@ class Device(db.Model):
      return f"<Device {self.brand} {self.model}"
 
 
+# SOLD DEVICE MODEL
+class SoldDevice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('customer_orders.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    sold_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 
 # INVENTORY TRANSACTION MODEL
@@ -325,14 +334,20 @@ class Sale(db.Model):
 class Notification(db.Model):
     __tablename__ = 'notifications'
     id = db.Column(db.Integer, primary_key=True)
-    staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     message = db.Column(db.String(255), nullable=False)
+    link = db.Column(db.String(255))
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False)
+    type = db.Column(db.String(50))  # e.g., 'assignment', 'approval', 'reminder'
+
 
     # Relationship
-    staff = db.relationship('User', backref='notifications', lazy=True)
+    user = db.relationship('User', backref='notifications', lazy=True)
 
+    def __repr__(self):
+        return f"<Notification id={self.id} user_id={self.user_id} read={self.is_read} message='{self.message[:30]}...'>"
 
         
 # ALERT MODEL
