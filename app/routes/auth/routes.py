@@ -424,7 +424,7 @@ def approve_order(order_id):
                 link=notif_link_staff
             ))
 
-        # ✅ FIXED: Notify the customer (use .id not .user_id)
+        # Notify the customer (use .id not .user_id)
         if order.customer:
             db.session.add(Notification(
                 user_id=order.customer.id,
@@ -462,9 +462,6 @@ def approve_order(order_id):
 
 
 
-
-
-
 # CUSTOMER ORDERS 
 @bp.route('/admin/orders')
 @login_required
@@ -488,8 +485,9 @@ def view_order(order_id):
 def cancel_order(order_id):
     order = CustomerOrder.query.get_or_404(order_id)
 
-    if order.status != 'pending':
-        flash("Only pending orders can be cancelled.", "warning")
+    # Allow cancelling 'pending' or 'awaiting_approval'
+    if order.status not in ['pending', 'awaiting_approval']:
+        flash("Only pending or awaiting approval orders can be cancelled.", "warning")
         return redirect(url_for('auth.view_order', order_id=order.id))
 
     # Set status to 'cancelled'
@@ -603,3 +601,19 @@ def mark_all_notifications_read():
 def view_sold_devices():
     sold_devices = Device.query.filter_by(status='sold').order_by(Device.id.desc()).all()
     return render_template('admin/sold_devices.html', devices=sold_devices)
+
+# REJECTED ORDERS
+@bp.route('/orders/rejected')
+@login_required
+@admin_required
+def rejected_orders():
+    orders = CustomerOrder.query.filter_by(status='rejected').order_by(CustomerOrder.created_at.desc()).all()
+    return render_template('admin/orders_rejected.html', orders=orders)
+
+# CANCELLED ORDERS
+@bp.route('/orders/cancelled')
+@login_required
+@admin_required
+def cancelled_orders():
+    orders = CustomerOrder.query.filter_by(status='cancelled').order_by(CustomerOrder.created_at.desc()).all()
+    return render_template('admin/orders_cancelled.html', orders=orders)
