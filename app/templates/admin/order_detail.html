@@ -6,7 +6,12 @@
 <div class="alert alert-warning">
     <strong>Order Rejected:</strong> {{ order.notes }}
 </div>
+{% elif order.status == 'cancelled' and order.notes %}
+<div class="alert alert-danger">
+    <strong>Order Cancelled:</strong> {{ order.notes }}
+</div>
 {% endif %}
+
 
 <p><strong>Customer:</strong> {{ order.customer.full_name }}</p>
 <p><strong>Status:</strong> {{ order.status }}</p>
@@ -53,12 +58,19 @@
 {% endif %}
 
 {% if order.status not in ['approved', 'rejected'] %}
-<form method="POST" action="{{ url_for('auth.cancel_order', order_id=order.id) }}" style="display:inline;">
+<form method="POST" action="{{ url_for('auth.cancel_order', order_id=order.id) }}" class="mt-3">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <button type="submit" class="btn btn-danger btn-sm m-2" onclick="return confirm('Are you sure you want to cancel this order?');">
+
+    <div class="mb-2">
+        <label for="cancel_reason" class="form-label">Cancellation Reason</label>
+        <textarea name="cancel_reason" id="cancel_reason" class="form-control" rows="3" required></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this order?');">
         Cancel Order
     </button>
 </form>
+
 {% endif %}
 
 <div class="text-center mt-3">
