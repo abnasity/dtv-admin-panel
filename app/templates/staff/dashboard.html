@@ -1,0 +1,50 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Welcome, {{ current_user.username }}!</h2>
+
+    <div class="row g-4">
+        <!-- Assigned Orders Card -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-clipboard-check me-2"></i>Assigned Orders</h5>
+                    <p class="card-text">Check orders assigned to you and take action.</p>
+                    <a href="{{ url_for('auth.assigned_orders') }}" class="btn btn-primary">View Orders</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Card -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-bell me-2"></i>Notifications</h5>
+                    <p class="card-text">You have <strong>{{ unread_notifications_count }}</strong> unread notification{{ unread_notifications_count != 1 and 's' or '' }}.</p>
+                    <a href="{{ url_for('auth.notifications') }}" class="btn btn-warning">View Notifications</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-user-cog me-1"></i> Update Profile
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
