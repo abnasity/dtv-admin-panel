@@ -41,7 +41,7 @@
                        <hr>
                         
 
-                        <!-- ✅ Form bound to WTForm -->
+                        <!-- Form bound to WTForm -->
                         <form method="POST" action="{{ url_for('customers.place_order') }}">
                             {{ form.hidden_tag() }}
 
@@ -50,10 +50,7 @@
                                 {{ form.payment_type(class="form-select") }}
                             </div>
 
-                            <div class="mb-3">
-                                {{ form.amount_paid.label(class="form-label") }}
-                                {{ form.amount_paid(class="form-control", step="0.01", min="0") }}
-                            </div>
+                            
 
                             <div class="class mb-3">
                                 {{ form.delivery_address.label(class="form-label") }}
