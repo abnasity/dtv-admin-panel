@@ -64,20 +64,30 @@ def create_app(config_class=Config):
      return dict(cart_count=cart_count, confirmed_orders_count=confirmed_orders_count)
  
  
+    # @app.context_processor
+    # def inject_notifications():
+    #  unread_count = 0
+    #  if current_user.is_authenticated and current_user.role in ['staff', 'admin']:
+    #     unread_count = Notification.query.filter_by(
+    #         user_id=current_user.id, is_read=False
+    #     ).count()
+    #  return dict(unread_notifications_count=unread_count)
+ 
+    # def inject_unread_notifications():
+    #  if current_user.is_authenticated:
+    #     count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+    #     return {'unread_notifications_count': count}
+    #  return {'unread_notifications_count': 0}
+    
     @app.context_processor
     def inject_notifications():
      unread_count = 0
-     if current_user.is_authenticated and current_user.role in ['staff', 'admin']:
+     if current_user.is_authenticated:
         unread_count = Notification.query.filter_by(
             user_id=current_user.id, is_read=False
         ).count()
-     return dict(unread_notifications_count=unread_count)
- 
-    def inject_unread_notifications():
-     if current_user.is_authenticated:
-        count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
-        return {'unread_notifications_count': count}
-     return {'unread_notifications_count': 0}
+     return {'unread_notifications_count': unread_count}
+
 
 
     
