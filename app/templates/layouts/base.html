@@ -49,6 +49,7 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
+
                 {% if current_user.is_authenticated and current_user.role in ['admin', 'staff'] %}
                     <!-- Admin/Staff Navbar Items -->
                         <li class="nav-item dropdown">
@@ -78,26 +79,7 @@
                             </ul>
                         </li>
 
-                         {% if current_user.is_authenticated and current_user.role in ['staff', 'admin'] %}
-                            <li class="nav-item position-relative">
-                                <a class="nav-link hover-effect position-relative" href="{{ 
-                                    url_for('auth.notifications') if current_user.is_staff() 
-                                    else url_for('auth.admin_notifications') 
-                                }}">
-                                    <i class="fas fa-bell"></i>
-                                    {% if unread_notifications_count and unread_notifications_count > 0 %}
-                                        <span class="custom-badge badge bg-danger pulse-badge">
-                                            {{ unread_notifications_count }}
-                                            <span class="visually-hidden">unread notifications</span>
-                                        </span>
-                                    {% endif %}
-                                </a>
-                            </li>
-                        {% endif %}
-
-
-
-
+                       
 
 
                     <!-- ADMIN ONLY -->
@@ -151,12 +133,10 @@
                         </a>
                         </li>
 
-
-
                     {% endif %}
 
                     <!-- User account/login (shown to all except login page) -->
-                 {% if not request.endpoint == 'auth.login' %}
+                 {% if not request.endpoint == 'auth.login' %}         
                     {% if current_user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
@@ -216,7 +196,6 @@
 
 <!-- END PUBLIC USER ACCOUNT CREATION -->
 
-
                     <li class="nav-item position-relative">
                         {% if current_user.is_authenticated and current_user.is_customer() %}
                             <a class="nav-link hover-effect d-flex align-items-center position-relative" href="{{ url_for('customers.view_cart') }}">
@@ -256,12 +235,34 @@
                                 </a>
                             </li>
 
-                    {% endif %}
 
-
-
-                   
+                    {% endif %}   
+                          
                 {% endif %}
+    
+             {% if current_user.is_authenticated and current_user.role in ['staff', 'admin', 'customer'] %}
+
+                                {% if current_user.is_staff() %}
+                                    {% set notif_url = url_for('auth.notifications') %}
+                                {% elif current_user.is_admin() %}
+                                    {% set notif_url = url_for('auth.admin_notifications') %}
+                                {% else %}
+                                    {% set notif_url = url_for('customers.notifications') %}
+                                {% endif %}
+
+                                <li class="nav-item position-relative">
+                                    <a class="nav-link hover-effect position-relative" href="{{ notif_url }}">
+                                        <i class="fas fa-bell"></i>
+                                        {% if unread_notifications_count and unread_notifications_count > 0 %}
+                                            <span class="custom-badge badge bg-danger pulse-badge">
+                                                {{ unread_notifications_count }}
+                                                <span class="visually-hidden">unread notifications</span>
+                                            </span>
+                                        {% endif %}
+                                    </a>
+                                </li>
+                            {% endif %}
+
 
             </ul>
         </div>
