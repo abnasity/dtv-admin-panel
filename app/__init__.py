@@ -66,14 +66,19 @@ def create_app(config_class=Config):
  
     @app.context_processor
     def inject_notifications():
-     unread_count = 0  # Set a default
-
-     if current_user.is_authenticated and getattr(current_user, 'role', None) == 'staff':
+     unread_count = 0
+     if current_user.is_authenticated and current_user.role in ['staff', 'admin']:
         unread_count = Notification.query.filter_by(
-            staff_id=current_user.id, is_read=False
+            user_id=current_user.id, is_read=False
         ).count()
-
      return dict(unread_notifications_count=unread_count)
+ 
+    def inject_unread_notifications():
+     if current_user.is_authenticated:
+        count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+        return {'unread_notifications_count': count}
+     return {'unread_notifications_count': 0}
+
 
     
 
@@ -88,6 +93,8 @@ def create_app(config_class=Config):
     from app.routes.reports import bp as reports_bp
     from app.routes.customers import bp as customers_bp
     from app.routes.public import bp as public_bp
+    from app.routes.staff import bp as staff_bp
+    
     
      # Register web route blueprints
     app.register_blueprint(main_bp, url_prefix='/main')
@@ -96,6 +103,7 @@ def create_app(config_class=Config):
     app.register_blueprint(sales_bp, url_prefix='/sales', name='sales')
     app.register_blueprint(reports_bp, url_prefix='/reports', name='reports')
     app.register_blueprint(customers_bp, url_prefix='/customers', name='customers')
+    app.register_blueprint(staff_bp, url_prefix='/staff', name='staff')
     app.register_blueprint(public_bp)
     
     
@@ -108,6 +116,7 @@ def create_app(config_class=Config):
     from app.api.customers import bp as customers_api_bp
     from app.api.orders import bp as orders_api_bp
     
+
     
     # Register API blueprints
     app.register_blueprint(auth_api_bp, url_prefix='/api/auth', name='api_auth')
@@ -117,6 +126,7 @@ def create_app(config_class=Config):
     app.register_blueprint(users_api_bp, url_prefix='/api/users', name='api_users')
     app.register_blueprint(customers_api_bp, url_prefix='/api/customers', name='api_customers')
     app.register_blueprint(orders_api_bp, url_prefix='/api/orders', name='api_orders')
+    
     
     # Exempt CSRF protection for API routes
     csrf.exempt(devices_api_bp)
