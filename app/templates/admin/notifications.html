@@ -14,9 +14,15 @@
 
     <ul class="list-group mt-2">
         {% for note in notifications %}
-            <li class="list-group-item d-flex justify-content-between align-items-start">
+            <li class="list-group-item d-flex justify-content-between align-items-start 
+                {% if not note.is_read %}list-group-item-info{% endif %}">
+                
                 <div>
-                    <div>{{ note.message }}</div>
+                    <div>{{ note.message }}
+                        {% if not note.is_read %}
+                            <span class="badge bg-primary ms-2">New</span>
+                        {% endif %}
+                    </div>
                     {% if note.link %}
                         <a href="{{ note.link }}" class="btn btn-sm btn-primary mt-1">View</a>
                     {% endif %}
