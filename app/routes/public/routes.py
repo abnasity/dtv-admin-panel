@@ -1,23 +1,23 @@
-from flask import render_template, request, session, url_for, flash, redirect, abort
-from flask_login import login_required, current_user
-from datetime import datetime
+from flask_login import current_user
+from app.models import User, Customer, Device
+from flask import render_template, redirect, url_for, request
 from app.routes.public import bp
-from app.models import Device, CartItem, Customer, CustomerOrder, CustomerOrderItem
-from app.forms import CheckoutForm
-from app import db
 
-# PUBLIC ROUTE
-# PUBLIC ROUTE
 @bp.route('/')
 def home():
-    if current_user.is_authenticated and current_user.role:
-        if current_user.is_admin():
-            return redirect(url_for('reports.dashboard'))
-        elif current_user.is_staff():
-            return redirect(url_for('staff.dashboard'))
-        elif current_user.is_customer():
+    if current_user.is_authenticated:
+        # If the logged in user is a staff/admin
+        if isinstance(current_user, User):
+            if current_user.is_admin():
+                return redirect(url_for('reports.dashboard'))
+            elif current_user.is_staff():
+                return redirect(url_for('staff.dashboard'))
+
+        # If the logged in user is a customer
+        elif isinstance(current_user, Customer):
             return redirect(url_for('customers.dashboard'))
 
+    # Unauthenticated users see public home page
     return render_template('public/home.html', public_view=True)
 
 
