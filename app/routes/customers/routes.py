@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, abort, session, make_response
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db, bcrypt
-from app.models import Customer, Device, CartItem, CustomerOrder, CustomerOrderItem, User
+from app.models import Customer, Device, CartItem, CustomerOrder, CustomerOrderItem, User, Notification
 from app.forms import CustomerRegistrationForm, CustomerLoginForm, CustomerEditForm, CheckoutForm
 from datetime import datetime
 from app.routes.customers import bp
@@ -404,3 +404,20 @@ def my_devices():
                 })
 
     return render_template('customers/my_devices.html', purchased_items=purchased_items)
+
+
+# NOTIFICATIONS
+@bp.route('/notifications')
+@login_required
+def notifications():
+    notes = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    return render_template('customers/notifications.html', notifications=notes)
+
+
+
+# REJECTED ORDERS
+@bp.route('/orders/rejected')
+@login_required
+def rejected_orders():
+    orders = CustomerOrder.query.filter_by(customer_id=current_user.id, status='rejected').order_by(CustomerOrder.created_at.desc()).all()
+    return render_template('customers/rejected_orders.html', orders=orders)
