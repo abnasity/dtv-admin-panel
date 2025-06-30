@@ -109,9 +109,15 @@
                         <ul class="dropdown-menu" aria-labelledby="customerOrdersDropdown">
                             <li>
                                 <a class="dropdown-item hover-effect" href="{{ url_for('auth.pending_orders') }}">
-                                    <i class="fas fa-hourglass-half me-1"></i> Pending Orders
+                                    <i class="fas fa-clock"></i> Pending Orders
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.awaiting_approval_orders') }}">
+                                    <i class="fas fa-hourglass-half me-1"></i>Orders Awaiting Approval
+                                </a>
+                            </li>
+
                             <li>
                                 <a class="dropdown-item hover-effect" href="{{ url_for('auth.approved_orders') }}">
                                     <i class="fas fa-check-circle me-1"></i> Approved Orders
@@ -132,9 +138,9 @@
                                     <i class="fas fa-ban me-1"></i> Cancelled Orders
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('auth.deleted_orders') }}">
-                                    <i class="bi bi-trash"></i> Deleted Orders
+                            <li>
+                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.deleted_orders') }}">
+                                    <i class="fas fa-trash"></i> Deleted Orders
                                 </a>
                             </li>
 
