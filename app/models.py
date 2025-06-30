@@ -142,6 +142,7 @@ class CustomerOrder(db.Model):
     delivery_address = db.Column(db.String(255))
     assigned_staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     assigned_staff = db.relationship('User', backref='assigned_customers', foreign_keys=[assigned_staff_id])
+    is_deleted = db.Column(db.Boolean, default=False)
     notes = db.Column(db.Text)
 
 # relationships
