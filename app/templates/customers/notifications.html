@@ -1,0 +1,24 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3>Notifications</h3>
+  {% if notifications %}
+    <ul class="list-group">
+      {% for note in notifications %}
+        <li class="list-group-item {% if not note.is_read %}fw-bold{% endif %}">
+          <a href="{{ note.link }}">{{ note.message }}</a>
+          <br><small class="text-muted">{{ note.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No notifications found.</p>
+  {% endif %}
+</div>
+<li>
+    <a class="dropdown-item hover-effect" href="{{ url_for('customers.rejected_orders') }}">
+        <i class="fas fa-times-circle me-1 text-danger"></i> Rejected Orders
+    </a>
+</li>
+
+{% endblock %}
