@@ -1,47 +1,367 @@
 {% extends 'layouts/base.html' %}
-{% block title %}Diamond Tree Ventures - Flash Deals{% endblock %}
-
 {% block content %}
-<div class="container mt-4">
-    <!-- Header Banner -->
-    <div class="text-center bg-danger text-white p-4 rounded">
-        <h2 class="mb-0">Diamond Tree Flash Deals</h2>
-        <small class="fw-light">Affordable Mobile Devices & Accessories</small>
-    </div>
 
-    <!-- Category Filters -->
-    <div class="mt-4 d-flex flex-wrap gap-2">
-        {% for category in ['All', 'Phones', 'Accessories', 'Smart Devices', 'Wearables', 'TV & Audio'] %}
-        <button class="btn btn-outline-secondary">{{ category }}</button>
-        {% endfor %}
-    </div>
+<style>
+.festive-banner {
+  
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(71, 70, 70, 0.85);
+  padding: 2rem;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+  
+  }
+  
+.festive-title {
 
-    <!-- Simulated Product Grid -->
-    <div class="row mt-5">
-        {% for i in range(6) %}
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm h-100">
-                <img src="https://source.unsplash.com/400x300/?smartphone,phone-{{ i }}" class="card-img-top" alt="Product Image">
-                <div class="card-body">
-                    <h5 class="card-title">Device Model {{ i + 1 }}</h5>
-                    <p class="card-text">Premium smartphone with top-tier features.</p>
-                    <span class="badge bg-success mb-2">Ksh {{ 20000 + i * 2500 }}</span>
+font-size: 2rem;
+font-weight: 700;
+color: #2bd68f;
+margin-bottom: 1rem;
+text-transform: uppercase;
+}
 
-                    {% if current_user.is_authenticated and current_user.is_customer() %}
-                        <form method="POST" action="#">
-                            <button type="submit" class="btn btn-sm btn-primary w-100" disabled>
-                                <i class="fas fa-cart-plus me-1"></i> Add to Cart (Demo)
-                            </button>
-                        </form>
-                    {% else %}
-                        <a href="{{ url_for('customers.login') }}"class="btn btn-sm btn-warning w-100">
-                            <i class="fas fa-lock me-1"></i> Login to Access Available Devices
-                        </a>
-                    {% endif %}
-                </div>
+.festive-subtitle {
+
+font-size: 1.2rem;
+font-weight: 600;
+color: #1d549b;
+margin-bottom: 1.5rem;
+
+
+}
+.shop-now-btn {
+  background-color: #ca6fff;
+  color: white;
+  padding: 12px 40px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+}
+
+.disclaimer{
+font-size: 0.8rem;
+color: #fdff70;
+margin-top: 1rem;
+}
+
+.carousel-item {
+  height: 500px;
+  position: relative;
+}
+.carousel-item img {
+object-fit: cover;
+height: 100%;
+}
+.collection banner {
+background-color: f8f9fa;
+padding: 5rem 0;
+text-align: center;
+position: relative;
+}
+
+.collection-header{
+font-size: 1.8rem;
+font-weight: 300;
+letter-spacing: 3px;
+text-transform: uppercase;
+margin-bottom: 1rem;
+color:#555;
+}
+.collection-name{
+font-size: 4rem;
+font-weight: 700;
+letter-spacing: 1px;
+
+margin-bottom: 2rem;
+color:#000;
+position: relative;
+display: inline-block;
+}
+
+.collection-name::after{
+font-size: 4rem;
+font-weight: 700;
+letter-spacing: 1px;
+
+margin-bottom: 2rem;
+color:#000;
+bottom: -10px;
+left: 50%;
+transform: translate(-50%);
+width: 80px;
+height: 3px;
+position: absolute;
+background-color: #d62b2b;
+}
+
+
+.hero-section {
+position: relative;
+text-align: left;
+padding: 50px;
+}
+ 
+  </style>
+
+<div class="container-fluid">
+
+<div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+    <div class="carousel-inner">
+
+      <!-- Slide 1 -->
+
+      <div class="carousel-item active">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <img src="https://media.istockphoto.com/id/1316900410/photo/samsung-galaxy-a32-5g.jpg?s=612x612&w=0&k=20&c=px7rssNsW6PfhqD6l9L8w1P7CqV1MBzqZedXQjwKEbc=" class="d-block w-100" alt="Carpet Samples">
+          </div>
+          <div class="col-md-6">
+            <div class="p-4">
+              <h2>Latest Smartphones</h2>
+              <p>Stay ahead with our cutting-edge mobile deals.</p>
             </div>
+          </div>
         </div>
-        {% endfor %}
+      </div>
+
+
+  
+      <!-- Slide 2 -->
+      <div class="carousel-item">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <img src="https://media.istockphoto.com/id/1960219022/photo/granada-andalusia-spain-25th-january-2024-new-samsung-s24-ultra-freshly-turned-on-screen-with.jpg?s=612x612&w=0&k=20&c=-_DsUvQMPkv46nG46GLFDPM6r4G_ZxzvTfFnTiejN0I=" class="d-block w-100 h-100" alt="Carpet Installation">
+          </div>
+          <div class="col-md-6">
+            <div class="p-4">
+              <h2>Next-Gen Smartphones</h2>
+              <p>Explore the future of mobile performance and design.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Slide 3 -->
+      <div class="carousel-item">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <img src="https://media.istockphoto.com/id/1316900406/photo/samsung-galaxy-a32-5g.jpg?s=612x612&w=0&k=20&c=1F8cH-i7H0x4CKQGDdSCm5jdgLIZUvk4Zlr37Bm78VA=" class="d-block w-100" alt="Carpet Cleaning">
+          </div>
+          <div class="col-md-6">
+            <div class="p-4">
+              <h2>Affordable Devices for Every Budget</h2>
+              <p>Premium tech, unbeatable prices.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  
+    <!-- Controls (optional) -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+  </div>
+
+
+
+<!-- DEALS SECTION -->
+
+
+<div id="dealsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+  <div class="carousel-inner">
+    <div class="carousel-item active position-relative">
+      <img src="https://media.istockphoto.com/id/1316900405/photo/samsung-galaxy-a32-5g.jpg?s=612x612&w=0&k=20&c=pr6o_DsW3TR-aCBeLp2_f2OdDTYw01KxDsvv1PEpk_A=" class="d-block w-100" alt="responsive image">
+      
+      <!-- Overlay Festive Banner -->
+      <div class="festive-banner text-center">
+        <h2 class="festive-title">FESTIVE SEASON DEALS</h2>
+        <p class="festive-subtitle">LIMITED DISCOUNT ON SELECTED PRODUCTS</p>
+        <button class="btn btn-dark shop-now-btn">SHOP NOW</button>
+        <p class="disclaimer">The limited discount is valid a limited number of products and sizes</p>
+      </div>
+    </div>
+  </div>
 </div>
+
+<br><br>
+
+<!-- SOLD-OUT DEALS SECTION -->
+
+
+<section>
+
+  <div>
+  
+    <!-- FEATURED PRODUCTS -->
+  <div class="row">
+  <h1 style="font-weight: bolder;" class="text-center">Featured Products</h1>
+  
+  
+  <div class="card" style="width: 18rem;">
+      <img src="https://www.phoneplacekenya.com/wp-content/uploads/2025/03/Samsung-Galaxy-A56-5G-a.jpg" class="card-img-top" alt="music production">
+      <div class="card-body">
+        <p class="card-text">Samsung Galaxy A56 5G</p>
+        <a href="#">Learn More</a>
+      </div>
+    </div>
+  
+    <div class="card" style="width: 18rem;">
+      <img src="https://www.phoneplacekenya.com/wp-content/uploads/2024/08/Samsung-Galaxy-A26-5G-A.jpg" class="card-img-top" alt="drumming lesson">
+      <div class="card-body">
+        <p class="card-text">Samsung Galaxy A26 5G</p>
+        <a href="#">Learn More</a>
+      </div>
+    </div>
+  
+    <div class="card" style="width: 18rem;">
+      <img src="https://www.phoneplacekenya.com/wp-content/uploads/2025/03/Samsung-Galaxy-A36-5G-a.jpg" class="card-img-top" alt="piano lesson">
+      <div class="card-body">
+        <p class="card-text">Samsung A36 5G</p>
+        <a href="#">Learn More</a>
+      </div>
+    </div>
+  
+    <div class="card" style="width: 18rem;">
+      <img src="https://www.phoneplacekenya.com/wp-content/uploads/2024/07/Samsung-Galaxy-A06.jpg" class="card-img-top" alt="guitar lesson">
+      <div class="card-body">
+        <p class="card-text">Samsung Galaxy A06</p>
+        <a href="#">Learn More</a>
+      </div>
+    </div>
+  
+    <div class="card" style="width: 18rem;">
+      <img src="https://www.phoneplacekenya.com/wp-content/uploads/2024/12/Samsung-Galaxy-A16-4G.jpg" class="card-img-top" alt="djing lesson">
+      <div class="card-body">
+        <p class="card-text">Samsung Galaxy A16</p>
+        <a href="#">Learn More</a>
+      </div>
+    </div>
+
+    <div class="card" style="width: 18rem;">
+      <img src="https://www.phoneplacekenya.com/wp-content/uploads/2024/08/Samsung-Galaxy-A16-5G-A.jpg" class="card-img-top" alt="djing lesson">
+      <div class="card-body">
+        <p class="card-text">Samsung Galaxy A16 5G</p>
+        <a href="#">Learn More</a>
+      </div>
+    </div>
+
+
+  </div>
+  
+  <div>
+  
+  </div>
+  
+  </div>
+  </section>
+
+  <!-- EXPLORE SECTION -->
+     
+        <h1 class="display-1">Explore Our Products</h1>
+    <div class="row">
+      <div class="card" style="width: 18rem;">
+        <img src="https://media.istockphoto.com/id/1316900409/photo/samsung-galaxy-a32-5g.jpg?s=612x612&w=0&k=20&c=IxEY4DaTbap12rYU28PiH2Z1tYK5a82fvSkY89t40jc=" class="card-img-top" alt="responsive image">
+        <div class="card-body">
+         
+            <h5 class="card-title">Grey Standard wall to wall carpet</h5> <h5 class="ms-lg-4 text-success"><span class="text-dark">Ksh</span>3000</h5>
+          <p class="card-text"> an extremely durable fiber, making it an excellent choice for heavy-traffic areas as well as easy to clean and maintain. </p>
+          <a href="#" class="btn btn-primary">Add to Basket</a>
+        </div>
+      </div>
+    
+      <div class="card" style="width: 18rem;">
+        <img src="https://media.istockphoto.com/id/1401798043/photo/samsung.jpg?s=612x612&w=0&k=20&c=THf92Ub_Anrx9TchSAdibfuSIyqa7E7ENySTKzclmdc=" class="card-img-top" alt="responsive image">
+        <div class="card-body">
+         
+            <h5 class="card-title">Triexta round floor carpets</h5> <h5 class="ms-lg-4 text-success"><span class="text-dark">Ksh</span>3500</h5>
+          
+          <p class="card-text">Triexta is a newer carpet yarn noted for its durability and stain resistance. Polyester is not as durable as nylon, but it is stain-resistant.</p>
+          <a href="#" class="btn btn-primary">Add to Basket</a>
+        </div>
+      </div>
+    
+      <div class="card" style="width: 18rem;">
+        <img src="https://media.istockphoto.com/id/1299655052/photo/choosing-an-app-on-a-samsung-smart-phone.jpg?s=612x612&w=0&k=20&c=jAWuw8LgjPGjfQGHOH8ceRltALUYyCT0ST-GzQ0yCj4=" class="card-img-top" alt="square carpet">
+        <div class="card-body">
+         
+            <h5 class="card-title">Square carpet  floor</h5> <h5 class="ms-lg-4 text-success"><span class="text-dark">Ksh</span>  5000</h5>
+       
+          <p class="card-text">Get carpet tiles at affordable prices around the country. We have square and plank carpet tiles in different colors.</p>
+          <a href="#" class="btn btn-primary">Add to Basket</a>
+        </div>
+      </div>
+      <div class="card" style="width: 18rem;">
+        <img src="https://media.istockphoto.com/id/1401797948/photo/samsung.jpg?s=612x612&w=0&k=20&c=64yok3CHyMFHSB7xLweZg8X9Oj250tPuG-_C2vh6wSQ=" class="card-img-top" alt="fibrous carpet">
+        <div class="card-body">
+         
+            <h5 class="card-title">Fibrous Nylon Carpet</h5> <h5 class="ms-lg-4 text-success"><span class="text-dark">Ksh</span>  3500</h5>
+        
+          <p class="card-text">Fibrous nylon carpets are available for smoother experience</p>
+          <a href="#" class="btn btn-primary">Add to Basket</a>
+        </div>
+      </div>
+
+      <div class="card" style="width: 18rem;">
+        <img src="https://media.istockphoto.com/id/1169860156/photo/galaxy-s10-plus-review.jpg?s=612x612&w=0&k=20&c=ONityVBmnfIVBB92Ug0jrqaXtP3UaYqvd7tb2qzyllw=" class="card-img-top" alt="aisle carpet">
+        <div class="card-body">
+         
+            <h5 class="card-title">Aisle carpets</h5> <h5 class="ms-lg-4 text-success"><span class="text-dark">Ksh</span>5500</h5>
+       
+          <p class="card-text">Discover best ideas and inspiration for Carpet aisle. Get inspired and try out new things. 503 people searched this. ·. Last updated 1d</p>
+          <a href="#" class="btn btn-primary">Add to Basket</a>
+        </div>
+      </div>
+
+      <div class="card" style="width: 18rem;">
+        <img src="hhttps://media.istockphoto.com/id/1217881331/photo/man-holding-in-hands-samsung-galaxy-s20-ultra-closeup.jpg?s=612x612&w=0&k=20&c=BhMtzBJQC-D5jNfYfb6vIr4K7vV4INyZ7UzWXkI51EE=" class="card-img-top" alt="grass carpet">
+        <div class="card-body">
+         
+            <h5 class="card-title">Artificial green grass carpet</h5> <h5 class="ms-lg-4 text-success"><span class="text-dark">Ksh</span>  3500</h5>
+        
+          <p class="card-text">Grass Carpet/Artificial Grass Carpet - 40mm / Per Mtr Squared Green Grass Mat Turf Carpets 2by0.5. KSh 3500</p>
+          <a href="#" class="btn btn-primary">Add to Basket</a>
+        </div>
+      </div>
+      <div class="card" style="width: 18rem;">
+        <img src="https://media.istockphoto.com/id/1459394864/photo/brand-new-samsung-galaxy-z-fold-4-in-grey-green-color-the-device-is-in-the-open-position.jpg?s=612x612&w=0&k=20&c=fKLSsFTBKIf2PrKDb5RnH31asXjPv2zBynKb3x3XF9g=" class="card-img-top" alt="rolled carpets">
+        <div class="card-body">
+         
+            <h5 class="card-title">Floor Carpet</h5> <h5 class="ms-lg-4 text-success"><span class="text-dark">Ksh</span>  4000</h5>
+         
+          <p class="card-text">Original Hard Carpet Heavyweight One Yard/Waterproof floor carpet
+          </p>
+          <a href="#" class="btn btn-primary">Add to Basket</a>
+        </div>
+      </div>
+      <div class="card" style="width: 18rem;">
+        <img src="data:image/webp;base64,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" class="card-img-top" alt="responsive image">
+        <div class="card-body">
+         
+            <h5 class="card-title">Hairy Rug Pillow Carpet</h5> <h5 class="ms-lg-4 text-success"><span class="text-dark">Ksh</span>  2500</h5>
+        
+          <p class="card-text"> Domus Outdoor Pillow; (65×105)cm, Orange/Blue · Domus: Outdoor Leave pattern Pillow for a comfortable nap</p>
+          <a href="#" class="btn btn-primary">Add to Basket</a>
+        </div>
+      </div>
+    </div>
+      </div>
+    
+
+ 
+
 {% endblock %}
