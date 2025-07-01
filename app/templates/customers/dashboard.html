@@ -3,14 +3,30 @@
 {% block title %}Available Phones - Diamond Tree{% endblock %}
 
 {% block content %}
+
+  <!-- Search Bar -->
+<div class="d-flex justify-content-between align-items-center p-3 border rounded bg-white shadow-sm mb-4">
+  <form class="d-flex flex-grow-1 me-3" method="GET" action="{{ url_for('customers.search') }}">
+    <div class="input-group">
+      <input type="text" class="form-control border-success" name="q" placeholder="SAMSUNG A16">
+      <button class="btn btn-success" type="submit">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+  </form>
+
+  <div class="text-end d-flex align-items-center">
+    <i class="fas fa-headset fs-4 text-dark me-2"></i>
+    <div class="small">
+      <div class="text-muted">Need Help?</div>
+      <div class="fw-bold text-success">0725567905</div>
+    </div>
+  </div>
+</div>
+
 <div class="container">
     <h2 class="mb-4 text-center">Available Phones</h2>
-
-    <!-- Search Bar -->
-    <form method="GET" action="{{ url_for('public.search') }}" class="d-flex mb-4 justify-content-center">
-        <input class="form-control w-50 me-2" type="search" name="q" placeholder="Search phones..." aria-label="Search" value="{{ request.args.get('q', '') }}">
-        <button class="btn btn-outline-success" type="submit">Search</button>
-    </form>
+ 
 
     <!-- Products Grid -->
     <div class="row">
