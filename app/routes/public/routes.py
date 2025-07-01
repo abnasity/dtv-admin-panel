@@ -21,15 +21,5 @@ def home():
     return render_template('public/home.html', public_view=True)
 
 
-# PUBLIC SEARCH ROUTE 
-@bp.route('/search')
-def search():
-    query = request.args.get('query', '')
-    products = Device.query.filter(
-        Device.model.ilike(f"%{query}%") |
-        Device.brand.ilike(f"%{query}%")
-    ).all()
-    return render_template('customers/dashboard.html', products=products)
-
 
 
