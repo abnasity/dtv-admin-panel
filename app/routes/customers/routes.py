@@ -8,6 +8,27 @@ from app.routes.customers import bp
 from app.utils.helpers import assign_staff_to_order
 from sqlalchemy import and_
 
+# CUSTOMER SEARCH SECTION
+@bp.route('/search')
+@login_required
+def search():
+    query = request.args.get('q', '').strip()
+
+    devices_query = Device.query.filter(Device.status == 'available')
+
+    if query:
+        devices_query = devices_query.filter(
+    (Device.model.ilike(f"%{query}%")) | 
+    (Device.brand.ilike(f"%{query}%"))
+)
+
+
+    results = devices_query.order_by(Device.arrival_date.desc()).all()
+
+    return render_template('customers/search_results.html', results=results, query=query)
+
+
+
 # REGISTER
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -47,7 +68,7 @@ def login():
 
     form = CustomerLoginForm()
 
-    # ✅ Show flash message if redirected for device access
+    # Show flash message if redirected for device access
     reason = request.args.get('reason')
     if reason == 'access_devices':
         flash("Please login to access available devices.", "warning")
@@ -60,7 +81,7 @@ def login():
             remember = getattr(form, 'remember_me', False)
             login_user(customer, remember=remember.data if remember else False)
            
-            # ✅ Merge session cart (after login)
+            # Merge session cart (after login)
             cart = session.pop('cart', [])
             for device_id in cart:
                 existing = CartItem.query.filter_by(customer_id=customer.id, device_id=device_id).first()
