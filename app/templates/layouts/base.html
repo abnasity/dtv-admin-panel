@@ -49,6 +49,15 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
+            <!--STAFF DASHBOARD  -->
+                {% if current_user.is_authenticated and current_user.role in ['staff'] %}
+                <li>
+                <a href="{{ url_for('staff.dashboard') }}" class="btn btn-outline-success">
+                    <i class="fas fa-tachometer-alt me-1"></i> Staff Dashboard
+                </a>
+                </li>
+                 {% endif %}
+                 <!-- END -->
 
                 {% if current_user.is_authenticated and current_user.role in ['admin', 'staff'] %}
                     <!-- Admin/Staff Navbar Items -->
