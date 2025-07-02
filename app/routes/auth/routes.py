@@ -8,15 +8,19 @@ from app.utils.decorators import staff_required
 from app.utils.helpers import assign_staff_to_order
 from app.routes.auth import bp
 from datetime import datetime
+from sqlalchemy import or_
+
 
 # LOGIN
 @bp.route('/login', methods=['GET', 'POST'])
 def login():         
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(
-            username=form.username.data,
-            email=form.email.data
+        user = User.query.filter(
+            or_(
+                User.username == form.username.data,
+                User.email == form.email.data
+            )
         ).first()
         
         if user and user.check_password(form.password.data):
@@ -25,7 +29,8 @@ def login():
             db.session.commit()
             
             login_user(user, remember=form.remember_me.data)
-               # Role-based redirection
+            
+            # Role-based redirection
             if user.role == 'admin':
                 return redirect(url_for('auth.dashboard'))
             elif user.role == 'staff':
@@ -38,8 +43,8 @@ def login():
         else:
             flash('Invalid login credentials. Please try again.', 'danger')
 
-    
     return render_template('auth/login.html', form=form)
+
 
 # PROFILE MANAGEMENT   
 @bp.route('/profile', methods=['GET', 'POST'])
