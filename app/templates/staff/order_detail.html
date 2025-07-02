@@ -19,6 +19,7 @@
 </p>
 
 <p><strong>Delivery Address:</strong> {{ order.delivery_address }}</p>
+<p><strong>Payment Option:</strong> {{ order.payment_option }}</p>
 <p><strong>Created At:</strong> {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
 
 {% if order.status == 'approved' %}
