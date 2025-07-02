@@ -45,7 +45,7 @@
             </table>
         </div>
 
-        <!-- 🟢 Move total here, outside loop -->
+
         {% set total = cart_items | map(attribute='device.price_cash') | select | sum %}
         <div class="text-end mt-3">
             <h5>Total: <span class="text-success">Ksh {{ "%.2f"|format(total or 0.00) }}</span></h5>
