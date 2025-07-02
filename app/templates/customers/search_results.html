@@ -13,7 +13,10 @@
                     <img src="{{ device.image_url or 'https://via.placeholder.com/400x300' }}" class="card-img-top" alt="{{ device.name }}">
                     <div class="card-body">
                         <h5 class="card-title">{{ device.name }}</h5>
+                        {% if device.description %}
                         <p class="card-text">{{ device.description[:100] }}...</p>
+                        {% endif %}
+
                         <span class="badge bg-success">Ksh {{ device.price_cash }}</span>
                         <br><br>
                         <a href="{{ url_for('customers.device_detail', device_id=device.id) }}" class="btn btn-sm btn-primary w-100">View Details</a>
