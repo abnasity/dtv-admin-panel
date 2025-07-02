@@ -1,0 +1,83 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+<div class="container my-4">
+  <h1 class="mb-4 text-center fw-bold">Admin Dashboard</h1>
+
+  <!-- Metrics -->
+  <div class="row mb-4 text-center">
+    <div class="col-md-4">
+      <div class="card shadow rounded-3">
+        <div class="card-body">
+          <h5 class="card-title text-primary">Total Users</h5>
+          <h2>{{ total_users }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow rounded-3">
+        <div class="card-body">
+          <h5 class="card-title text-success">Available Devices</h5>
+          <h2>{{ total_devices }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow rounded-3">
+        <div class="card-body">
+          <h5 class="card-title text-warning">Pending Orders</h5>
+          <h2>{{ pending_orders }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="card shadow mb-5">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">Recent Orders</h5>
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Order ID</th>
+            <th>Customer</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td>#{{ order.id }}</td>
+            <td>{{ order.customer.full_name }}</td>
+            <td>
+              {% if order.status == 'pending' %}
+              <span class="badge bg-warning text-dark">Pending</span>
+              {% elif order.status == 'approved' %}
+              <span class="badge bg-success">Approved</span>
+              {% elif order.status == 'rejected' %}
+              <span class="badge bg-danger">Rejected</span>
+              {% elif order.status == 'cancelled' %}
+              <span class="badge bg-secondary">Cancelled</span>
+              {% elif order.status == 'awaiting_approval' %}
+              <span class="badge bg-info text-dark">Awaiting Approval</span>
+              {% endif %}
+            </td>
+            <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+              <a href="{{ url_for('auth.view_order', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-3">No recent orders.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
