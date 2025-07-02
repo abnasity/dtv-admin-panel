@@ -70,6 +70,8 @@
                         <th>Ram</th>
                         <th>Rom</th>
                         <th>Purchase Price</th>
+                        <th>Cash Price</th>
+                        <th>Credit Price</th>
                         <th>Status</th>
                         <th>Arrival Date</th>
                         <th>Actions</th>
@@ -83,7 +85,9 @@
                         <td>{{ device.model }}</td>
                         <td>{{ device.ram }}</td>
                         <td>{{ device.rom }}</td>
-                        <td>Ksh {{ "%.2f"|format(device.purchase_price) }}</td>
+                        <td>Ksh {{ "%.2f"|format(device.purchase_price or 0.00) }}</td>
+                        <td>Ksh {{ "%.2f"|format(device.price_cash or 0.00) }}</td>
+                        <td>Ksh {{ "%.2f"|format(device.price_credit or 0.00) }}</td>
                         <td>
                             <span class="badge bg-{{ 'success' if device.status == 'available' else 'secondary' }}">
                                 {{ device.status }}
@@ -201,6 +205,40 @@
                         </div>
                         {% endif %}
                     </div>
+
+                  <div class="mb-3">
+                        {{ device_form.price_cash.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">Ksh</span>
+                            {{ device_form.price_cash(class="form-control") }}
+                        </div>
+                        {% if device_form.price_cash.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in device_form.price_cash.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+
+
+                    <div class="mb-3">
+                        {{ device_form.price_credit.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">Ksh</span>
+                            {{ device_form.price_credit(class="form-control") }}
+                        </div>
+                        {% if device_form.price_credit.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in device_form.price_credit.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+
                     <div class="mb-3">
                         {{ device_form.notes.label(class="form-label") }}
                         {{ device_form.notes(class="form-control", rows=3) }}
