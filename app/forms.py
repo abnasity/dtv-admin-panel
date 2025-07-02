@@ -102,6 +102,8 @@ class DeviceForm(FlaskForm):
     ram = StringField('RAM', validators=[DataRequired(), Length(max=20)])
     rom = StringField('ROM', validators=[DataRequired(), Length(max=20)])
     purchase_price = DecimalField('Purchase Price', validators=[DataRequired(), NumberRange(min=0)], places=2)
+    price_cash = DecimalField('Cash Price', validators=[Optional(), NumberRange(min=0)])
+    price_credit = DecimalField('Credit Price', validators=[Optional(), NumberRange(min=0)])
     notes = TextAreaField('Notes')
     submit = SubmitField('Save Device')
     
