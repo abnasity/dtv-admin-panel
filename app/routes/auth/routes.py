@@ -11,10 +11,7 @@ from datetime import datetime
 
 # LOGIN
 @bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('staff.dashboard'))
-            
+def login():         
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(
@@ -28,23 +25,31 @@ def login():
             db.session.commit()
             
             login_user(user, remember=form.remember_me.data)
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('reports.dashboard'))
+               # Role-based redirection
+            if user.role == 'admin':
+                return redirect(url_for('auth.dashboard'))
+            elif user.role == 'staff':
+                return redirect(url_for('staff.dashboard'))
+            elif user.role == 'customer':
+                return redirect(url_for('customers.dashboard'))
+
+            # Default fallback
+            return redirect(url_for('auth.login'))
         else:
-            flash('Invalid login credentials. Please check your username, email, and password.', 'danger')
-            
+            flash('Invalid login credentials. Please try again.', 'danger')
+
+    
     return render_template('auth/login.html', form=form)
 
 # PROFILE MANAGEMENT   
 @bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    
-       
+          
     form = ProfileForm(current_user.username, current_user.email)
     
     if not isinstance(current_user, User):
-        abort(403, message="Access denied: only authenticated users can access this page.")
+        abort(403)
         redirect(url_for('customers.login'))
     
     if form.validate_on_submit():
@@ -151,6 +156,23 @@ def assigned_orders():
 
 
 # ADMIN DASHBOARD
+@bp.route('/admin/dashboard')
+@login_required
+@admin_required
+def dashboard():
+    total_users = User.query.count()
+    total_devices = Device.query.filter_by(status='available').count()
+    pending_orders = CustomerOrder.query.filter_by(status='pending').count()
+
+    recent_orders = CustomerOrder.query.order_by(CustomerOrder.created_at.desc()).limit(5).all()
+
+    return render_template('admin/dashboard.html',
+                           total_users=total_users,
+                           total_devices=total_devices,
+                           pending_orders=pending_orders,
+                           recent_orders=recent_orders)
+
+
 # USER MANAGEMENT
 @bp.route('/users')
 @login_required
@@ -623,6 +645,8 @@ def view_assignments():
 
 # DELETE CUSTOMER
 @bp.route('/<int:id>', methods=['DELETE'])
+@login_required
+@admin_required
 def delete_customer(id):
     """Delete a customer by ID"""
     customer = Customer.query.get_or_404(id)
