@@ -48,7 +48,16 @@
         {% endif %}
 
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">          
+            <ul class="navbar-nav ms-auto">   
+            <!-- DASHBOARDS -->
+             {% if current_user.is_authenticated and current_user.role in ['customer'] %}
+                <li>
+                <a href="{{ url_for('customers.dash') }}" class="btn btn-outline-success">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                </li>
+                 {% endif %}
+
             <!--STAFF DASHBOARD  -->
                 {% if current_user.is_authenticated and current_user.role in ['staff'] %}
                 <li>
@@ -57,6 +66,17 @@
                 </a>
                 </li>
                  {% endif %}
+
+                 <!--ADMIN DASHBOARD  -->
+                 {% if current_user.is_authenticated and current_user.role in ['admin'] %}
+                <li>
+                <a href="{{ url_for('auth.dashboard') }}" class="btn btn-outline-success">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                </li>
+                 {% endif %}
+
+                 
                  <!-- END -->
 
                 {% if current_user.is_authenticated and current_user.role in ['admin', 'staff'] %}
@@ -93,6 +113,7 @@
 
                     <!-- ADMIN ONLY -->
                     {% if current_user.is_admin() %}
+                        
                        <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle hover-effect" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-briefcase me-1"></i> Management
