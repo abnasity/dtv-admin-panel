@@ -115,6 +115,38 @@ canvas.drawing, canvas.drawingBuffer {
                             {% endif %}
                         </div>
                         
+
+                     <div class="mb-3">
+                            {{ form.price_cash.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">Ksh</span>
+                                {{ form.price_cash(class="form-control") }}
+                            </div>
+                            {% if form.price_cash.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.price_cash.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}                        
+                         </div>
+
+                        <div class="mb-3">
+                            {{ form.price_credit.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">Ksh</span>
+                                {{ form.price_credit(class="form-control") }}
+                            </div>
+                            {% if form.price_credit.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.price_credit.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+
                         <div class="mb-3">
                             {{ form.notes.label(class="form-label") }}
                             {{ form.notes(class="form-control", rows=3) }}
