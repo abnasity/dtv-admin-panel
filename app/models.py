@@ -238,6 +238,8 @@ class Device(db.Model):
     ram = db.Column(db.String(20), nullable=False)  # e.g., '4GB', '6GB'
     rom = db.Column(db.String(20), nullable=False)  # e.g., '64GB', '128GB'
     purchase_price = db.Column(db.Numeric(10, 2), nullable=False)
+    price_cash = db.Column(db.Numeric(10, 2), nullable=True)
+    price_credit = db.Column(db.Numeric(10, 2), nullable=True)
     description = db.Column(db.Text, nullable=True, default="No description available.")
     status = db.Column(db.String(20), default='available')  # available, sold
     arrival_date = db.Column(db.DateTime, default=datetime.utcnow)
