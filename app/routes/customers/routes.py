@@ -121,6 +121,37 @@ def logout():
     return response
    
 
+# CUSTOMER DASHBOARD
+@bp.route('/dash')
+@login_required
+def dash():
+    if not current_user.is_customer():
+        abort(403)
+
+    q = request.args.get('q', '').strip()
+    status = request.args.get('status', '')
+
+    query = CustomerOrder.query.filter_by(customer_id=current_user.id, is_deleted=False)
+
+    if q:
+        query = query.join(CustomerOrder.items).join(Device).filter(
+            db.or_(
+                Device.name.ilike(f"%{q}%"),
+                Device.imei.ilike(f"%{q}%")
+            )
+        )
+
+    if status:
+        query = query.filter(CustomerOrder.status == status)
+
+    orders = query.order_by(CustomerOrder.created_at.desc()).all()
+
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+
+    return render_template('customers/dash.html', orders=orders, notifications=notifications)
+
+
+
 # ACCOUNT STATUS TOGGLE
 # This route allows toggling the account status (active/inactive)
 @bp.route('/account/status', methods=['POST'])
@@ -446,8 +477,31 @@ def my_devices():
 @bp.route('/notifications')
 @login_required
 def notifications():
-    notes = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
-    return render_template('customers/notifications.html', notifications=notes)
+    show = request.args.get('filter', 'all')  # 'all' or 'unread'
+
+    query = Notification.query.filter_by(user_id=current_user.id)
+
+    if show == 'unread':
+        query = query.filter_by(is_read=False)
+
+    notifications = query.order_by(Notification.created_at.desc()).all()
+
+    return render_template('customers/notifications.html', notifications=notifications, current_filter=show)
+
+
+# MARK NOTIFICATION AS READ
+@bp.route('/notifications/read/<int:notification_id>')
+@login_required
+def mark_notification_read(notification_id):
+    note = Notification.query.get_or_404(notification_id)
+
+    if note.user_id != current_user.id:
+        abort(403)
+
+    note.is_read = True
+    db.session.commit()
+
+    return redirect(note.link or url_for('customers.notifications'))
 
 
 
