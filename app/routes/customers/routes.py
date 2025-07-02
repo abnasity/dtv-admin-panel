@@ -198,6 +198,20 @@ def dashboard():
     return render_template('customers/dashboard.html', products=products)
 
 
+# DEVICE DETAIL PAGE
+@bp.route('/device/<int:device_id>')
+@login_required
+def device_detail(device_id):
+    device = Device.query.get_or_404(device_id)
+
+    if device.status != 'available':
+        flash('This device is no longer available.', 'warning')
+        return redirect(url_for('customers.dashboard'))
+
+    return render_template('customers/device_detail.html', device=device)
+
+
+
 # CUSTOMER CARTS
 @bp.route('/cart')
 @login_required
