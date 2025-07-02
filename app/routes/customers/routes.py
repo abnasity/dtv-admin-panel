@@ -327,6 +327,7 @@ def place_order():
     order = CustomerOrder(
         customer_id=current_user.id,
         delivery_address=selected_address,
+        payment_option=form.payment_type.data,
         status='pending',
         created_at=datetime.utcnow()
     )
