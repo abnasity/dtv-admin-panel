@@ -42,6 +42,16 @@
                     <h5 class="card-title">Order Summary</h5>
                     <p><strong>Total Items:</strong> {{ items|length }}</p>
                     <p><strong>Total Price:</strong> Ksh {{ "%.2f"|format(order.total_amount()) }}</p>
+                    <p><strong>Payment Method:</strong>
+                    {% if order.payment_option == 'cash' %}
+                        <span class="badge bg-success">Cash</span>
+                    {% elif order.payment_option == 'credit' %}
+                        <span class="badge bg-warning text-dark">Credit</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Unknown</span>
+                    {% endif %}
+                    </p>
+
 
                     {% if order.approved_by %}
                     <hr>
