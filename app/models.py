@@ -140,6 +140,7 @@ class CustomerOrder(db.Model):
     approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     approved_at = db.Column(db.DateTime, nullable=True)
     delivery_address = db.Column(db.String(255))
+    payment_option = db.Column(db.String(20), nullable=False)
     assigned_staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     assigned_staff = db.relationship('User', backref='assigned_customers', foreign_keys=[assigned_staff_id])
     is_deleted = db.Column(db.Boolean, default=False)
