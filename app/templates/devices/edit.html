@@ -85,6 +85,32 @@
                         </div>
                         
                         <div class="mb-3">
+                            {{ form.price_cash.label(class="form-label") }}
+                            {{ form.price_cash(class="form-control") }}
+                            {% if form.price_cash.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.price_cash.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+
+                        <div class="mb-3">
+                            {{ form.price_credit.label(class="form-label") }}
+                            {{ form.price_credit(class="form-control") }}
+                            {% if form.price_credit.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.price_credit.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+
+                        <div class="mb-3">
                             {{ form.notes.label(class="form-label") }}
                             {{ form.notes(class="form-control", rows=3) }}
                             {% if form.notes.errors %}
