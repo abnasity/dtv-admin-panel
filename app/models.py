@@ -345,10 +345,9 @@ class Notification(db.Model):
     message = db.Column(db.String(255), nullable=False)
     link = db.Column(db.String(255))
     is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)   
     type = db.Column(db.String(50))  # e.g., 'assignment', 'approval', 'reminder'
-
+    recipient_type = db.Column(db.String(20), default='customer')  
 
     # Relationship
     user = db.relationship('User', backref='notifications', lazy=True)
