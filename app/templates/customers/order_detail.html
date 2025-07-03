@@ -31,10 +31,10 @@
                         <td>
                             {% if order.payment_option == 'cash' %}
                                 Ksh {{ "%.2f"|format(item.device.price_cash or 0) }}
-                                <span class="text-success small">(Cash)</span>
+                                <span class="text-success fs-6 small">(Cash)</span>
                             {% elif order.payment_option == 'credit' %}
                                 Ksh {{ "%.2f"|format(item.device.price_credit or 0) }}
-                                <span class="text-primary small">(Credit)</span>
+                                <span class="text-primary fs-6 small">(Credit)</span>
                             {% else %}
                                 <span class="text-muted">Unknown</span>
                             {% endif %}
@@ -65,11 +65,11 @@
 
                     <p><strong>Payment Method:</strong>
                         {% if order.payment_option == 'cash' %}
-                            <span class="badge bg-success">Cash</span>
+                            <span class="badge fs-6 bg-success">Cash</span>
                         {% elif order.payment_option == 'credit' %}
-                            <span class="badge bg-primary text-dark">Credit</span>
+                            <span class="badge fs-6 bg-primary text-dark">Credit</span>
                         {% else %}
-                            <span class="badge bg-secondary">Unknown</span>
+                            <span class="badge fs-6 bg-secondary">Unknown</span>
                         {% endif %}
                     </p>
 
