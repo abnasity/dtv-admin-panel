@@ -85,9 +85,10 @@
                         <td>{{ device.model }}</td>
                         <td>{{ device.ram }}</td>
                         <td>{{ device.rom }}</td>
-                        <td>Ksh {{ "%.2f"|format(device.purchase_price or 0.00) }}</td>
-                        <td>Ksh {{ "%.2f"|format(device.price_cash or 0.00) }}</td>
-                        <td>Ksh {{ "%.2f"|format(device.price_credit or 0.00) }}</td>
+                        <td>Ksh {{ "{:,.2f}".format(device.purchase_price or 0) }}</td>
+                        <td>Ksh {{ "{:,.2f}".format(device.price_cash or 0) }}</td>
+                        <td>Ksh {{ "{:,.2f}".format(device.price_credit or 0) }}</td>
+
                         <td>
                             <span class="badge bg-{{ 'success' if device.status == 'available' else 'secondary' }}">
                                 {{ device.status }}
