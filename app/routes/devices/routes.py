@@ -50,6 +50,8 @@ def add_device():
             ram=form.ram.data,
             rom=form.rom.data,
             purchase_price=form.purchase_price.data,
+            price_cash=form.price_cash.data or 0,
+            price_credit=form.price_credit.data or 0,
             notes=form.notes.data
         )
         db.session.add(device)
@@ -89,6 +91,8 @@ def edit_device(imei):
         device.ram = form.ram.data
         device.rom = form.rom.data
         device.purchase_price = form.purchase_price.data
+        device.price_cash = form.price_cash.data or 0
+        device.price_credit = form.price_credit.data or 0
         device.notes = form.notes.data
         
         try:
