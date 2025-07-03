@@ -319,7 +319,7 @@ def checkout():
     products = [item.device for item in cart_items]
     total_price = sum(device.purchase_price for device in products)
 
-    return render_template('customers/checkout.html', form=form, products=products, total_price=total_price)
+    return render_template('customers/checkout.html', form=form, products=products, cart_items=cart_items, total_price=total_price)
 
 
 # PLACING AN ORDER
@@ -501,7 +501,7 @@ def mark_notification_read(notification_id):
     note.is_read = True
     db.session.commit()
 
-    return redirect(note.link or url_for('customers.notifications'))
+    return redirect(url_for('customers.notifications'))
 
 
 
