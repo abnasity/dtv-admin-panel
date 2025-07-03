@@ -119,9 +119,19 @@ def logout():
     flash('You have been successfully logged out.', 'success')
     
     return response
-   
+ 
+ # CUSTOMER DASHBOARD
+@bp.route('/dashboard')
+@login_required
+def dashboard():
+    if not isinstance(current_user, Customer):
+        abort(403, description="Unauthorized access: Customers only.")
 
-# CUSTOMER DASHBOARD
+    products = Device.query.filter_by(status='available').all()
+
+    return render_template('customers/dashboard.html', products=products)
+
+# CUSTOMER DASH
 @bp.route('/dash')
 @login_required
 def dash():
@@ -146,10 +156,12 @@ def dash():
 
     orders = query.order_by(CustomerOrder.created_at.desc()).all()
 
-    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    notifications = Notification.query.filter(
+        Notification.user_id == current_user.id,
+        Notification.recipient_type == 'customer'  
+    ).order_by(Notification.created_at.desc()).all()
 
     return render_template('customers/dash.html', orders=orders, notifications=notifications)
-
 
 
 # ACCOUNT STATUS TOGGLE
@@ -217,16 +229,6 @@ def get_customer(customer_id):
 
 
 
-# CUSTOMER DASHBOARD
-@bp.route('/dashboard')
-@login_required
-def dashboard():
-    if not isinstance(current_user, Customer):
-        abort(403, description="Unauthorized access: Customers only.")
-
-    products = Device.query.filter_by(status='available').all()
-
-    return render_template('customers/dashboard.html', products=products)
 
 
 # DEVICE DETAIL PAGE
