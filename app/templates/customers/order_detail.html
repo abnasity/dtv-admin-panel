@@ -20,7 +20,7 @@
                     <tr>
                         <th>Device</th>
                         <th>IMEI</th>
-                        <th>Price</th>
+                        <th>Price ({{ order.payment_option|capitalize }})</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -28,7 +28,17 @@
                     <tr>
                         <td>{{ item.device.brand }} {{ item.device.model }}</td>
                         <td>{{ item.device.imei }}</td>
-                        <td>Ksh {{ "%.2f"|format(item.unit_price) }}</td>
+                        <td>
+                            {% if order.payment_option == 'cash' %}
+                                Ksh {{ "%.2f"|format(item.device.price_cash or 0) }}
+                                <span class="text-success small">(Cash)</span>
+                            {% elif order.payment_option == 'credit' %}
+                                Ksh {{ "%.2f"|format(item.device.price_credit or 0) }}
+                                <span class="text-primary small">(Credit)</span>
+                            {% else %}
+                                <span class="text-muted">Unknown</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -41,17 +51,27 @@
                 <div class="card-body">
                     <h5 class="card-title">Order Summary</h5>
                     <p><strong>Total Items:</strong> {{ items|length }}</p>
-                    <p><strong>Total Price:</strong> Ksh {{ "%.2f"|format(order.total_amount()) }}</p>
-                    <p><strong>Payment Method:</strong>
-                    {% if order.payment_option == 'cash' %}
-                        <span class="badge bg-success">Cash</span>
-                    {% elif order.payment_option == 'credit' %}
-                        <span class="badge bg-warning text-dark">Credit</span>
-                    {% else %}
-                        <span class="badge bg-secondary">Unknown</span>
-                    {% endif %}
-                    </p>
+                    <p><strong>Total Price:</strong>
+                    {% set ns = namespace(total=0) %}
+                    {% for item in items %}
+                        {% if order.payment_option == 'cash' %}
+                            {% set ns.total = ns.total + (item.device.price_cash or 0) %}
+                        {% elif order.payment_option == 'credit' %}
+                            {% set ns.total = ns.total + (item.device.price_credit or 0) %}
+                        {% endif %}
+                    {% endfor %}
+                    Ksh {{ "%.2f"|format(ns.total) }}
+                   </p>
 
+                    <p><strong>Payment Method:</strong>
+                        {% if order.payment_option == 'cash' %}
+                            <span class="badge bg-success">Cash</span>
+                        {% elif order.payment_option == 'credit' %}
+                            <span class="badge bg-primary text-dark">Credit</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Unknown</span>
+                        {% endif %}
+                    </p>
 
                     {% if order.approved_by %}
                     <hr>
@@ -65,10 +85,11 @@
     {% else %}
     <p class="text-muted">No items found in this order.</p>
     {% endif %}
-     <div class="text-center mt-3">
-            <a href="{{ url_for('customers.dashboard') }}" class="btn btn-primary">
-                <i class="fas fa-arrow-left"></i> Continue Shopping
-            </a>
-        </div>
+
+    <div class="text-center mt-3">
+        <a href="{{ url_for('customers.dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Continue Shopping
+        </a>
+    </div>
 </div>
 {% endblock %}
