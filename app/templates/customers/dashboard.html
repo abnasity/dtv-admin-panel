@@ -49,9 +49,9 @@
               {% endif %}
 
               {% if product.price_credit %}
-                <strong>Credit:</strong> Ksh {{ "%.2f"|format(product.price_credit) }}
+                <strong>Credit(Deposit):</strong> Ksh {{ "%.2f"|format(product.price_credit) }}
               {% else %}
-                <strong>Credit:</strong> <span class="text-muted">Not available</span>
+                <strong>Credit(Deposit):</strong> <span class="text-muted">Not available</span>
               {% endif %}
             </p>
 
