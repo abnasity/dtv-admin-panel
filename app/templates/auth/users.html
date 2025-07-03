@@ -110,12 +110,12 @@
 
 
                         <td>
-                            <span class="badge bg-{{ 'primary' if user.role == 'admin' else 'secondary' }}">
+                            <span class="badge fs-6 bg-{{ 'primary' if user.role == 'admin' else 'secondary' }}">
                                 {{ user.role.title() }}
                             </span>
                         </td>
                         <td>
-                            <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                            <span class="badge fs-6 p-2 bg-{{ 'success' if user.is_active else 'danger' }}">
                                 {{ 'Active' if user.is_active else 'Inactive' }}
                             </span>
                         </td>
