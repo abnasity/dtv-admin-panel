@@ -14,17 +14,18 @@
                 <table class="table table-striped">
                     <thead class="table-light">
                         <tr>
-                            <th>Device</th>
-                            <th>IMEI</th>
-                            <th>Price</th>
+                            <th>Device</th>                           
+                            <th>Price(Cash)</th>
+                            <th>Price(Credit)</th>
+
                         </tr>
                     </thead>
                     <tbody>
                         {% for device in products %}
                         <tr>
-                            <td>{{ device.brand }} {{ device.model }}</td>
-                            <td>{{ device.imei }}</td>
-                            <td>Ksh {{ "%.2f"|format(device.sale_price or device.purchase_price) }}</td>
+                            <td>{{ device.brand }} {{ device.model }}</td>                           
+                            <td>Ksh {{ "%.2f"|format(device.price_cash) }}</td>
+                            <td>Ksh {{ "%.2f"|format(device.price_credit) }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -37,7 +38,17 @@
                     <div class="card-body">
                         <h5 class="card-title">Order Summary</h5>
                         <p><strong>Total Items:</strong> {{ products|length }}</p>
-                        <p><strong>Total Price:</strong> Ksh {{ "%.2f"|format(total_price) }}</p>
+                                        <p><strong>Total (Cash):</strong> 
+                                <span class="text-success">
+                                    Ksh {{ "%.2f"|format(cart_items | map(attribute='device.price_cash') | select | sum or 0.00) }}
+                                </span>
+                            </p>
+                            <p><strong>Total (Credit):</strong> 
+                                <span class="text-success">
+                                    Ksh {{ "%.2f"|format(cart_items | map(attribute='device.price_credit') | select | sum or 0.00) }}
+                                </span>
+                        </p>
+
                        <hr>
                         
 
