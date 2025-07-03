@@ -120,29 +120,44 @@ def logout():
     
     return response
  
- # CUSTOMER DASHBOARD
+# CUSTOMER DASHBOARD (Primary dashboard with products)
 @bp.route('/dashboard')
 @login_required
 def dashboard():
     if not isinstance(current_user, Customer):
         abort(403, description="Unauthorized access: Customers only.")
 
+    # Get available products
     products = Device.query.filter_by(status='available').all()
+    
+    # Get customer notifications (last 5)
+    notifications = Notification.query.filter(
+        Notification.user_id == current_user.id,
+        Notification.recipient_type == 'customer'
+    ).order_by(Notification.created_at.desc()).limit(5).all()
 
-    return render_template('customers/dashboard.html', products=products)
+    return render_template('customers/dashboard.html', 
+                         products=products,
+                         notifications=notifications)
 
-# CUSTOMER DASH
+# CUSTOMER DASH (Order-focused dashboard)
 @bp.route('/dash')
 @login_required
 def dash():
-    if not current_user.is_customer():
-        abort(403)
+    if not isinstance(current_user, Customer):
+        abort(403, description="Unauthorized access: Customers only.")
 
+    # Search and filter functionality
     q = request.args.get('q', '').strip()
     status = request.args.get('status', '')
 
-    query = CustomerOrder.query.filter_by(customer_id=current_user.id, is_deleted=False)
+    # Base query for orders
+    query = CustomerOrder.query.filter_by(
+        customer_id=current_user.id, 
+        is_deleted=False
+    )
 
+    # Apply search filters if provided
     if q:
         query = query.join(CustomerOrder.items).join(Device).filter(
             db.or_(
@@ -156,13 +171,15 @@ def dash():
 
     orders = query.order_by(CustomerOrder.created_at.desc()).all()
 
+    # Get all customer notifications
     notifications = Notification.query.filter(
         Notification.user_id == current_user.id,
-        Notification.recipient_type == 'customer'  
+        Notification.recipient_type == 'customer'
     ).order_by(Notification.created_at.desc()).all()
 
-    return render_template('customers/dash.html', orders=orders, notifications=notifications)
-
+    return render_template('customers/dash.html', 
+                         orders=orders, 
+                         notifications=notifications)
 
 # ACCOUNT STATUS TOGGLE
 # This route allows toggling the account status (active/inactive)
@@ -226,8 +243,6 @@ def get_my_info():
 def get_customer(customer_id):
     customer = Customer.query.get_or_404(customer_id)
     return jsonify(customer.to_dict())
-
-
 
 
 
@@ -479,9 +494,15 @@ def my_devices():
 @bp.route('/notifications')
 @login_required
 def notifications():
+    if not isinstance(current_user, Customer):  # Ensure only customers can access
+        abort(403)
+
     show = request.args.get('filter', 'all')  # 'all' or 'unread'
 
-    query = Notification.query.filter_by(user_id=current_user.id)
+    query = Notification.query.filter(
+        Notification.user_id == current_user.id,
+        Notification.recipient_type == 'customer'  # Critical addition
+    )
 
     if show == 'unread':
         query = query.filter_by(is_read=False)
@@ -495,16 +516,16 @@ def notifications():
 @bp.route('/notifications/read/<int:notification_id>')
 @login_required
 def mark_notification_read(notification_id):
-    note = Notification.query.get_or_404(notification_id)
-
-    if note.user_id != current_user.id:
-        abort(403)
+    note = Notification.query.filter(
+        Notification.id == notification_id,
+        Notification.user_id == current_user.id,
+        Notification.recipient_type == 'customer'  # Critical addition
+    ).first_or_404()
 
     note.is_read = True
     db.session.commit()
 
     return redirect(url_for('customers.notifications'))
-
 
 
 # REJECTED ORDERS
