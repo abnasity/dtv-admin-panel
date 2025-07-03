@@ -54,7 +54,7 @@
                                     <div>
                                         <strong>Order #{{ order.id }}</strong><br>
                                         {{ order.created_at.strftime('%Y-%m-%d') }}<br>
-                                        <span class="badge bg-{{ 'secondary' if order.status == 'pending' else 'info' if order.status == 'awaiting_approval' else 'success' if order.status == 'approved' else 'danger' }}">
+                                        <span class="badge fs-6 bg-{{ 'secondary' if order.status == 'pending' else 'info' if order.status == 'awaiting_approval' else 'success' if order.status == 'approved' else 'danger' }}">
                                             {{ order.status.capitalize() }}
                                         </span>
                                     </div>
