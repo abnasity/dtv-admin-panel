@@ -54,15 +54,15 @@
             <td>{{ order.customer.full_name }}</td>
             <td>
               {% if order.status == 'pending' %}
-              <span class="badge bg-warning text-dark">Pending</span>
+              <span class="badge fs-6 bg-warning text-dark">Pending</span>
               {% elif order.status == 'approved' %}
-              <span class="badge bg-success">Approved</span>
+              <span class="badge fs-6 bg-success">Approved</span>
               {% elif order.status == 'rejected' %}
-              <span class="badge bg-danger">Rejected</span>
+              <span class="badge fs-6 bg-danger">Rejected</span>
               {% elif order.status == 'cancelled' %}
-              <span class="badge bg-secondary">Cancelled</span>
+              <span class="badge fs-6 bg-secondary">Cancelled</span>
               {% elif order.status == 'awaiting_approval' %}
-              <span class="badge bg-info text-dark">Awaiting Approval</span>
+              <span class="badge fs-6 bg-info text-dark">Awaiting Approval</span>
               {% endif %}
             </td>
             <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
