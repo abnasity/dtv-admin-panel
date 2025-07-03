@@ -25,7 +25,7 @@
                         <td>
                             <span class="badge fs-6 bg-{{ 
                                 'secondary' if order.status == 'pending' else 
-                                'info' if order.status == 'awaiting_approval' else 
+                                'primary' if order.status == 'awaiting_approval' else 
                                 'success' if order.status == 'approved' else 
                                 'danger' if order.status == 'cancelled' else 'dark'
                             }}">{{ order.status | capitalize }}</span>
