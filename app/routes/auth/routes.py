@@ -115,13 +115,15 @@ def mark_awaiting_approval(order_id):
         note = Notification(
             user_id=admin.id,
             message=f"Order #{order.id} by {order.customer.full_name} is ready for approval",
+            recipient_type='admin',
             link=url_for('auth.view_order', order_id=order.id)
         )
         db.session.add(note)
     db.session.commit()
 
     flash("Order marked as awaiting approval.", "info")
-    return render_template ('staff/notifications.html')
+    return redirect(url_for('auth.notifications'))
+
 
 # VIEW ORDER FOR STAFF
 @bp.route('/orders/<int:order_id>')
@@ -448,6 +450,7 @@ def approve_order(order_id):
             db.session.add(Notification(
                 user_id=order.assigned_staff_id,
                 message=f"Order #{order.id} was rejected. Sold device(s): {sold_names_str}",
+                recipient_type='staff',
                 link=notif_link_staff
             ))
 
@@ -456,6 +459,7 @@ def approve_order(order_id):
             db.session.add(Notification(
                 user_id=order.customer.id,
                 message=f"Your order #{order.id} was rejected. Device(s) unavailable: {sold_names_str}",
+                recipient_type='customer',
                 link=notif_link_customer
             ))
 
@@ -479,6 +483,7 @@ def approve_order(order_id):
         db.session.add(Notification(
             user_id=order.assigned_staff_id,
             message=f"Order #{order.id} has been approved and marked as sold.",
+            recipient_type='staff',
             link=notif_link
         ))
 
@@ -534,6 +539,7 @@ def cancel_order(order_id):
         db.session.add(Notification(
             user_id=order.assigned_staff_id,
             message=f"Order #{order.id} was cancelled by admin. Reason: {reason}",
+            recipient_type='staff',
             link=notif_link_staff
         ))
 
@@ -543,6 +549,7 @@ def cancel_order(order_id):
         db.session.add(Notification(
             user_id=order.customer.id,
             message=f"Your order #{order.id} was cancelled. Reason: {reason}",
+            recipient_type='customer',
             link=notif_link_customer
         ))
 
