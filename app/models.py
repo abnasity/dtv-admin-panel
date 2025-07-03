@@ -3,7 +3,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db 
 from app import bcrypt, login_manager
-from sqlalchemy import text
+from sqlalchemy import text, Numeric
 
 # USERS MODEL
 # This model represents both admin and staff users in the system.
