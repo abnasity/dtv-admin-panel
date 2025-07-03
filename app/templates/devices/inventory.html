@@ -90,7 +90,7 @@
                         <td>Ksh {{ "{:,.2f}".format(device.price_credit or 0) }}</td>
 
                         <td>
-                            <span class="badge bg-{{ 'success' if device.status == 'available' else 'secondary' }}">
+                            <span class="badge fs-6 bg-{{ 'success' if device.status == 'available' else 'secondary' }}">
                                 {{ device.status }}
                             </span>
                         </td>
