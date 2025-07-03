@@ -37,18 +37,39 @@
             <td>{{ item.device.imei }}</td>
             <td>{{ item.device.brand }}</td>
             <td>{{ item.device.model }}</td>
-            <td>KES {{ item.device.purchase_price }}</td>
+            <td>
+                {% if order.payment_option == 'cash' %}
+                    KES {{ "%.2f"|format(item.device.price_cash or 0) }}
+                    <span class="text-success small">(Cash)</span>
+                {% elif order.payment_option == 'credit' %}
+                    KES {{ "%.2f"|format(item.device.price_credit or 0) }}
+                    <span class="text-primary small">(Credit)</span>
+                {% else %}
+                    <span class="text-muted">Unknown</span>
+                {% endif %}
+            </td>
+
             <td>{{ item.device.status }}</td>
         </tr>
-    {% endfor %}
-    </tbody>
-    <tfoot>
-        <tr>
-            <td colspan="3"></td>
-            <th>Total:</th>
-            <th>KES {{ order.get_total() }}</th>
-        </tr>
-    </tfoot>
+            {% endfor %}
+            </tbody>
+            {% set ns = namespace(total=0) %}
+        {% for item in order.items %}
+            {% if order.payment_option == 'cash' %}
+                {% set ns.total = ns.total + (item.device.price_cash or 0) %}
+            {% elif order.payment_option == 'credit' %}
+                {% set ns.total = ns.total + (item.device.price_credit or 0) %}
+            {% endif %}
+        {% endfor %}
+
+<tfoot>
+    <tr>
+        <td colspan="3"></td>
+        <th>Total:</th>
+        <th>KES {{ "%.2f"|format(ns.total) }}</th>
+    </tr>
+</tfoot>
+
 </table>
 
 {% if order.status in ['pending', 'awaiting_approval'] %}
