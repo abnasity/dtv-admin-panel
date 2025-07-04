@@ -35,10 +35,40 @@
                         <td>{{ order.payment_option }}</td>
 
                         <td>
-                            <a href="{{ url_for('auth.view_order_staff', order_id=order.id) }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-eye me-1"></i> View
-                            </a>
-                        </td>
+                        <a href="{{ url_for('auth.view_order_staff', order_id=order.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye me-1"></i> View
+                        </a>
+
+                        {% if order.status == 'approved' %}
+                      <form action="{{ url_for('staff.mark_task_failed', order_id=order.id) }}" method="POST" style="display:inline;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    
+    <div class="mb-3">
+        <label for="failureReason" class="form-label fw-semibold">Failure Reason *</label>
+        <textarea 
+            id="failureReason" 
+            name="reason" 
+            class="form-control" 
+            rows="3" 
+            required
+            placeholder="Please specify the reason for task failure..."
+        ></textarea>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <button 
+            type="submit" 
+            class="btn btn-danger px-4"
+            onclick="return confirm('Are you sure you want to mark this task as failed? This action cannot be undone.')"
+        >
+            <i class="fas fa-times-circle me-2"></i> Mark as Failed
+        </button>
+    </div>
+</form>
+
+                        {% endif %}
+                    </td>
+
                     </tr>
                 {% endfor %}
             </tbody>
