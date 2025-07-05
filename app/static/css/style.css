@@ -24,8 +24,13 @@ main {
 }
 
 .hover-effect:hover {
-    color: #ce0700; /* Blue on hover */
+    color: #ce0700; 
+    background-color: #f0f0f0; 
+    border-radius: 5px; 
+    padding-left: 0.5rem; 
+    padding-right: 0.5rem;
 }
+
 
 .badge {
     font-size: 0.5rem;
