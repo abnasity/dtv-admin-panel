@@ -24,7 +24,7 @@
             <td>{{ loop.index }}</td>
             <td>{{ order.id }}</td>
             <td>{{ order.customer.full_name }}</td>
-            <td><span class="badge bg-danger">Failed</span></td>
+            <td><span class="badge fs-6 bg-danger">Failed</span></td>
             
             <td>
               <a href="{{ url_for('auth.view_order_staff', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
