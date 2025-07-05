@@ -1,6 +1,6 @@
 from app.routes.staff import bp
 from app.utils.decorators import staff_required
-from flask_login import login_required
+from flask_login import login_required, current_user
 from flask import render_template, flash, redirect, url_for, request
 from app.models import CustomerOrder, User, Notification
 from app.extensions import db
@@ -68,3 +68,25 @@ def mark_task_failed(order_id):
     flash('Order marked as failed. Devices restocked and notifications sent.', 'danger')
     return redirect(url_for('staff.dashboard'))
 
+# staff sold items
+@bp.route('/staff/sold-items')
+@login_required
+@staff_required  # If you have a decorator to restrict to staff
+def view_sold_items():
+    sold_items = CustomerOrder.query.filter_by(
+        assigned_staff_id=current_user.id,
+        status='approved'
+    ).all()
+    return render_template('staff/sold_items.html', sold_items=sold_items)
+
+
+# FAILED ORDERS
+@bp.route('/staff/failed-orders')
+@login_required
+@staff_required
+def view_failed_orders():
+    failed_orders = CustomerOrder.query.filter_by(
+        status='failed',
+        assigned_staff_id=current_user.id
+    ).all()
+    return render_template('staff/failed_orders.html', failed_orders=failed_orders)
