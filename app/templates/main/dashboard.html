@@ -1,0 +1,46 @@
+
+{% extends 'layouts/base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Centered Brand Title -->
+<div class="d-flex flex-column align-items-center justify-content-center text-center my-4">
+  <a href="#" class="text-decoration-none">
+    <div class="fw-bold" style="font-size: 42px; letter-spacing: 2px; color: rgb(145, 88, 15); text-transform: uppercase; font-family: Arial, Helvetica, sans-serif;">
+      DIAMOND TREE
+    </div>
+    <div style="font-size: 24px; letter-spacing: 5px; color: rgb(4, 116, 116); font-family: Arial, Helvetica, sans-serif;">
+      VENTURES
+    </div>
+  </a>
+</div>
+
+<!-- Dashboard Cards -->
+<div class="row g-4">
+  {% for label, value, icon, color in [
+      ('Total Orders', stats.total_orders, 'fa-layer-group', 'primary'),
+      ('Pending Orders', stats.pending_orders, 'fa-clock', 'warning'),
+      ('Approved Orders', stats.approved_orders, 'fa-check-circle', 'success'),
+      ('Failed Orders', stats.failed_orders, 'fa-times-circle', 'danger'),
+      ('Registered Customers', stats.registered_customers, 'fa-users', 'secondary'),
+      ('Devices Available', stats.total_devices, 'fa-mobile-alt', 'info')
+  ] %}
+  <div class="col-md-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-body text-center">
+        <i class="fas {{ icon }} fa-2x text-{{ color }}"></i>
+        <h5 class="card-title mt-2 text-muted">{{ label }}</h5>
+        <h3 class="text-{{ color }}">{{ value }}</h3>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Login Button -->
+<li class="list-unstyled text-center my-4">
+  <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">
+    <i class="fas fa-sign-in-alt me-1"></i>Login
+  </a>
+</li>
+{% endblock %}
