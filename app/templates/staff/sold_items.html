@@ -1,0 +1,29 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<h2>My Sold Items</h2>
+
+{% if sold_items %}
+<table class="table table-striped mt-4">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Order ID</th>
+      <th>Customer</th>
+      <th>Date Sold</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in sold_items %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ order.id }}</td>
+      <td>{{ order.customer.full_name }}</td>
+      <td>{{ order.created_at.strftime('%Y-%m-%d') }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="text-muted mt-4">No items sold yet.</p>
+{% endif %}
+{% endblock %}
