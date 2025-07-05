@@ -1,0 +1,43 @@
+{% extends 'layouts/base.html' %}
+{% block title %}My Failed Orders{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">My Failed Orders</h2>
+
+  {% if failed_orders %}
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th class="text-success">#</th>
+            <th class="text-success">Order ID</th>
+            <th class="text-success">Customer</th>
+            <th class="text-success">Status</th>
+            <th class="text-success">Status</th>
+          
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in failed_orders %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ order.id }}</td>
+            <td>{{ order.customer.full_name }}</td>
+            <td><span class="badge bg-danger">Failed</span></td>
+            
+            <td>
+              <a href="{{ url_for('auth.view_order_staff', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-eye"></i> View
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info">You have no failed orders.</div>
+  {% endif %}
+</div>
+{% endblock %}
