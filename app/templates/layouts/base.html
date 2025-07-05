@@ -81,117 +81,109 @@
 
                 {% if current_user.is_authenticated and current_user.role in ['admin', 'staff'] %}
                     <!-- Admin/Staff Navbar Items -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle hover-effect" href="#" id="storeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-store me-1"></i> Stock & Sales
-                            </a>
-                         <ul class="dropdown-menu" aria-labelledby="storeDropdown">
-                                <li>
-                                    <a class="dropdown-item hover-effect" href="{{ url_for('devices.inventory') }}">
-                                        <i class="fas fa-warehouse me-1"></i> Inventory
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item hover-effect" href="{{ url_for('sales.index') }}">
-                                        <i class="fas fa-shopping-cart me-1"></i> Sales
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ url_for('auth.view_sold_devices') }}">
-                                        <i class="fas fa-mobile-alt me-1"></i> Sold Devices
-                                    </a>
-                                </li>
+                  <li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle hover-effect" href="#" id="storeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="fas fa-store me-1"></i> Stock & Sales
+  </a>
+  <ul class="dropdown-menu shadow-sm border rounded-3" aria-labelledby="storeDropdown">
+    <li>
+      <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('devices.inventory') }}">
+        <i class="fas fa-warehouse text-success me-2 small"></i> Inventory
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('sales.index') }}">
+        <i class="fas fa-shopping-cart text-primary me-2 small"></i> Sales
+      </a>
+    </li>
 
+    {% if current_user.is_authenticated and current_user.role in ['admin'] %}
+      <li>
+        <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.view_sold_devices') }}">
+          <i class="fas fa-mobile-alt text-info me-2 small"></i> Sold Devices
+        </a>
+      </li>
+    {% else %}
+      <li>
+        <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('staff.view_sold_items') }}">
+          <i class="fas fa-mobile-alt text-success me-2 small"></i> My Sold Items
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('staff.view_failed_orders') }}">
+          <i class="fas fa-times-circle text-danger me-2 small"></i> Failed Orders
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+</li>
 
-
-
-                            </ul>
-                        </li>
 
                        
-
-
                     <!-- ADMIN ONLY -->
                     {% if current_user.is_admin() %}
                         
                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle hover-effect" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-briefcase me-1"></i> Management
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                                <li>
-                                    <a class="dropdown-item hover-effect" href="{{ url_for('reports.dashboard') }}">
-                                        <i class="fas fa-chart-bar me-1"></i> Reports
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item hover-effect" href="{{ url_for('auth.users') }}">
-                                        <i class="fas fa-users me-1"></i> Users
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-                        <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle hover-effect" href="#" id="customerOrdersDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-shopping-bag me-1"></i> Customer Orders
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="customerOrdersDropdown">
-                            <li>
-                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.pending_orders') }}">
-                                    <i class="fas fa-clock"></i> Pending Orders
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.awaiting_approval_orders') }}">
-                                    <i class="fas fa-hourglass-half me-1"></i>Orders Awaiting Approval
-                                </a>
-                            </li>
-
-                            <li>
-                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.approved_orders') }}">
-                                    <i class="fas fa-check-circle me-1"></i> Approved Orders
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.view_orders') }}">
-                                    <i class="fas fa-list me-1"></i> All Orders
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.rejected_orders') }}">
-                                    <i class="fas fa-times-circle me-1"></i> Rejected Orders
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.cancelled_orders') }}">
-                                    <i class="fas fa-ban me-1"></i> Cancelled Orders
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item hover-effect" href="{{ url_for('auth.deleted_orders') }}">
-                                    <i class="fas fa-trash"></i> Deleted Orders
-                                </a>
-                            </li>
-
-                            <li>
-                            <a class="dropdown-item hover-effect" href="{{ url_for('auth.failed_orders') }}" class="dropdown-item">
-                                <i class="fas fa-times-circle"></i> Failed Orders
-                            </a>
-                            </li>
-
-                        </ul>
-                        </li>
+  <a class="nav-link dropdown-toggle hover-effect" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="fas fa-briefcase me-1"></i> Management
+  </a>
+  <ul class="dropdown-menu shadow-sm border rounded-3" aria-labelledby="adminDropdown">
+    <li>
+      <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('reports.dashboard') }}">
+        <i class="fas fa-chart-bar text-success me-2 small"></i> Reports
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.users') }}">
+        <i class="fas fa-users text-success me-2 small"></i> Users
+      </a>
+    </li>
+  </ul>
+</li>
 
 
-                        <li class="nav-item">
-                        <a class="nav-link hover-effect" href="{{ url_for('auth.view_assignments') }}">
-                           <i class="fas fa-tasks"></i>Staff Assignments
- 
-                        </a>
-                        </li>
+                        <div class="dropdown">
+ <a class="nav-link dropdown-toggle hover-effect" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="fas fa-briefcase me-1"></i> Customer Orders
+  </a>
+  <ul class="dropdown-menu p-2 shadow-sm border rounded-3" style="min-width: 220px;">
+    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.pending_orders') }}">
+      <i class="fas fa-clock text-primary me-2 small"></i> Pending Orders</a></li>
 
-                    {% endif %}
+    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.awaiting_approval_orders') }}">
+      <i class="fas fa-hourglass-half text-warning me-2 small"></i> Orders Awaiting Approval</a></li>
+
+    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.approved_orders') }}">
+      <i class="fas fa-check-circle text-success me-2 small"></i> Approved Orders</a></li>
+
+    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.view_orders') }}">
+      <i class="fas fa-list text-info me-2 small"></i> All Orders</a></li>
+
+    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.rejected_orders') }}">
+      <i class="fas fa-times-circle text-danger me-2 small"></i> Rejected Orders</a></li>
+
+    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.cancelled_orders') }}">
+      <i class="fas fa-ban text-danger me-2 small"></i> Cancelled Orders</a></li>
+
+    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.deleted_orders') }}">
+      <i class="fas fa-trash-alt text-secondary me-2 small"></i> Deleted Orders</a></li>
+
+    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.failed_orders') }}">
+      <i class="fas fa-times text-dark me-2 small"></i> Failed Orders</a></li>
+  </ul>
+</div>
+
+
+
+<li class="nav-item">
+  <a class="nav-link hover-effect d-flex align-items-center small" href="{{ url_for('auth.view_assignments') }}">
+    <i class="fas fa-tasks me-2 small"></i> Staff Assignments
+  </a>
+</li>
+
+
+
+                            {% endif %}
 
                     <!-- User account/login (shown to all except login page) -->
                  {% if not request.endpoint == 'auth.login' %}         
