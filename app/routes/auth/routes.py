@@ -705,28 +705,6 @@ def view_sold_devices():
     return render_template('admin/sold_devices.html', devices=sold_devices)
 
 
-# RESTOCK FAILED DEVICE ORDERS
-@bp.route('/orders/<int:order_id>/restock', methods=['POST'])
-@login_required
-@admin_required
-def restock_device(order_id):
-    order = CustomerOrder.query.get_or_404(order_id)
-
-    if order.status != 'failed':
-        flash('Only failed orders can be restocked.', 'warning')
-        return redirect(url_for('admin.dashboard'))
-
-    # Restore the associated device to 'available'
-    if order.device:
-        order.device.status = 'available'
-
-    # DO NOT change the order.status here
-    db.session.commit()
-
-    flash(f"Device for order #{order.id} has been restocked and marked as available.", 'success')
-    return redirect(url_for('admin.failed_orders'))
-
-
 
 
 # LIST OF FAILED ORDERS
