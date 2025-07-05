@@ -34,6 +34,7 @@
 <body class="bg-light">
 
 <!-- Navbar -->
+ {% if show_nav != false %}
 <nav class="navbar navbar-expand-lg bg-body-tertiary shadow">
     <div class="container-fluid">
         <a class="navbar-brand fs-1" href="#">
@@ -199,15 +200,10 @@
                             </ul>
                         </li>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">
-                                <i class="fas fa-sign-in-alt me-1"></i>Login
-                            </a>
-                        </li> 
+                        
                     {% endif %}
                 {% endif %}              
                 {% elif not request.endpoint == 'auth.login' %}                               
-                    
                <!-- PUBLIC USER ACCOUNT CREATION -->
                                     <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle hover-effect" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
@@ -305,7 +301,7 @@
         </div>
     </div>
 </nav>
-
+{% endif %}
 
 <!-- Flash Messages -->
 <div class="container mt-3">
