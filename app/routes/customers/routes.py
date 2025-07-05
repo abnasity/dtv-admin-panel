@@ -534,3 +534,25 @@ def mark_notification_read(notification_id):
 def rejected_orders():
     orders = CustomerOrder.query.filter_by(customer_id=current_user.id, status='rejected').order_by(CustomerOrder.created_at.desc()).all()
     return render_template('customers/rejected_orders.html', orders=orders)
+
+
+# DELETE a single notification
+@bp.route('/notifications/delete/<int:notification_id>', methods=['POST'])
+@login_required
+def delete_notification(notification_id):
+    notif = Notification.query.get_or_404(notification_id)
+    if notif.user_id != current_user.id:
+        abort(403)
+    db.session.delete(notif)
+    db.session.commit()
+    flash('Notification deleted.', 'success')
+    return redirect(request.referrer or url_for('customers.notifications'))
+
+# CLEAR all notifications
+@bp.route('/notifications/clear', methods=['POST'])
+@login_required
+def clear_notifications():
+    Notification.query.filter_by(user_id=current_user.id).delete()
+    db.session.commit()
+    flash('All notifications cleared.', 'info')
+    return redirect(url_for('customers.notifications'))
