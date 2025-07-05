@@ -494,14 +494,14 @@ def my_devices():
 @bp.route('/notifications')
 @login_required
 def notifications():
-    if not isinstance(current_user, Customer):  # Ensure only customers can access
+    if current_user.role != 'customer':
         abort(403)
 
-    show = request.args.get('filter', 'all')  # 'all' or 'unread'
+    show = request.args.get('filter', 'all')
 
     query = Notification.query.filter(
         Notification.user_id == current_user.id,
-        Notification.recipient_type == 'customer'  # Critical addition
+        Notification.recipient_type == 'customer'
     )
 
     if show == 'unread':
@@ -513,19 +513,20 @@ def notifications():
 
 
 # MARK NOTIFICATION AS READ
-@bp.route('/notifications/read/<int:notification_id>')
+@bp.route('/notifications/mark_all_read', methods=['POST'])
 @login_required
-def mark_notification_read(notification_id):
-    note = Notification.query.filter(
-        Notification.id == notification_id,
-        Notification.user_id == current_user.id,
-        Notification.recipient_type == 'customer'  # Critical addition
-    ).first_or_404()
+def mark_all_notifications_read():
+    # Only allow customers to access this route
+    if current_user.role != 'customer':
+        abort(403)
 
-    note.is_read = True
+    # Mark all unread notifications for the current customer as read
+    Notification.query.filter_by(user_id=current_user.id, is_read=False).update({Notification.is_read: True})
     db.session.commit()
 
+    flash("All notifications marked as read.", "info")
     return redirect(url_for('customers.notifications'))
+
 
 
 # REJECTED ORDERS
