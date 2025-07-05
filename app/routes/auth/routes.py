@@ -87,9 +87,19 @@ def profile():
 @bp.route('/logout')
 @login_required
 def logout():
+    user_role = current_user.role 
     logout_user()
     flash('You have been logged out.', 'info')
-    return redirect(url_for('auth.login'))
+
+    # Redirect based on role
+    if user_role in ['admin', 'staff']:
+        return redirect(url_for('main.dashboard')) 
+    elif user_role == 'customer':
+        return redirect(url_for('customers.login'))
+    else:
+        return redirect(url_for('auth.login'))
+
+    
 
 # STAFF DASHBOARD
 @bp.route('/notifications')
@@ -454,7 +464,7 @@ def approve_order(order_id):
                 link=notif_link_staff
             ))
 
-        # Notify the customer (use .id not .user_id)
+        # Notify the customer about rejection
         if order.customer:
             db.session.add(Notification(
                 user_id=order.customer.id,
@@ -476,21 +486,30 @@ def approve_order(order_id):
         if item.device:
             item.device.status = 'sold'
 
-    # Step 3: Notify staff
+    # Step 3: Notify assigned staff
+    notif_link_staff = url_for('auth.view_order_staff', order_id=order.id)
     if order.assigned_staff_id:
-        notif_link = url_for('auth.view_order_staff', order_id=order.id)
-        Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link).delete()
+        Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link_staff).delete()
         db.session.add(Notification(
             user_id=order.assigned_staff_id,
             message=f"Order #{order.id} has been approved and marked as sold.",
             recipient_type='staff',
-            link=notif_link
+            link=notif_link_staff
+        ))
+
+    # ✅ Step 4: Notify the customer about approval
+    notif_link_customer = url_for('customers.order_detail', order_id=order.id)
+    if order.customer:
+        db.session.add(Notification(
+            user_id=order.customer.id,
+            message=f"Your order #{order.id} has been approved! You will be contacted shortly.",
+            recipient_type='customer',
+            link=notif_link_customer
         ))
 
     db.session.commit()
     flash(f"Order #{order.id} approved. Devices marked as sold.", "success")
     return redirect(url_for('auth.view_orders', order_id=order.id))
-
 
 
 
