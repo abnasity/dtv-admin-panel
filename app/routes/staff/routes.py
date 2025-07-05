@@ -1,7 +1,7 @@
 from app.routes.staff import bp
 from app.utils.decorators import staff_required
 from flask_login import login_required, current_user
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, abort
 from app.models import CustomerOrder, User, Notification
 from app.extensions import db
 
@@ -58,7 +58,7 @@ def mark_task_failed(order_id):
         notif_link_customer = url_for('customers.order_detail', order_id=order.id)
         db.session.add(Notification(
             user_id=order.customer.id,
-            message=f"Your order #{order.id}failed. Reason: {reason}",
+            message=f"Your order #{order.id} failed. Reason: {reason}",
             recipient_type='customer',
             link=notif_link_customer
         ))
@@ -90,3 +90,24 @@ def view_failed_orders():
         assigned_staff_id=current_user.id
     ).all()
     return render_template('staff/failed_orders.html', failed_orders=failed_orders)
+
+# DELETE NOTIFICATION
+@bp.route('/notifications/delete/<int:notification_id>', methods=['POST'])
+@login_required
+def delete_notification(notification_id):
+    notif = Notification.query.get_or_404(notification_id)
+    if notif.user_id != current_user.id:
+        abort(403)
+    db.session.delete(notif)
+    db.session.commit()
+    flash('Notification deleted.', 'success')
+    return redirect(request.referrer or url_for('auth.view_notifications'))
+
+# CLEAR NOTIFICATIONS
+@bp.route('/notifications/clear', methods=['POST'])
+@login_required
+def clear_notifications():
+    Notification.query.filter_by(user_id=current_user.id).delete()
+    db.session.commit()
+    flash('All notifications cleared.', 'info')
+    return redirect(url_for('auth.view_notifications'))
