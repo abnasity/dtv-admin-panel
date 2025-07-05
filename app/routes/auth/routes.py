@@ -705,8 +705,6 @@ def view_sold_devices():
     return render_template('admin/sold_devices.html', devices=sold_devices)
 
 
-
-
 # LIST OF FAILED ORDERS
 @bp.route('/admin/failed_orders')
 @login_required
@@ -715,3 +713,26 @@ def failed_orders():
     orders = CustomerOrder.query.filter_by(status='failed').all()
     return render_template('admin/failed_orders.html', orders=orders)
 
+# DELETE NOTIFICATIONS
+@bp.route('/notifications/delete/<int:notification_id>', methods=['POST'])
+@login_required
+def delete_notification(notification_id):
+    notif = Notification.query.get_or_404(notification_id)
+
+    # Optional: only allow user to delete their own notifications
+    if notif.user_id != current_user.id:
+        abort(403)
+
+    db.session.delete(notif)
+    db.session.commit()
+    flash('Notification deleted.', 'success')
+    return redirect(request.referrer or url_for('auth.notifications'))  # fallback
+
+# CLEAR NOTIFICATIONS
+@bp.route('/notifications/clear', methods=['POST'])
+@login_required
+def clear_notifications():
+    Notification.query.filter_by(user_id=current_user.id).delete()
+    db.session.commit()
+    flash('All notifications cleared.', 'info')
+    return redirect(request.referrer or url_for('auth.notifications'))
