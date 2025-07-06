@@ -17,7 +17,7 @@
                         <p class="card-text">{{ device.description[:100] }}...</p>
                         {% endif %}
 
-                        <span class="badge bg-success">Ksh {{ device.price_cash }}</span>
+                        <span class="badge fs-6 bg-success">Ksh {{ device.price_cash }}</span>
                         <br><br>
                         <a href="{{ url_for('customers.device_detail', device_id=device.id) }}" class="btn btn-sm btn-primary w-100">View Details</a>
                     </div>
