@@ -1,9 +1,15 @@
 {% extends 'layouts/base.html' %}
+
 {% block content %}
 <div class="container">
     <h3 class="mb-4">Sold Devices</h3>
-    <table class="table table-bordered">
-        <thead>
+
+    <div class="mb-3">
+        <input type="text" id="deviceSearch" class="form-control" placeholder="Search sold devices...">
+    </div>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
             <tr>
                 <th>IMEI</th>
                 <th>Brand</th>
@@ -25,4 +31,16 @@
         </tbody>
     </table>
 </div>
+
+<script>
+document.getElementById("deviceSearch").addEventListener("keyup", function () {
+    let query = this.value.toLowerCase();
+    let rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(function (row) {
+        let text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? "" : "none";
+    });
+});
+</script>
 {% endblock %}
