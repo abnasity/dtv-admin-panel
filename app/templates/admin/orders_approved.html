@@ -1,6 +1,10 @@
 {% extends 'layouts/base.html' %}
+
 {% block content %}
-<h3>{{ title }}</h3>
+<h2 class="mt-4 text-center fw-bold">Approved Orders</h2>
+<div class="mb-3">
+    <input type="text" id="orderSearch" class="form-control" placeholder="Search orders...">
+</div>
 
 <table class="table">
     <thead>
@@ -32,4 +36,16 @@
     {% endfor %}
     </tbody>
 </table>
+<script>
+document.getElementById("orderSearch").addEventListener("keyup", function() {
+    let query = this.value.toLowerCase();
+    let rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(function(row) {
+        let text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? "" : "none";
+    });
+});
+</script>
+
 {% endblock %}

@@ -1,10 +1,11 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}Deleted Orders{% endblock %}
-
 {% block content %}
+<h2 class="mt-4 text-center fw-bold">Deleted Orders</h2>
+<div class="mb-3">
+    <input type="text" id="orderSearch" class="form-control" placeholder="Search orders...">
+</div>
 <div class="container mt-4">
-    <h2 class="mb-4">Deleted Orders</h2>
 
     {% if orders %}
         <div class="table-responsive">
@@ -39,4 +40,16 @@
         <div class="alert alert-info">No deleted orders found.</div>
     {% endif %}
 </div>
+<script>
+document.getElementById("orderSearch").addEventListener("keyup", function() {
+    let query = this.value.toLowerCase();
+    let rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(function(row) {
+        let text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? "" : "none";
+    });
+});
+</script>
+
 {% endblock %}

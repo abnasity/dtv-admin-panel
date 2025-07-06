@@ -2,32 +2,64 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Order Assignments</h2>
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Phone number</th>
-                <th>Delivery Address</th>
-                <th>Assigned Staff</th>
-                <th>Status</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for order in orders %}
-            <tr>
-                <td>#{{ order.id }}</td>
-                <td>{{ order.customer.full_name }}</td>
-                <td>{{ order.customer.phone_number }}</td>
-                <td>{{ order.delivery_address }}</td>
-                <td>{{ order.assigned_staff.username }}</td>
-                <td>{{ order.status }}</td>
-                <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h2 class="text-center fw-bold mb-4">Order Assignments</h2>
+
+    <!-- Search Input -->
+    <div class="mb-3">
+        <input type="text" id="orderSearch" class="form-control" placeholder="Search assignments...">
+    </div>
+
+    {% if orders %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Phone Number</th>
+                    <th>Delivery Address</th>
+                    <th>Assigned Staff</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.customer.full_name }}</td>
+                    <td>{{ order.customer.phone_number }}</td>
+                    <td>{{ order.delivery_address }}</td>
+                    <td>{{ order.assigned_staff.username if order.assigned_staff else 'Unassigned' }}</td>
+                    <td>
+                        <span class="badge fs-6 bg-{{ 
+                            'secondary' if order.status == 'pending' else 
+                            'info' if order.status == 'awaiting_approval' else 
+                            'success' if order.status == 'completed' else 
+                            'danger' if order.status == 'failed' else 
+                            'primary' }}">
+                            {{ order.status | capitalize }}
+                        </span>
+                    </td>
+                    <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="alert alert-info">No order assignments found.</div>
+    {% endif %}
 </div>
+
+<!-- Client-side search filter -->
+<script>
+document.getElementById("orderSearch").addEventListener("keyup", function() {
+    let query = this.value.toLowerCase();
+    document.querySelectorAll("table tbody tr").forEach(function(row) {
+        row.style.display = row.textContent.toLowerCase().includes(query) ? "" : "none";
+    });
+});
+</script>
+
 {% endblock %}
