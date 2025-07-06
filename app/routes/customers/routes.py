@@ -475,7 +475,7 @@ def order_success():
 def my_orders():
     orders = CustomerOrder.query.filter(
         CustomerOrder.customer_id == current_user.id,
-        CustomerOrder.status.in_(['approved', 'pending'])  # show both
+        CustomerOrder.status.in_(['approved', 'completed'])
     ).order_by(CustomerOrder.created_at.desc()).all()
 
     return render_template('customers/my_orders.html', orders=orders)
@@ -488,14 +488,14 @@ def my_devices():
     if not isinstance(current_user, Customer):
         abort(403)
 
-    approved_orders = CustomerOrder.query.filter_by(
+    completed_orders = CustomerOrder.query.filter_by(
         customer_id=current_user.id,
-        status='approved'
+        status='completed'
     ).all()
 
     # Flatten all purchased devices
     purchased_items = []
-    for order in approved_orders:
+    for order in completed_orders:
         for item in order.items:
             if item.device and item.device.status == 'sold':
                 purchased_items.append({
