@@ -484,7 +484,7 @@ def approve_order(order_id):
 
     for item in order.items:
         if item.device:
-            item.device.status = 'sold'
+            item.device.status = 'available'
 
     # Step 3: Notify assigned staff
     notif_link_staff = url_for('auth.view_order_staff', order_id=order.id)
@@ -492,7 +492,7 @@ def approve_order(order_id):
         Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link_staff).delete()
         db.session.add(Notification(
             user_id=order.assigned_staff_id,
-            message=f"Order #{order.id} has been approved and marked as sold.",
+            message=f"Order #{order.id} has been approved and awaiting sale confirmation.",
             recipient_type='staff',
             link=notif_link_staff
         ))
@@ -508,7 +508,7 @@ def approve_order(order_id):
         ))
 
     db.session.commit()
-    flash(f"Order #{order.id} approved. Devices marked as sold.", "success")
+    flash(f"Order #{order.id} approved. Awaiting sale confirmation.", "success")
     return redirect(url_for('auth.view_orders', order_id=order.id))
 
 
@@ -661,6 +661,21 @@ def assign_staff_to_order(order):
         return matching_staff
 
     return None
+
+
+# COMPLETED ORDERS
+@bp.route('/orders/completed')
+@login_required
+@admin_required
+def completed_orders():
+    """Admin view: List of all completed orders"""
+    orders = CustomerOrder.query.filter_by(status='completed') \
+        .order_by(CustomerOrder.created_at.desc()) \
+        .all()
+    
+    return render_template('admin/completed_orders.html', orders=orders)
+
+
 
 # ASSIGNMENTS
 @bp.route('/assignments')
