@@ -12,25 +12,29 @@ from sqlalchemy import or_
 
 
 # LOGIN
+from sqlalchemy import or_
+
 @bp.route('/login', methods=['GET', 'POST'])
 def login():         
     form = LoginForm()
     if form.validate_on_submit():
+        # Accept identifier as either username or email
+        identifier = form.identifier.data.strip()
+
         user = User.query.filter(
             or_(
-                User.username == form.username.data,
-                User.email == form.email.data
+                User.username.ilike(identifier),
+                User.email.ilike(identifier)
             )
         ).first()
         
         if user and user.check_password(form.password.data):
-            # Update last seen timestamp
             user.last_seen = db.func.now()
             db.session.commit()
-            
+
             login_user(user, remember=form.remember_me.data)
             
-            # Role-based redirection
+            # Redirect based on role
             if user.role == 'admin':
                 return redirect(url_for('auth.dashboard'))
             elif user.role == 'staff':
@@ -38,8 +42,7 @@ def login():
             elif user.role == 'customer':
                 return redirect(url_for('customers.dashboard'))
 
-            # Default fallback
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('auth.login'))  # Fallback
         else:
             flash('Invalid login credentials. Please try again.', 'danger')
 

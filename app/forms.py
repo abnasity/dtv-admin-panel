@@ -6,11 +6,10 @@ from flask_wtf.file import FileField, FileAllowed
 
 # USER LOGIN FORM
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    identifier = StringField('Username or Email', validators=[DataRequired(), Length(min=3, max=120)])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
-    submit = SubmitField('Login')   
+    submit = SubmitField('Login')  
     
 # USER PROFILE FORM  
 class ProfileForm(FlaskForm):
