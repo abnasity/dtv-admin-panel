@@ -7,7 +7,7 @@ from app.extensions import db
 
 
 
-
+# DASHBOARD
 @bp.route('/dashboard')
 @login_required
 @staff_required
@@ -68,6 +68,54 @@ def mark_task_failed(order_id):
     flash('Order marked as failed. Devices restocked and notifications sent.', 'danger')
     return redirect(url_for('staff.dashboard'))
 
+
+# MARK TASK AS SUCCESSFUL
+@bp.route('/orders/<int:order_id>/task_success', methods=['POST'])
+@login_required
+@staff_required
+def mark_task_success(order_id):
+    order = CustomerOrder.query.get_or_404(order_id)
+
+    if order.status != 'approved':
+        flash('Only approved orders can be marked as successful.', 'warning')
+        return redirect(url_for('staff.dashboard'))
+
+    # Mark each device in the order as sold
+    for item in order.items:
+        if item.device and item.device.status != 'sold':
+            item.device.mark_as_sold()  # uses your model's mark_as_sold()
+
+    # Optionally, update the order status if needed
+    order.status = 'completed'
+    db.session.commit()
+
+    # Notify all admins
+    admin_users = User.query.filter_by(role='admin').all()
+    for admin in admin_users:
+        db.session.add(Notification(
+            user_id=admin.id,
+            message=f"Order #{order.id} marked as successful by staff."
+        ))
+
+    # Notify the customer
+    if order.customer:
+        notif_link_customer = url_for('customers.order_detail', order_id=order.id)
+        db.session.add(Notification(
+            user_id=order.customer.id,
+            message=f"Your order #{order.id} was completed successfully. Thank you for shopping with us!",
+            recipient_type='customer',
+            link=notif_link_customer
+        ))
+
+    db.session.commit()
+
+    flash('Order marked as successful. Devices sold and notifications sent.', 'success')
+    return redirect(url_for('staff.dashboard'))
+
+
+
+
+
 # staff sold items
 @bp.route('/staff/sold-items')
 @login_required
@@ -75,7 +123,7 @@ def mark_task_failed(order_id):
 def view_sold_items():
     sold_items = CustomerOrder.query.filter_by(
         assigned_staff_id=current_user.id,
-        status='approved'
+        status='completed'
     ).all()
     return render_template('staff/sold_items.html', sold_items=sold_items)
 
@@ -110,4 +158,4 @@ def clear_notifications():
     Notification.query.filter_by(user_id=current_user.id).delete()
     db.session.commit()
     flash('All notifications cleared.', 'info')
-    return redirect(url_for('auth.view_notifications'))
+    return redirect(url_for('auth.notifications'))
