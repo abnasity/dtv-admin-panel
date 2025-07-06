@@ -4,68 +4,65 @@
 <h2 class="mt-4">Assigned Orders</h2>
 
 {% if orders %}
-    <div class="table-responsive mt-3">
-        <table class="table table-striped table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th scope="col" class="text-primary">#Order ID</th>
-                    <th scope="col" class="text-primary">Customer</th>
-                    <th scope="col" class="text-primary">Status</th>
-                    <th scope="col" class="text-primary">Created At</th>
-                    <th scope="col" class="text-primary">Delivery Address</th>
-                    <th scope="col" class="text-primary">Payment Option</th>
-                    <th scope="col" class="text-primary">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in orders %}
-                    <tr>
-                        <td>#{{ order.id }}</td>
-                        <td>{{ order.customer.full_name }}</td>
-                        <td>
-                            <span class="badge fs-6 bg-{{ 
-                                'secondary' if order.status == 'pending' else 
-                                'primary' if order.status == 'awaiting_approval' else 
-                                'success' if order.status == 'approved' else 
-                                'danger' if order.status == 'cancelled' else 'dark'
-                            }}">{{ order.status | capitalize }}</span>
-                        </td>
-                        <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>{{ order.delivery_address }}</td>
-                        <td>{{ order.payment_option }}</td>
+<div class="table-responsive mt-3">
+    <table class="table table-striped table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th class="text-primary">#Order ID</th>
+                <th class="text-primary">Customer</th>
+                <th class="text-primary">Status</th>
+                <th class="text-primary">Created At</th>
+                <th class="text-primary">Delivery Address</th>
+                <th class="text-primary">Payment Option</th>
+                <th class="text-primary">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>#{{ order.id }}</td>
+                <td>{{ order.customer.full_name }}</td>
+                <td>
+                    <span class="badge fs-6 bg-{{ 
+                        'secondary' if order.status == 'pending' else 
+                        'primary' if order.status == 'awaiting_approval' else 
+                        'success' if order.status == 'approved' else 
+                        'danger' if order.status == 'cancelled' else 'dark' 
+                    }}">{{ order.status | capitalize }}</span>
+                </td>
+                <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ order.delivery_address }}</td>
+                <td>{{ order.payment_option }}</td>
 
-                        <td>
-                        <a href="{{ url_for('auth.view_order_staff', order_id=order.id) }}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-eye me-1"></i> View
-                        </a>
+                <td>
+                    <a href="{{ url_for('auth.view_order_staff', order_id=order.id) }}" class="btn btn-sm btn-primary mb-2">
+                        <i class="fas fa-eye me-1"></i> View
+                    </a>
 
-                        {% if order.status == 'approved' %}
-                     <form action="{{ url_for('staff.mark_task_failed', order_id=order.id) }}" method="POST" class="mt-2 d-flex align-items-center">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    
-    <input type="text" 
-           name="reason" 
-           class="form-control form-control-sm me-2" 
-           placeholder="Failure reason" 
-           required 
-           style="max-width: 200px;">
-    
-    <button type="submit" 
-            class="btn btn-sm btn-danger"
-            onclick="return confirm('Are you sure you want to mark this task as failed? This action cannot be undone.')">
-        <i class="fas fa-times-circle me-1"></i> Failed
-    </button>
-</form>
+                    {% if order.status == 'approved' %}
+                    <!-- Mark as Failed -->
+                    <form action="{{ url_for('staff.mark_task_failed', order_id=order.id) }}" method="POST" class="d-flex align-items-center mb-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="text" name="reason" class="form-control form-control-sm me-2" placeholder="Failure reason" required style="max-width: 200px;">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to mark this task as failed? This action cannot be undone.')">
+                            <i class="fas fa-times-circle me-1"></i> Failed
+                        </button>
+                    </form>
 
-
-                        {% endif %}
-                    </td>
-
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                    <!-- Mark as Successful -->
+                    <form action="{{ url_for('staff.mark_task_success', order_id=order.id) }}" method="POST" class="d-flex align-items-center">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Are you sure you want to mark this task as successful? This action cannot be undone.')">
+                            <i class="fas fa-check-circle me-1"></i> Successful
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% else %}
     <p class="text-muted mt-3">No orders have been assigned to you.</p>
 {% endif %}
