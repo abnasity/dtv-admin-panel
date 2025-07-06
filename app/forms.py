@@ -2,7 +2,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, NumberRange, EqualTo, Optional
 from app.models import User, Customer
-  
+from flask_wtf.file import FileField, FileAllowed
+
 # USER LOGIN FORM
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
@@ -105,6 +106,10 @@ class DeviceForm(FlaskForm):
     price_cash = DecimalField('Cash Price', validators=[Optional(), NumberRange(min=0)])
     price_credit = DecimalField('Credit Price', validators=[Optional(), NumberRange(min=0)])
     notes = TextAreaField('Notes')
+    image = FileField('Device Image', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Only images allowed!')
+    ])
+    color = StringField('Color (for image matching)')
     submit = SubmitField('Save Device')
     
     def __init__(self, original_imei=None, *args, **kwargs):
