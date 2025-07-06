@@ -1,6 +1,7 @@
-from flask import url_for
+from flask import url_for, current_app
 from app.models import Notification, User
 from app.extensions import db
+import os
 
 def assign_staff_to_order(order):
     """
@@ -89,3 +90,36 @@ def create_customer_notification(customer_id, message):
         print(f"[ERROR] Failed to create notification: {str(e)}")
         db.session.rollback()
         return False
+
+
+# IMAGE DEBUGGING
+#a utility function to help debug image paths
+def get_device_debug_info(device):
+    """Return detailed debug information about a device's image"""
+    clean_brand = device.brand.lower().replace(' ', '-')
+    clean_model = device.model.lower().replace(' ', '-')
+    
+    # Generate possible expected paths
+    possible_paths = [
+        f"static/images/devices/{clean_brand}/{device.main_image}" if device.main_image else None,
+        f"static/images/devices/{clean_brand}/{clean_model}.jpg",
+        f"static/images/devices/{clean_brand}/{clean_model}-a.jpg",
+        f"static/images/devices/{clean_brand}/{device.model.lower()}.jpg"
+    ]
+    
+    # Check which paths actually exist
+    existing_paths = []
+    for path in possible_paths:
+        if path and os.path.exists(os.path.join(current_app.root_path, path)):
+            existing_paths.append(path)
+    
+    return {
+        'device_id': device.id,
+        'brand': device.brand,
+        'model': device.model,
+        'main_image': device.main_image,
+        'image_url': device.image_url,
+        'possible_paths': possible_paths,
+        'existing_paths': existing_paths,
+        'using_fallback': not bool(existing_paths) and device.image_url.endswith('default-device.jpg')
+    }
