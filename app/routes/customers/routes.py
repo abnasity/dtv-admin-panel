@@ -1,12 +1,15 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify, abort, session, make_response
+from flask import render_template, redirect, url_for, flash, request, jsonify, abort, session, make_response, current_app
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db, bcrypt
 from app.models import Customer, Device, CartItem, CustomerOrder, CustomerOrderItem, User, Notification
 from app.forms import CustomerRegistrationForm, CustomerLoginForm, CustomerEditForm, CheckoutForm
 from datetime import datetime
 from app.routes.customers import bp
-from app.utils.helpers import assign_staff_to_order
+from app.utils.helpers import assign_staff_to_order, get_device_debug_info
 from sqlalchemy import and_
+from sqlalchemy.orm import load_only 
+import os
+
 
 # CUSTOMER SEARCH SECTION
 @bp.route('/search')
@@ -130,6 +133,18 @@ def dashboard():
     # Get available products
     products = Device.query.filter_by(status='available').all()
     
+    if current_app.debug:
+        for device in products:
+            device.debug_info = get_device_debug_info(device)
+    
+        # Add file existence info to each device
+    for device in products:
+        if device.image_url.startswith('/static/'):
+            static_path = device.image_url[1:]  # Remove leading slash
+            device.file_exists = os.path.exists(os.path.join(current_app.root_path, static_path))
+        else:
+            device.file_exists = False
+    
     # Get customer notifications (last 5)
     notifications = Notification.query.filter(
         Notification.user_id == current_user.id,
@@ -139,6 +154,7 @@ def dashboard():
     return render_template('customers/dashboard.html', 
                          products=products,
                          notifications=notifications)
+    
 
 # CUSTOMER DASH (Order-focused dashboard)
 @bp.route('/dash')
