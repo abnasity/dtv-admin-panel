@@ -65,7 +65,7 @@ def mark_task_failed(order_id):
 
     db.session.commit()
 
-    flash('Order marked as failed. Devices restocked and notifications sent.', 'danger')
+    flash('Order marked as failed and notifications sent.', 'danger')
     return redirect(url_for('staff.dashboard'))
 
 
@@ -109,7 +109,7 @@ def mark_task_success(order_id):
 
     db.session.commit()
 
-    flash('Order marked as successful. Devices sold and notifications sent.', 'success')
+    flash('Order marked as successful. Device(s) sold and notifications sent.', 'success')
     return redirect(url_for('staff.dashboard'))
 
 
