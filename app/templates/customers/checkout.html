@@ -23,9 +23,28 @@
                     <tbody>
                         {% for device in products %}
                         <tr>
-                            <td>{{ device.brand }} {{ device.model }}</td>                           
-                            <td>Ksh {{ "%.2f"|format(device.price_cash) }}</td>
-                            <td>Ksh {{ "%.2f"|format(device.price_credit) }}</td>
+                            <td>{{ device.brand }} {{ device.model }}</td>    
+                            
+                            <td>
+                            {% if device.price_cash is not none %}
+                                <span class="badge fs-6 bg-success p-2">
+                                Ksh {{ "%.2f"|format(device.price_cash) }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                            </td>
+
+                            <td>
+                            {% if device.price_credit is not none %}
+                                <span class="badge fs-6 bg-success p-2">
+                                Ksh {{ "%.2f"|format(device.price_credit) }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                            </td>
+                    
                         </tr>
                         {% endfor %}
                     </tbody>
