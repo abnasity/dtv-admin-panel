@@ -32,33 +32,60 @@
     {% for product in products %}
       <div class="col-md-4 mb-4">
         <div class="card shadow-sm h-100">
-          {% if product.image_url %}
-            <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.brand }} {{ product.model }}">
-          {% endif %}
+          <!-- Enhanced Image Section with Debug Info -->
+          <div class="product-image-container position-relative" style="height: 200px; background-color: #f8f9fa;">
+            <img loading="lazy" 
+                 src="{{ product.image_url }}" 
+                 class="img-fluid h-100 w-100 object-fit-cover" 
+                 alt="{{ product.brand }} {{ product.model }}"
+                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-device.jpg') }}';"
+                 data-debug-info="Brand: {{ product.brand }}, Model: {{ product.model }}, Image: {{ product.main_image }}">
+            
+            {% if product.color %}
+              <span class="badge bg-primary position-absolute" style="bottom: 10px; right: 10px;">
+                {{ product.color|capitalize }}
+              </span>
+            {% endif %}
+          </div> <!-- This closing div was missing -->
 
           <div class="card-body">
             <h5 class="card-title">{{ product.brand }} {{ product.model }}</h5>
             <p class="card-text">
               <strong>RAM:</strong> {{ product.ram }}<br>
               <strong>Storage:</strong> {{ product.rom }}<br>
-
-              {% if product.price_cash %}
-                <strong>Price (Cash):</strong> Ksh {{ "%.2f"|format(product.price_cash) }}<br>
-              {% else %}
-                <strong>Price (Cash):</strong> <span class="text-muted">Not available</span><br>
-              {% endif %}
-
-              {% if product.price_credit %}
-                <strong>Credit(Deposit):</strong> Ksh {{ "%.2f"|format(product.price_credit) }}
-              {% else %}
-                <strong>Credit(Deposit):</strong> <span class="text-muted">Not available</span>
-              {% endif %}
+              <strong>IMEI:</strong> {{ product.imei }}<br>
+              
+              <!-- Price Display -->
+              <div class="d-flex justify-content-between mt-2">
+                <div>
+                  <small class="text-muted">Cash Price:</small><br>
+                  <span class="fw-bold text-success">
+                    {% if product.price_cash %}
+                      Ksh {{ "{:,.2f}".format(product.price_cash) }}
+                    {% else %}
+                      <span class="text-muted">Not available</span>
+                    {% endif %}
+                  </span>
+                </div>
+                <div class="text-end">
+                  <small class="text-muted">Credit Deposit:</small><br>
+                  <span class="fw-bold">
+                    {% if product.price_credit %}
+                      Ksh {{ "{:,.2f}".format(product.price_credit) }}
+                    {% else %}
+                      <span class="text-muted">Not available</span>
+                    {% endif %}
+                  </span>
+                </div>
+              </div>
             </p>
 
+            <!-- Add to Cart Button -->
             <form method="POST" action="{{ url_for('customers.add_to_cart', device_id=product.id) }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-              <button type="submit" class="btn btn-primary w-100">
-                <i class="fas fa-cart-plus me-1"></i>Add to Cart
+              <button type="submit" class="btn btn-primary w-100" {% if not product.is_available %}disabled{% endif %}>
+                <i class="fas fa-cart-plus me-1"></i> 
+                {% if product.is_available %}Add to Cart{% else %}Out of Stock{% endif %}
               </button>
             </form>
           </div>
@@ -66,9 +93,37 @@
       </div>
     {% else %}
       <div class="col-12">
-        <p class="text-center text-muted">No products available.</p>
+        <div class="text-center py-5">
+          <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+          <p class="text-muted">No products available at the moment.</p>
+          <a href="{{ url_for('public.home') }}" class="btn btn-outline-success">
+            <i class="fas fa-home me-1"></i> Return Home
+          </a>
+        </div>
       </div>
     {% endfor %}
   </div>
 </div>
+
+<style>
+  .product-image-container {
+    overflow: hidden;
+    position: relative;
+  }
+  .product-image-container img {
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .product-image-container img:hover {
+    transform: scale(1.05);
+  }
+  .card {
+    transition: all 0.3s ease;
+  }
+  .card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+</style>
+
 {% endblock %}
