@@ -1,9 +1,11 @@
 from datetime import datetime
 from flask_login import UserMixin
+from flask import current_app, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db 
 from app import bcrypt, login_manager
 from sqlalchemy import text, Numeric
+import os
 
 # USERS MODEL
 # This model represents both admin and staff users in the system.
@@ -25,6 +27,7 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
     # Relationships
     sales = db.relationship('Sale', backref='seller', lazy='dynamic')
     created_by = db.relationship('User', backref='created_users',  remote_side=[id], uselist=False)
+   
     
     def set_password(self, password):
         """Hash and set user password using bcrypt"""
@@ -148,7 +151,13 @@ class CustomerOrder(db.Model):
 
 # relationships
     customer = db.relationship('Customer', back_populates='orders')
-    items = db.relationship('CustomerOrderItem', backref='order', lazy=True, cascade='all, delete-orphan', foreign_keys='CustomerOrderItem.order_id')
+    items = db.relationship(
+        'CustomerOrderItem', 
+        back_populates='customer_order',  # Changed from 'order'
+        lazy=True,
+        cascade='all, delete-orphan',
+        foreign_keys='CustomerOrderItem.order_id'
+    )
 
     approved_by = db.relationship('User', foreign_keys=[approved_by_id])
 
@@ -189,8 +198,14 @@ class CartItem(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
-    customer = db.relationship('Customer', back_populates='cart_items')
-    device = db.relationship('Device', backref='cart_items')
+    device = db.relationship(
+        "Device",
+        back_populates="cart_items"
+    )
+    customer = db.relationship(
+        "Customer",
+        back_populates="cart_items"
+    )
 
     def __repr__(self):
         return f"<CartItem customer={self.customer_id} device={self.device_id}>"
@@ -207,12 +222,15 @@ class CustomerOrderItem(db.Model):
     unit_price = db.Column(db.Numeric(12, 2), nullable=False)
 
     # Relationship to device
-    device = db.relationship("Device", backref="order_items")
-
-    def to_dict(self):
-     return {
-        'device': self.device.to_dict() if self.device else None
-    }
+    customer_order = db.relationship(
+        "CustomerOrder",
+        back_populates="items"  # Matches the name above
+    )
+    
+    device = db.relationship(
+        "Device",
+        back_populates="items"
+    )
 
     def to_dict(self):
      return {
@@ -228,53 +246,159 @@ class CustomerOrderItem(db.Model):
         
 #  DEVICE MODEL
 class Device(db.Model):
-    """Device model for mobile phone inventory management"""
+    """Enhanced Device model with advanced image management"""
     __tablename__ = 'devices'
 
     id = db.Column(db.Integer, primary_key=True)
     imei = db.Column(db.String(15), unique=True, nullable=False, index=True)
     brand = db.Column(db.String(50), nullable=False)
     model = db.Column(db.String(100), nullable=False)
-    ram = db.Column(db.String(20), nullable=False)  # e.g., '4GB', '6GB'
-    rom = db.Column(db.String(20), nullable=False)  # e.g., '64GB', '128GB'
-    purchase_price = db.Column(db.Numeric(10, 2), nullable=False)
-    price_cash = db.Column(db.Numeric(10, 2), nullable=True)
-    price_credit = db.Column(db.Numeric(10, 2), nullable=True)
-    description = db.Column(db.Text, nullable=True, default="No description available.")
-    status = db.Column(db.String(20), default='available')  # available, sold
+    ram = db.Column(db.String(20), nullable=False)
+    rom = db.Column(db.String(20), nullable=False)
+    purchase_price = db.Column(Numeric(10, 2), nullable=False)
+    price_cash = db.Column(Numeric(10, 2), nullable=True)
+    price_credit = db.Column(Numeric(10, 2), nullable=True)
+    description = db.Column(db.Text, default="No description available.")
+    status = db.Column(db.String(20), default='available')
     arrival_date = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     notes = db.Column(db.Text)
+    color = db.Column(db.String(50), nullable=True)
+    image_variants = db.Column(db.JSON, nullable=True)
+    main_image = db.Column(db.String(255), nullable=True)  # Stores the primary image filename
     
-    # Relationship
-    sale = db.relationship('Sale', backref='device', uselist=False)
-
+    # Relationships
+    sale = db.relationship('Sale', back_populates='device', uselist=False)
+    items = db.relationship(
+        'CustomerOrderItem', 
+        back_populates='device', 
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+    cart_items = db.relationship('CartItem', back_populates='device', lazy=True)
+    transactions = db.relationship('InventoryTransaction', back_populates='device')
+    alerts = db.relationship('Alert', back_populates='device')
+    
     @property
     def is_available(self):
-        """Check if device is available for sale"""
-        return self.status == 'available'
-
+     """Check if device is available for sale"""
+     return str(self.status).lower() == 'available'
+     
     def mark_as_sold(self):
-        """Mark device as sold"""
+        """Mark device as sold and update timestamp"""
         self.status = 'sold'
         self.modified_at = datetime.utcnow()
-    
-    def to_dict(self):
-     return {
-        'id': self.id,
-        'imei': self.imei,
-        'brand': self.brand,
-        'model': self.model,
-        'ram': self.ram,
-        'rom': self.rom,
-        'status': self.status,
-        'purchase_price': str(self.purchase_price),
-        'arrival_date': self.arrival_date.isoformat(),
-    }
+        db.session.commit()
+    # Status Management
+    # Image Handling
+    @property
+    def image_url(self):
+        """Get image URL with comprehensive fallback logic"""
+        try:
+            clean_brand = self.brand.lower().replace(' ', '-')
+            clean_model = self.model.lower().replace(' ', '-')
+            
+            # Remove common suffixes and variations
+            clean_model = clean_model.replace('-a', '').replace('-b', '').replace('_', '-')
+            
+            # 1. Try main_image first if set
+            if self.main_image:
+                path = os.path.join('static', 'images', 'devices', clean_brand, self.main_image)
+                if os.path.exists(os.path.join(current_app.root_path, path)):
+                    return url_for('static', filename=f'images/devices/{clean_brand}/{self.main_image}')
+            
+            # 2. Generate possible filename variations
+            possible_filenames = [
+                f"{clean_model}.jpg",                  # standard
+                f"{clean_model}-a.jpg",                # with suffix
+                f"{clean_model.split('-')[-1]}.jpg",   # just model number
+                f"{self.model.lower()}.jpg",           # original model
+                f"nokia-{clean_model.split('-')[-1]}.jpg"  # nokia-specific
+            ]
+            
+            # 3. Try each possible filename
+            for filename in possible_filenames:
+                path = os.path.join('static', 'images', 'devices', clean_brand, filename)
+                if os.path.exists(os.path.join(current_app.root_path, path)):
+                    self.main_image = filename  # Update for future reference
+                    db.session.commit()
+                    return url_for('static', filename=f'images/devices/{clean_brand}/{filename}')
+            
+            # 4. Final fallback
+            return url_for('static', filename='images/default-device.jpg')
+        
+        except Exception as e:
+            current_app.logger.error(f"Error generating image URL: {str(e)}")
+            return url_for('static', filename='images/default-device.jpg')
+
+    @property
+    def thumbnail_url(self):
+        """Get optimized thumbnail URL with cache busting"""
+        if not self.image_url:
+            return None
+            
+        try:
+            base_url = self.image_url.rsplit('.', 1)[0]
+            thumbnail_path = os.path.join('static', base_url.lstrip('/') + '_200x200.jpg')
+            
+            if os.path.exists(os.path.join(current_app.root_path, thumbnail_path)):
+                return f"{base_url}_200x200.jpg?v={int(self.modified_at.timestamp())}"
+            
+            return f"{self.image_url}?v={int(self.modified_at.timestamp())}"
+        except Exception as e:
+            current_app.logger.error(f"Error generating thumbnail URL: {str(e)}")
+            return self.image_url
+
+    def add_image(self, image_file):
+        """Save new image and set as main image"""
+        from app.utils.image_utils import image_manager
+        
+        # Generate consistent filename
+        clean_brand = self.brand.lower().replace(' ', '-')
+        clean_model = self.model.lower().replace(' ', '-').replace('-a', '').replace('-b', '')
+        filename = f"{clean_model}.jpg"
+        
+        # Save the image
+        filename = image_manager.save_device_image(
+            brand=clean_brand,
+            model=clean_model,
+            image_file=image_file
+        )
+        
+        # Update the device record
+        self.main_image = filename
+        db.session.commit()
+        
+        return filename
+
+    # Serialization
+    def to_dict(self, include_variants=False):
+        """Enhanced serialization with image support"""
+        data = {
+            'id': self.id,
+            'imei': self.imei,
+            'brand': self.brand,
+            'model': self.model,
+            'color': self.color,
+            'ram': self.ram,
+            'rom': self.rom,
+            'status': self.status,
+            'purchase_price': float(self.purchase_price),
+            'price_cash': float(self.price_cash) if self.price_cash else None,
+            'price_credit': float(self.price_credit) if self.price_credit else None,
+            'image_url': self.image_url,
+            'thumbnail_url': self.thumbnail_url,
+            'arrival_date': self.arrival_date.isoformat(),
+            'modified_at': self.modified_at.isoformat()
+        }
+        
+        if include_variants:
+            data['image_variants'] = self.get_image_variants()
+            
+        return data
 
     def __repr__(self):
-     return f"<Device {self.brand} {self.model}"
-
+        return f"<Device {self.brand} {self.model} ({self.color or 'no color'})>"
 
 # SOLD DEVICE MODEL
 class SoldDevice(db.Model):
@@ -300,7 +424,7 @@ class InventoryTransaction(db.Model):
     notes = db.Column(db.Text)
 
     # Relationships
-    device = db.relationship('Device', backref='transactions')
+    device = db.relationship('Device', back_populates='transactions')
     staff = db.relationship('User', backref='inventory_logs')
 
     def to_dict(self):
@@ -332,6 +456,7 @@ class Sale(db.Model):
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), unique=True, nullable=False)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
+    device = db.relationship("Device", back_populates="sale")
         
     @property
     def is_fully_paid(self):
@@ -371,7 +496,7 @@ class Alert(db.Model):
     notes = db.Column(db.Text)
 
     # Relationships
-    device = db.relationship('Device', backref='alerts')
+    device = db.relationship('Device', back_populates='alerts')
     created_by = db.relationship('User', backref='created_alerts')
 
     def to_dict(self):
