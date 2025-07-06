@@ -156,6 +156,13 @@
 
     <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.approved_orders') }}">
       <i class="fas fa-check-circle text-success me-2 small"></i> Approved Orders</a></li>
+    
+    <li>
+      <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.completed_orders') }}" class="dropdown-item">
+        <i class="fas fa-clipboard-check text-success me-2 small"></i> Completed Orders
+      </a>
+    </li>
+
 
     <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.view_orders') }}">
       <i class="fas fa-list text-info me-2 small"></i> All Orders</a></li>
