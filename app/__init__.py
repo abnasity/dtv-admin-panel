@@ -1,9 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, current_app
 from config import Config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf
 from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
 from app.models import CartItem, User, Customer, CustomerOrder, Notification
+import os
+
 
 login_manager.session_protection = "strong"
 login_manager.login_view = 'auth.login'
@@ -19,62 +21,71 @@ def load_user(user_id):
         return Customer.query.get(int(user_id))
     return None
 
+# ... (keep all your existing imports and top-level code) ...
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     app.config.update(
-    SESSION_COOKIE_SECURE=True,  # Only send cookies over HTTPS
-    SESSION_COOKIE_HTTPONLY=True,  # Prevent JavaScript cookie access
-    SESSION_COOKIE_SAMESITE='Lax'  # CSRF protection
-)
+        SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='Lax'
+    )
     
-    # Initialize Flask extensions with app
+    # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     bcrypt.init_app(app)
     csrf.init_app(app)
+    
+    # Initialize image manager
+    from app.utils.image_utils import init_app as init_image_app
+    init_image_app(app)
 
-    # Configure login manager
-    login_manager.login_view = 'auth.login'
-    login_manager.login_message = 'Please log in to access this page.'
-    login_manager.login_message_category = 'info'
-
-    #CONTEXT PROCESSORS 
-    # Add template context processor for current date   
+    # Context Processors
     @app.context_processor
     def inject_now():
         from datetime import datetime
         return {'now': datetime.utcnow()}
     
-    # This makes {{ csrf_token() }} available in all templates.
     @app.context_processor
     def inject_csrf_token():
-     return dict(csrf_token=generate_csrf())
+        return dict(csrf_token=generate_csrf())
  
     @app.context_processor
     def inject_cart_count():
-     cart_count = 0
-     confirmed_orders_count = 0
-
-     if hasattr(current_user, 'is_customer') and current_user.is_authenticated and current_user.is_customer():
-        cart_count = CartItem.query.filter_by(customer_id=current_user.id).count()
-        confirmed_orders_count = CustomerOrder.query.filter_by(customer_id=current_user.id, status='approved').count()
-
-     return dict(cart_count=cart_count, confirmed_orders_count=confirmed_orders_count)
+        cart_count = 0
+        confirmed_orders_count = 0
+        if hasattr(current_user, 'is_customer') and current_user.is_authenticated and current_user.is_customer():
+            cart_count = CartItem.query.filter_by(customer_id=current_user.id).count()
+            confirmed_orders_count = CustomerOrder.query.filter_by(
+                customer_id=current_user.id, 
+                status='approved'
+            ).count()
+        return dict(cart_count=cart_count, confirmed_orders_count=confirmed_orders_count)
  
- 
-    # INJECT NOTIFICATIONS
     @app.context_processor
     def inject_notifications():
-     unread_count = 0
-     if current_user.is_authenticated:
-        unread_count = Notification.query.filter_by(
-            user_id=current_user.id, is_read=False
-        ).count()
-     return {'unread_notifications_count': unread_count}
+        unread_count = 0
+        if current_user.is_authenticated:
+            unread_count = Notification.query.filter_by(
+                user_id=current_user.id, 
+                is_read=False
+            ).count()
+        return {'unread_notifications_count': unread_count}
 
+    # Single utility processor for file operations
+    @app.context_processor
+    def utility_processor():
+        def file_exists(filepath):
+            absolute_path = os.path.join(current_app.root_path, filepath)
+            return os.path.isfile(absolute_path)
+        return dict(file_exists=file_exists)
 
+   
+    
+    
 
 
     # Import web route blueprints
@@ -107,6 +118,8 @@ def create_app(config_class=Config):
     from app.api.users import bp as users_api_bp
     from app.api.customers import bp as customers_api_bp
     from app.api.orders import bp as orders_api_bp
+    from app.api.device_images import bp as device_images_api_bp
+    
     
 
     
@@ -118,6 +131,7 @@ def create_app(config_class=Config):
     app.register_blueprint(users_api_bp, url_prefix='/api/users', name='api_users')
     app.register_blueprint(customers_api_bp, url_prefix='/api/customers', name='api_customers')
     app.register_blueprint(orders_api_bp, url_prefix='/api/orders', name='api_orders')
+    app.register_blueprint(device_images_api_bp)
     
     
     # Exempt CSRF protection for API routes
@@ -126,7 +140,7 @@ def create_app(config_class=Config):
     csrf.exempt(auth_api_bp)
     csrf.exempt(customers_api_bp)
     csrf.exempt(orders_api_bp)
-      
+    csrf.exempt(device_images_api_bp)
 
     
 
