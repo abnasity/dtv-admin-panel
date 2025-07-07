@@ -1,5 +1,4 @@
 {% extends "layouts/base.html" %}
-
 {% block title %}Dashboard - Diamond Tree Ventures{% endblock %}
 
 {% block content %}
@@ -19,19 +18,45 @@
 
 <!-- Stats Cards -->
 <div class="row mb-4">
-    {% for card in stat_cards %}
     <div class="col-md-3">
-        <div class="card bg-{{ card.bg }} text-white">
+        <div class="card bg-primary text-white">
             <div class="card-body">
-                <h6 class="card-title">{{ card.title }}</h6>
-                <h3 class="card-text">{{ card.value }}</h3>
-                <p class="mb-0">
-                    <i class="{{ card.icon }} me-1"></i>{{ card.growth }}{% if card.percent %}%{% endif %}
-                </p>
+                <h6 class="card-title">Total Sales</h6>
+                <h3 class="card-text">{{ stats.total_sales }}</h3>
+                <p><i class="fas fa-arrow-up me-1"></i>{{ stats.sales_growth }}%</p>
             </div>
         </div>
     </div>
-    {% endfor %}
+
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6 class="card-title">Total Revenue</h6>
+                <h3 class="card-text">Ksh {{ "%.2f"|format(stats.total_revenue) }}</h3>
+                <p><i class="fas fa-arrow-up me-1"></i>{{ stats.revenue_growth }}%</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h6 class="card-title">Available Devices</h6>
+                <h3 class="card-text">{{ stats.available_devices }}</h3>
+                <p><i class="fas fa-mobile-alt me-1"></i>Stock</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h6 class="card-title">Outstanding Credit</h6>
+                <h3 class="card-text">Ksh {{ "%.2f"|format(stats.outstanding_credit) }}</h3>
+                <p><i class="fas fa-credit-card me-1"></i>Pending</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Charts -->
@@ -89,7 +114,7 @@
                                     {{ sale.device.model if sale.device else '' }}
                                 </td>
                                 <td>{{ sale.seller.username if sale.seller else 'Unknown' }}</td>
-                                <td>${{ "%.2f"|format(sale.sale_price) }}</td>
+                                <td>Ksh {{ "%.2f"|format(sale.sale_price) }}</td>
                                 <td>
                                     <span class="badge bg-{{ 'success' if sale.is_fully_paid else 'warning' }}">
                                         {{ 'Paid' if sale.is_fully_paid else 'Partial' }}
@@ -122,7 +147,9 @@
                             <h6 class="mb-0">{{ product.brand }} {{ product.model }}</h6>
                             <small class="text-muted">{{ product.total_sold }} units sold</small>
                         </div>
-                        <span class="badge bg-primary rounded-pill">${{ "%.2f"|format(product.revenue) }}</span>
+                        <span class="badge bg-primary rounded-pill">
+                            Ksh {{ "%.2f"|format(product.revenue) }}
+                        </span>
                     </div>
                     {% endfor %}
                 </div>
@@ -133,43 +160,59 @@
         </div>
     </div>
 </div>
-
 {% endblock content %}
 
 {% block extra_js %}
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- Main JS -->
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-
-<!-- Dashboard JS Init -->
 <script>
-    try {
-        const defaultData = {
-            stats: {
-                total_sales: 0,
-                total_revenue: 0,
-                sales_growth: 0,
-                revenue_growth: 0,
-                available_devices: 0,
-                outstanding_credit: 0
-            },
-            chartData: {
-                dates: [],
-                sales: [],
-                revenue: []
-            },
-            paymentData: {
-                cash_sales: 0,
-                credit_sales: 0
-            }
-        };
+    const chartData = {{ chart_data | tojson }};
+    const paymentData = {{ payment_data | tojson }};
 
-        const dashboardData = Object.assign({}, defaultData);
-        initializeDashboard(dashboardData);
-    } catch (err) {
-        console.error('Dashboard JS error:', err);
-    }
+    const ctxSales = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctxSales, {
+        type: 'line',
+        data: {
+            labels: chartData.dates,
+            datasets: [
+                {
+                    label: 'Sales Count',
+                    data: chartData.sales,
+                    borderColor: '#007bff',
+                    fill: false,
+                    tension: 0.4
+                },
+                {
+                    label: 'Revenue (Ksh)',
+                    data: chartData.revenue,
+                    borderColor: '#28a745',
+                    fill: false,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+    const ctxPayment = document.getElementById('paymentChart').getContext('2d');
+    new Chart(ctxPayment, {
+        type: 'doughnut',
+        data: {
+            labels: ['Cash', 'Credit'],
+            datasets: [{
+                data: [paymentData.cash_sales, paymentData.credit_sales],
+                backgroundColor: ['#007bff', '#ffc107']
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
 </script>
 {% endblock extra_js %}
