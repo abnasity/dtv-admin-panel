@@ -105,8 +105,6 @@ class Customer(UserMixin, db.Model):
     orders = db.relationship( 'CustomerOrder', back_populates='customer',cascade='all, delete-orphan',lazy=True
 )
 
-
-
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
@@ -127,6 +125,21 @@ class Customer(UserMixin, db.Model):
 
     def __repr__(self):
         return f'<Customer {self.email}>'
+    
+    def get_reset_token(self, expires_sec=1800):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'customer_id': self.id})
+    
+    @staticmethod
+    @staticmethod
+    def verify_reset_token(token, expires_sec=1800):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            customer_id = s.loads(token, max_age=expires_sec)['customer_id']
+        except Exception:
+            return None
+        return Customer.query.get(customer_id)
+
 
     def to_dict(self):
         return {
