@@ -29,6 +29,13 @@
                             {% endfor %}
                         </div>
 
+                        <!-- 🔐 Forgot Password Link -->
+                        <div class="mb-3 text-end">
+                            <a href="{{ url_for('customers.customer_reset_request') }}" class="small text-decoration-none">
+                                Forgot password?
+                            </a>
+                        </div>
+
                         <div class="d-grid">
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
