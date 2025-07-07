@@ -2,13 +2,46 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, a
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db, bcrypt
 from app.models import Customer, Device, CartItem, CustomerOrder, CustomerOrderItem, User, Notification
-from app.forms import CustomerRegistrationForm, CustomerLoginForm, CustomerEditForm, CheckoutForm
+from app.forms import CustomerRegistrationForm, CustomerLoginForm, CustomerEditForm, CheckoutForm, CustomerRequestResetForm, CustomerResetPasswordForm
 from datetime import datetime
 from app.routes.customers import bp
 from app.utils.helpers import assign_staff_to_order, get_device_debug_info
+from app.utils.email import send_customer_reset_email
 from sqlalchemy import and_
 from sqlalchemy.orm import load_only 
 import os
+
+
+@bp.route('/forgot-password', methods=['GET', 'POST'])
+def customer_reset_request():
+    form = CustomerRequestResetForm()
+    if form.validate_on_submit():
+        customer = Customer.query.filter_by(email=form.email.data).first()
+        if customer:
+            send_customer_reset_email(customer)
+            flash('Reset instructions have been sent to your email.', 'info')
+        else:
+            flash('No customer with that email exists.', 'warning')
+        return redirect(url_for('customers.login'))
+    return render_template('customers/reset_request.html', form=form)
+
+
+@bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def customer_reset_token(token):
+    customer = Customer.verify_reset_token(token)
+    if not customer:
+        flash('That is an invalid or expired token.', 'warning')
+        return redirect(url_for('customers.customer_reset_request'))
+
+    form = CustomerResetPasswordForm()
+    if form.validate_on_submit():
+        customer.set_password(form.password.data)
+        db.session.commit()
+        flash('Your password has been updated!', 'success')
+        return redirect(url_for('customers.login'))
+
+    return render_template('customers/reset_token.html', form=form, token=token)
+
 
 
 # CUSTOMER SEARCH SECTION
