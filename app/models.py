@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db 
 from app import bcrypt, login_manager
 from sqlalchemy import text, Numeric
+from itsdangerous import URLSafeTimedSerializer
 import os
 
 # USERS MODEL
@@ -47,6 +48,19 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
     
     def get_id(self):
       return f'user-{self.id}'
+  
+    def get_reset_token(self, expires_sec=1800):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id})
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token, max_age=1800)['user_id']
+        except Exception:
+            return None
+        return User.query.get(user_id)
     
     def to_dict(self):
         """Convert user object to dictionary for API responses"""
