@@ -234,3 +234,15 @@ class ResetPasswordForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[
         DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset Password')
+
+
+#CUSTOMER RESET PASSWORD FORMS
+class CustomerRequestResetForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+
+class CustomerResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', validators=[
+        DataRequired(), EqualTo('password')])
+    submit = SubmitField('Reset Password')
