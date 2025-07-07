@@ -27,6 +27,9 @@
                         {% for error in form.password.errors %}
                             <div class="text-danger">{{ error }}</div>
                         {% endfor %}
+                        <div class="mt-1 text-end">
+                            <a href="{{ url_for('auth.reset_request') }}" class="small">Forgot password?</a>
+                        </div>
                     </div>
 
                     <div class="mb-3 form-check">
