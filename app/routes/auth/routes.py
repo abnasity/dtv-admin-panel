@@ -425,8 +425,7 @@ def edit_user(user_id):
         return jsonify({'success': False, 'error': str(e)}), 500
     
 
-# CUSTOMER MANAGEMENT (ADMIN DASHBOARD)
-# # ADMIN ORDER APPROVAL  
+# CUSTOMER MANAGEMENT (ADMIN DASHBOARD) 
 # # ADMIN ORDER APPROVAL  
 @bp.route('/orders/<int:order_id>/approve', methods=['POST'])
 @login_required
@@ -448,7 +447,6 @@ def approve_order(order_id):
         sold_names = [f"{d.brand} {d.model}" for d in sold_devices]
         sold_names_str = ', '.join(sold_names)
 
-        # Mark order as rejected
         order.status = 'rejected'
         order.notes = f"The following device(s) are no longer available: {sold_names_str}"
         order.approved_by_id = current_user.id
@@ -467,7 +465,7 @@ def approve_order(order_id):
                 link=notif_link_staff
             ))
 
-        # Notify the customer about rejection
+        # Notify the customer
         if order.customer:
             db.session.add(Notification(
                 user_id=order.customer.id,
@@ -478,6 +476,54 @@ def approve_order(order_id):
 
         db.session.commit()
         flash(f"Order #{order.id} rejected. Device(s) already sold: {sold_names_str}", "danger")
+        return redirect(url_for('auth.view_order', order_id=order.id))  # ✅ MISSING return fixed here
+
+    # Step 1.5: Check if any device is already in another active order for a different staff
+    conflicting_devices = []
+    for item in order.items:
+        if item.device:
+            active_conflict = db.session.query(CustomerOrder).join(CustomerOrder.items).filter(
+                CustomerOrder.id != order.id,
+                CustomerOrder.status.in_(['pending', 'awaiting_approval', 'approved']),
+                CustomerOrder.assigned_staff_id != None,
+                CustomerOrder.items.any(device_id=item.device.id)
+            ).first()
+            if active_conflict:
+                conflicting_devices.append(item.device)
+
+    if conflicting_devices:
+        conflict_names = [f"{d.brand} {d.model}" for d in conflicting_devices]
+        conflict_names_str = ', '.join(conflict_names)
+
+        order.status = 'rejected'
+        order.notes = f"The following device(s) are in another sale process: {conflict_names_str}"
+        order.approved_by_id = current_user.id
+        order.approved_at = datetime.utcnow()
+
+        notif_link_staff = url_for('auth.view_order_staff', order_id=order.id)
+        notif_link_customer = url_for('customers.order_detail', order_id=order.id)
+
+        # Notify assigned staff
+        if order.assigned_staff_id:
+            Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link_staff).delete()
+            db.session.add(Notification(
+                user_id=order.assigned_staff_id,
+                message=f"Order #{order.id} was rejected. Conflict: {conflict_names_str}",
+                recipient_type='staff',
+                link=notif_link_staff
+            ))
+
+        # Notify the customer
+        if order.customer:
+            db.session.add(Notification(
+                user_id=order.customer.id,
+                message=f"Your order #{order.id} was rejected. Device(s) in use: {conflict_names_str}",
+                recipient_type='customer',
+                link=notif_link_customer
+            ))
+
+        db.session.commit()
+        flash(f"Order #{order.id} rejected. Device(s) already in another sale process: {conflict_names_str}", "danger")
         return redirect(url_for('auth.view_order', order_id=order.id))
 
     # Step 2: Approve the order
@@ -500,7 +546,7 @@ def approve_order(order_id):
             link=notif_link_staff
         ))
 
-    # ✅ Step 4: Notify the customer about approval
+    # Step 4: Notify customer
     notif_link_customer = url_for('customers.order_detail', order_id=order.id)
     if order.customer:
         db.session.add(Notification(
@@ -513,6 +559,8 @@ def approve_order(order_id):
     db.session.commit()
     flash(f"Order #{order.id} approved. Awaiting sale confirmation.", "success")
     return redirect(url_for('auth.view_orders', order_id=order.id))
+
+
 
 
 
