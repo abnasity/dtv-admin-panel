@@ -1,11 +1,9 @@
 from flask import Blueprint, request, jsonify
+from app.utils.image_utils import image_manager
 from flask_login import login_required, current_user
 from app.models import Device
 from app import db
 from app.decorators import admin_required
-
-
-
 
 
 
@@ -142,3 +140,39 @@ def delete_device(imei):
         return jsonify({'error': 'Database error occurred'}), 500
     
     return '', 204
+
+
+# app/api/devices.py
+@bp.route('/<int:device_id>/images', methods=['GET'])
+def get_device_images(device_id):
+    device = Device.query.get_or_404(device_id)
+    return jsonify({
+        'primary': device.image_url,
+        'thumbnail': device.thumbnail_url,
+        'variants': device.get_image_variants()
+    })
+
+@bp.route('/<int:device_id>/images', methods=['POST'])
+def upload_device_image(device_id):
+    device = Device.query.get_or_404(device_id)
+    
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    
+    try:
+        filename = image_manager.save_device_image(
+            device.brand,
+            device.model,
+            device.color,
+            file
+        )
+        return jsonify({
+            'message': 'Image uploaded successfully',
+            'image_url': f"/static/images/devices/{device.brand.lower()}/{filename}"
+        }), 201
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
