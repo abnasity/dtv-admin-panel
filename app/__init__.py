@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, current_app
 from config import Config
-from app.extensions import db, migrate, login_manager, bcrypt, csrf
+from app.extensions import db, migrate, login_manager, bcrypt, csrf, mail
 from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
 from app.models import CartItem, User, Customer, CustomerOrder, Notification
@@ -38,6 +38,7 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     bcrypt.init_app(app)
     csrf.init_app(app)
+    mail.init_app(app)
     
     # Initialize image manager
     from app.utils.image_utils import init_app as init_image_app
