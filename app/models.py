@@ -293,9 +293,14 @@ class Device(db.Model):
     color = db.Column(db.String(50), nullable=True)
     image_variants = db.Column(db.JSON, nullable=True)
     main_image = db.Column(db.String(255), nullable=True)  # Stores the primary image filename
+    specs_id = db.Column(db.Integer, db.ForeignKey('device_specs.id'))
+    slug = db.Column(db.String(100), unique=True, index=True)
+
+
     
     # Relationships
     sale = db.relationship('Sale', back_populates='device', uselist=False)
+    specs = db.relationship('DeviceSpecs', backref='devices')
     items = db.relationship(
         'CustomerOrderItem', 
         back_populates='device', 
@@ -426,6 +431,50 @@ class Device(db.Model):
 
     def __repr__(self):
         return f"<Device {self.brand} {self.model} ({self.color or 'no color'})>"
+
+
+class DeviceSpecs(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    
+    announced = db.Column(db.String(100))
+    release_status = db.Column(db.String(100))
+    
+    dimensions = db.Column(db.String(100))
+    weight = db.Column(db.String(50))
+    build = db.Column(db.Text)
+    sim = db.Column(db.Text)
+    
+    display_type = db.Column(db.String(100))
+    display_size = db.Column(db.String(100))
+    resolution = db.Column(db.String(100))
+    display_protection = db.Column(db.String(100))
+    
+    os = db.Column(db.String(100))
+    chipset = db.Column(db.String(100))
+    cpu = db.Column(db.Text)
+    gpu = db.Column(db.String(100))
+    
+    ram_storage_options = db.Column(db.Text)
+    main_camera = db.Column(db.Text)
+    selfie_camera = db.Column(db.Text)
+    video_features = db.Column(db.Text)
+    
+    battery_type = db.Column(db.String(100))
+    charging = db.Column(db.String(100))
+    
+    connectivity = db.Column(db.Text)  # WLAN, Bluetooth, GPS, etc.
+    sensors = db.Column(db.Text)
+    usb = db.Column(db.String(100))
+    
+    colors = db.Column(db.String(255))
+    models = db.Column(db.Text)
+    sar = db.Column(db.String(100))
+    price = db.Column(db.String(100))
+    
+    performance_scores = db.Column(db.Text)
+    display_brightness = db.Column(db.String(100))
+    loudspeaker_rating = db.Column(db.String(100))
+
 
 # SOLD DEVICE MODEL
 class SoldDevice(db.Model):
