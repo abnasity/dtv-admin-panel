@@ -31,3 +31,4 @@ gunicorn==21.2.0
 flask-bcrypt
 PyJWT
 pillow
+python-slugify
