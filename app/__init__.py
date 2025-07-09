@@ -40,9 +40,7 @@ def create_app(config_class=Config):
     csrf.init_app(app)
     mail.init_app(app)
     
-    # Initialize image manager
-    from app.utils.image_utils import init_app as init_image_app
-    init_image_app(app)
+
 
     # Context Processors
     @app.context_processor
@@ -119,7 +117,7 @@ def create_app(config_class=Config):
     from app.api.users import bp as users_api_bp
     from app.api.customers import bp as customers_api_bp
     from app.api.orders import bp as orders_api_bp
-    from app.api.device_images import bp as device_images_api_bp
+    
     
     
 
@@ -132,7 +130,7 @@ def create_app(config_class=Config):
     app.register_blueprint(users_api_bp, url_prefix='/api/users', name='api_users')
     app.register_blueprint(customers_api_bp, url_prefix='/api/customers', name='api_customers')
     app.register_blueprint(orders_api_bp, url_prefix='/api/orders', name='api_orders')
-    app.register_blueprint(device_images_api_bp)
+    
     
     
     # Exempt CSRF protection for API routes
@@ -141,7 +139,7 @@ def create_app(config_class=Config):
     csrf.exempt(auth_api_bp)
     csrf.exempt(customers_api_bp)
     csrf.exempt(orders_api_bp)
-    csrf.exempt(device_images_api_bp)
+    
 
     
 
