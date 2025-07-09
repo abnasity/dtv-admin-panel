@@ -37,10 +37,11 @@ canvas.drawing, canvas.drawingBuffer {
                     </a>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         {{ form.csrf_token }}
+                        {{ specs_form.csrf_token }}
                         
-                        <div class="mb-3">
+                         <div class="mb-3">
                             {{ form.imei.label(class="form-label") }}
                             {{ imei_input(form.imei, "Enter 15-digit IMEI") }}
                             {% if form.imei.errors %}
@@ -157,8 +158,31 @@ canvas.drawing, canvas.drawingBuffer {
                                 {% endfor %}
                             </div>
                             {% endif %}
-                        </div>
+                        </div> 
                         
+
+<hr class="my-4">
+<h4>Device Specifications</h4>
+
+<div class="mb-3">
+    {{ specs_form.details.label(class="form-label") }}
+    {{ specs_form.details(class="form-control", rows=10, placeholder="Enter full specs, features, key highlights, etc.") }}
+</div>
+
+<div class="mb-3">
+    {{ form.image.label(class="form-label") }}
+    {{ form.image(class="form-control") }}
+    {% if form.image.errors %}
+    <div class="invalid-feedback d-block">
+        {% for error in form.image.errors %}
+            {{ error }}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+
+
                         <div class="text-end">
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
