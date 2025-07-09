@@ -7,6 +7,8 @@ from app import bcrypt, login_manager
 from sqlalchemy import text, Numeric
 from itsdangerous import URLSafeTimedSerializer
 import os
+from app.utils.image_utils import save_device_image
+
 
 # USERS MODEL
 # This model represents both admin and staff users in the system.
@@ -130,7 +132,7 @@ class Customer(UserMixin, db.Model):
         s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         return s.dumps({'customer_id': self.id})
     
-    @staticmethod
+    
     @staticmethod
     def verify_reset_token(token, expires_sec=1800):
         s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
@@ -291,16 +293,16 @@ class Device(db.Model):
     modified_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     notes = db.Column(db.Text)
     color = db.Column(db.String(50), nullable=True)
-    image_variants = db.Column(db.JSON, nullable=True)
+    image_variants = db.Column(db.JSON, default=dict, nullable=True)
     main_image = db.Column(db.String(255), nullable=True)  # Stores the primary image filename
-    specs_id = db.Column(db.Integer, db.ForeignKey('device_specs.id'))
+    image_folder = db.Column(db.String(255), nullable=True)
+    specs_id = db.Column(db.Integer, db.ForeignKey('device_specs.id'), nullable=True)
     slug = db.Column(db.String(100), unique=True, index=True)
-
-
-    
+ 
     # Relationships
     sale = db.relationship('Sale', back_populates='device', uselist=False)
-    specs = db.relationship('DeviceSpecs', backref='devices')
+    specs = db.relationship('DeviceSpecs', back_populates='device', uselist=False, foreign_keys=[specs_id])
+
     items = db.relationship(
         'CustomerOrderItem', 
         back_populates='device', 
@@ -325,38 +327,16 @@ class Device(db.Model):
     # Image Handling
     @property
     def image_url(self):
-        """Get image URL with comprehensive fallback logic"""
+        """Get image URL using stored folder or fallback options"""
         try:
-            clean_brand = self.brand.lower().replace(' ', '-')
-            clean_model = self.model.lower().replace(' ', '-')
-            
-            # Remove common suffixes and variations
-            clean_model = clean_model.replace('-a', '').replace('-b', '').replace('_', '-')
-            
-            # 1. Try main_image first if set
+            folder = self.image_folder or f"devices/{self.brand.lower().replace(' ', '-')}"
             if self.main_image:
-                path = os.path.join('static', 'images', 'devices', clean_brand, self.main_image)
+                path = os.path.join('static', 'images', folder, self.main_image)
                 if os.path.exists(os.path.join(current_app.root_path, path)):
-                    return url_for('static', filename=f'images/devices/{clean_brand}/{self.main_image}')
-            
-            # 2. Generate possible filename variations
-            possible_filenames = [
-                f"{clean_model}.jpg",                  # standard
-                f"{clean_model}-a.jpg",                # with suffix
-                f"{clean_model.split('-')[-1]}.jpg",   # just model number
-                f"{self.model.lower()}.jpg",           # original model
-                f"nokia-{clean_model.split('-')[-1]}.jpg"  # nokia-specific
-            ]
-            
-            # 3. Try each possible filename
-            for filename in possible_filenames:
-                path = os.path.join('static', 'images', 'devices', clean_brand, filename)
-                if os.path.exists(os.path.join(current_app.root_path, path)):
-                    self.main_image = filename  # Update for future reference
-                    db.session.commit()
-                    return url_for('static', filename=f'images/devices/{clean_brand}/{filename}')
-            
-            # 4. Final fallback
+                    return url_for('static', filename=f'images/{folder}/{self.main_image}')
+                else:
+                    current_app.logger.warning(f"Main image '{self.main_image}' not found in folder '{folder}' for device ID {self.id}")
+            # Final fallback
             return url_for('static', filename='images/default-device.jpg')
         
         except Exception as e:
@@ -381,27 +361,42 @@ class Device(db.Model):
             current_app.logger.error(f"Error generating thumbnail URL: {str(e)}")
             return self.image_url
 
-    def add_image(self, image_file):
-        """Save new image and set as main image"""
-        from app.utils.image_utils import image_manager
+    def add_image(self, image_file, subdir=None, filename=None, variant_key=None):    
+        subdir = subdir or f"devices/{self.brand.lower().replace(' ', '-')}"
+        filename = filename or f"{self.model.lower().replace(' ', '-')}.jpg"
+        saved_filename = save_device_image(
+                file=image_file,
+                subdir=subdir,
+                filename=filename
+)
+
         
-        # Generate consistent filename
-        clean_brand = self.brand.lower().replace(' ', '-')
-        clean_model = self.model.lower().replace(' ', '-').replace('-a', '').replace('-b', '')
-        filename = f"{clean_model}.jpg"
-        
-        # Save the image
-        filename = image_manager.save_device_image(
-            brand=clean_brand,
-            model=clean_model,
-            image_file=image_file
-        )
-        
-        # Update the device record
-        self.main_image = filename
+        if variant_key:
+            self.image_variants = self.image_variants or {}
+            self.image_variants[variant_key] = saved_filename
+
+        self.main_image = saved_filename
+        self.image_folder = subdir
         db.session.commit()
-        
-        return filename
+        return saved_filename
+    
+    def get_image_variants(self):
+        """Return full URLs for all image variants if available"""
+        if not self.image_variants:
+            return {}
+
+        folder = self.image_folder or f"devices/{self.brand.lower().replace(' ', '-')}"
+        variants = {}
+
+        for key, filename in self.image_variants.items():
+            path = os.path.join('static', 'images', folder, filename)
+            if os.path.exists(os.path.join(current_app.root_path, path)):
+                variants[key] = url_for('static', filename=f'images/{folder}/{filename}')
+            else:
+                current_app.logger.warning(f"Variant image '{filename}' for key '{key}' not found in folder '{folder}'")
+
+        return variants
+
 
     # Serialization
     def to_dict(self, include_variants=False):
@@ -432,52 +427,21 @@ class Device(db.Model):
     def __repr__(self):
         return f"<Device {self.brand} {self.model} ({self.color or 'no color'})>"
 
-
+# DEVICE SPECS
 class DeviceSpecs(db.Model):
+    __tablename__ = 'device_specs'
     id = db.Column(db.Integer, primary_key=True)
-    
-    announced = db.Column(db.String(100))
-    release_status = db.Column(db.String(100))
-    
-    dimensions = db.Column(db.String(100))
-    weight = db.Column(db.String(50))
-    build = db.Column(db.Text)
-    sim = db.Column(db.Text)
-    
-    display_type = db.Column(db.String(100))
-    display_size = db.Column(db.String(100))
-    resolution = db.Column(db.String(100))
-    display_protection = db.Column(db.String(100))
-    
-    os = db.Column(db.String(100))
-    chipset = db.Column(db.String(100))
-    cpu = db.Column(db.Text)
-    gpu = db.Column(db.String(100))
-    
-    ram_storage_options = db.Column(db.Text)
-    main_camera = db.Column(db.Text)
-    selfie_camera = db.Column(db.Text)
-    video_features = db.Column(db.Text)
-    
-    battery_type = db.Column(db.String(100))
-    charging = db.Column(db.String(100))
-    
-    connectivity = db.Column(db.Text)  # WLAN, Bluetooth, GPS, etc.
-    sensors = db.Column(db.Text)
-    usb = db.Column(db.String(100))
-    
-    colors = db.Column(db.String(255))
-    models = db.Column(db.Text)
-    sar = db.Column(db.String(100))
-    price = db.Column(db.String(100))
-    
-    performance_scores = db.Column(db.Text)
-    display_brightness = db.Column(db.String(100))
-    loudspeaker_rating = db.Column(db.String(100))
+    details = db.Column(db.Text)  
 
+    device = db.relationship(
+            'Device',
+            back_populates='specs',
+            uselist=False
+        )
 
 # SOLD DEVICE MODEL
 class SoldDevice(db.Model):
+    __tablename__ = 'sold_devices'
     id = db.Column(db.Integer, primary_key=True)
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)
     order_id = db.Column(db.Integer, db.ForeignKey('customer_orders.id'), nullable=False)
