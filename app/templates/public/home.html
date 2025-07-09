@@ -89,7 +89,7 @@
   <div id="heroCarousel" class="carousel slide mb-4" data-bs-ride="carousel" data-bs-interval="3000">
   <div class="carousel-inner">
 
-    <div class="carousel-item active">
+    <div class="carousel-item active" data-bs-interval="5000">
       <div class="row g-0">
         <div class="col-md-6">
           <img src="https://media.istockphoto.com/id/1316900410/photo/samsung-galaxy-a32-5g.jpg?s=612x612&w=0&k=20&c=px7rssNsW6PfhqD6l9L8w1P7CqV1MBzqZedXQjwKEbc=" class="d-block w-100" alt="Smartphone">
@@ -103,7 +103,7 @@
       </div>
     </div>
 
-    <div class="carousel-item">
+    <div class="carousel-item" data-bs-interval="5000">
       <div class="row g-0">
         <div class="col-md-6">
           <img src="https://media.istockphoto.com/id/1960219022/photo/granada-andalusia-spain-25th-january-2024-new-samsung-s24-ultra-freshly-turned-on-screen-with.jpg?s=612x612&w=0&k=20&c=-_DsUvQMPkv46nG46GLFDPM6r4G_ZxzvTfFnTiejN0I=" class="d-block w-100" alt="Samsung S24 Ultra">
@@ -117,7 +117,7 @@
       </div>
     </div>
 
-    <div class="carousel-item">
+    <div class="carousel-item" data-bs-interval="5000">
       <div class="row g-0">
         <div class="col-md-6">
           <img src="https://media.istockphoto.com/id/1316900406/photo/samsung-galaxy-a32-5g.jpg?s=612x612&w=0&k=20&c=1F8cH-i7H0x4CKQGDdSCm5jdgLIZUvk4Zlr37Bm78VA=" class="d-block w-100" alt="Samsung Galaxy A32">
@@ -162,16 +162,8 @@
   <section class="container mb-5">
   <h1 class="text-center fw-bold mb-4">Featured Products</h1>
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-    {% for img, name in [
-      ('https://www.phoneplacekenya.com/wp-content/uploads/2025/03/Samsung-Galaxy-A56-5G-a.jpg', 'Samsung Galaxy A56 5G'),
-      ('https://www.phoneplacekenya.com/wp-content/uploads/2024/08/Samsung-Galaxy-A26-5G-A.jpg', 'Samsung Galaxy A26 5G'),
-      ('https://www.phoneplacekenya.com/wp-content/uploads/2025/03/Samsung-Galaxy-A36-5G-a.jpg', 'Samsung A36 5G'),
-      ('https://www.phoneplacekenya.com/wp-content/uploads/2024/07/Samsung-Galaxy-A06.jpg', 'Samsung Galaxy A06'),
-      ('https://www.phoneplacekenya.com/wp-content/uploads/2024/12/Samsung-Galaxy-A16-4G.jpg', 'Samsung Galaxy A16'),
-      ('https://www.phoneplacekenya.com/wp-content/uploads/2024/08/Samsung-Galaxy-A16-5G-A.jpg', 'Samsung Galaxy A16 5G'),
-      ('https://www.phoneplacekenya.com/wp-content/uploads/2024/10/Realme-C61-4G-a.jpg', 'Realme C61 4G'),
-      ('https://www.phoneplacekenya.com/wp-content/uploads/2025/05/Vivo-V50-Lite-4G-a.jpg', 'Vivo V50 Lite 4G')
-    ] %}
+    
+{% for device in featured_devices %}
     <div class="col">
       <div class="card h-100 position-relative border">
         {# Example logic to vary badge — you can replace this with real logic later #}
@@ -193,14 +185,15 @@
           <span class="badge bg-danger position-absolute top-0 start-0 m-2">HOT</span>
         {% endif %}
 
-        <img src="{{ img }}" class="card-img-top" alt="{{ name }}">
-        <div class="card-body text-center">
-          <p class="card-text fw-semibold">{{ name }}</p>
-          <a href="#" class="btn btn-outline-primary">Learn More</a>
-        </div>
+      <img src="{{ url_for('static', filename='images/' ~ device.image) }}" class="card-img-top" loading="lazy" alt="{{ device.name }}">
+      <div class="card-body text-center">
+        <p class="card-text fw-semibold">{{ device.name }}</p>
+        <p class="text-success mb-2">{{ device.cash_price }} | <span class="text-primary">{{ device.credit_price }}</span></p>
+        <a href="{{ url_for('devices.learn_more_device', device_slug=device.slug) }}" class="btn btn-outline-primary">Learn More</a>
       </div>
     </div>
-    {% endfor %}
+  </div>
+{% endfor %}
   </div>
 </section>
 
@@ -215,7 +208,7 @@
       <div class="card h-100 shadow-sm">
         <img src="https://media.istockphoto.com/id/1316900409/photo/samsung-galaxy-a32-5g.jpg?s=612x612&w=0&k=20&c=IxEY4DaTbap12rYU28PiH2Z1tYK5a82fvSkY89t40jc=" class="card-img-top" alt="Grey Carpet">
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Grey Standard Wall-to-Wall Carpet</h5>
+          <h5 class="card-title">Samsung Galaxy A32</h5>
           <h6 class="text-success"><span class="text-dark">Ksh</span> 3000</h6>
           <p class="card-text">Durable fiber, easy to maintain, perfect for high-traffic areas.</p>
           <a href="#" class="btn btn-primary mt-auto">Add to Basket</a>
@@ -227,7 +220,7 @@
       <div class="card h-100 shadow-sm">
         <img src="https://media.istockphoto.com/id/1401798043/photo/samsung.jpg?s=612x612&w=0&k=20&c=THf92Ub_Anrx9TchSAdibfuSIyqa7E7ENySTKzclmdc=" class="card-img-top" alt="Triexta Carpet">
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Triexta Round Floor Carpets</h5>
+          <h5 class="card-title">Samsung Galaxy S20</h5>
           <h6 class="text-success"><span class="text-dark">Ksh</span> 3500</h6>
           <p class="card-text">Noted for stain resistance and durability, ideal for busy homes.</p>
           <a href="#" class="btn btn-primary mt-auto">Add to Basket</a>
@@ -251,7 +244,7 @@
       <div class="card h-100 shadow-sm">
         <img src="https://media.istockphoto.com/id/1401797948/photo/samsung.jpg?s=612x612&w=0&k=20&c=64yok3CHyMFHSB7xLweZg8X9Oj250tPuG-_C2vh6wSQ=" class="card-img-top" alt="Fibrous Carpet">
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Fibrous Nylon Carpet</h5>
+          <h5 class="card-title">Samsung Galaxy S20</h5>
           <h6 class="text-success"><span class="text-dark">Ksh</span> 3500</h6>
           <p class="card-text">Smooth and resilient experience for home or office settings.</p>
           <a href="#" class="btn btn-primary mt-auto">Add to Basket</a>
@@ -259,13 +252,13 @@
       </div>
     </div>
 
-    <div class="col">
+  <div class="col">
       <div class="card h-100 shadow-sm">
-        <img src="https://media.istockphoto.com/id/1169860156/photo/galaxy-s10-plus-review.jpg?s=612x612&w=0&k=20&c=ONityVBmnfIVBB92Ug0jrqaXtP3UaYqvd7tb2qzyllw=" class="card-img-top" alt="Aisle Carpet">
+        <img src="{{ url_for('static', filename='images/devices/infinix/note50-pro.jpg') }}" class="card-img-top" alt="Infinix Note">
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Aisle Carpets</h5>
-          <h6 class="text-success"><span class="text-dark">Ksh</span> 5500</h6>
-          <p class="card-text">Perfect for weddings and formal walkways, durable & elegant.</p>
+          <h5 class="card-title">Infinix Note 50 Pro</h5>
+          <h6 class="text-success"><span class="text-dark">Ksh</span> 2500</h6>
+          <p class="card-text">Soft shaggy surface perfect for living areas or bedrooms.</p>
           <a href="#" class="btn btn-primary mt-auto">Add to Basket</a>
         </div>
       </div>
@@ -273,7 +266,7 @@
 
     <div class="col">
       <div class="card h-100 shadow-sm">
-        <img src="https://www.phoneplacekenya.com/wp-content/uploads/2024/09/Oppo-A3x-4G-1.jpg" class="card-img-top" alt="Oppo A3x">
+        <img src="{{ url_for('static', filename='images/devices/oppo/a3x-4g.jpg') }}" class="card-img-top" alt="Oppo A3x">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">Oppo A3x 4G</h5>
           <h6 class="text-success"><span class="text-dark">Ksh</span> 3500</h6>
@@ -285,7 +278,7 @@
 
     <div class="col">
       <div class="card h-100 shadow-sm">
-        <img src="https://www.phoneplacekenya.com/wp-content/uploads/2025/05/Vivo-V50-Lite-4G-a.jpg" class="card-img-top" alt="Vivo V50">
+        <img src="{{ url_for('static', filename='images/devices/vivo/v50-lite-4g.jpg') }}" class="card-img-top" alt="Vivo V50">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">Vivo V50 Lite 4G</h5>
           <h6 class="text-success"><span class="text-dark">Ksh</span> 4000</h6>
@@ -297,7 +290,7 @@
 
     <div class="col">
       <div class="card h-100 shadow-sm">
-        <img src="https://www.phoneplacekenya.com/wp-content/uploads/2025/06/Infinix-Note-50s-5G-a.jpg" class="card-img-top" alt="Infinix Note">
+        <img src="{{ url_for('static', filename='images/devices/infinix/note50s-5g.jpg') }}" class="card-img-top" alt="Infinix Note">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">Hairy Rug Pillow Carpet</h5>
           <h6 class="text-success"><span class="text-dark">Ksh</span> 2500</h6>
@@ -309,7 +302,7 @@
 
     <div class="col">
       <div class="card h-100 shadow-sm">
-        <img src="https://www.phoneplacekenya.com/wp-content/uploads/2025/06/Infinix-Note-50s-5G-a.jpg" class="card-img-top" alt="Infinix Note">
+        <img src="{{ url_for('static', filename='images/devices/realme/c61-4g.jpg') }}" class="card-img-top" alt="Realme C61">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">Realme C61 4G</h5>
           <h6 class="text-success"><span class="text-dark">Ksh</span> 2500</h6>
@@ -321,7 +314,7 @@
 
 <div class="col">
       <div class="card h-100 shadow-sm">
-        <img src="https://www.phoneplacekenya.com/wp-content/uploads/2025/06/Vivo-Y04-4G-Violet.jpg" class="card-img-top" alt="Infinix Note">
+       <img src="{{ url_for('static', filename='images/devices/vivo/y04-4g.jpg') }}" class="card-img-top" alt="Vivo y04">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">Vivo Y04 4G</h5>
           <h6 class="text-success"><span class="text-dark">Ksh</span> 2500</h6>
@@ -333,9 +326,9 @@
 
   <div class="col">
       <div class="card h-100 shadow-sm">
-        <img src="https://www.phoneplacekenya.com/wp-content/uploads/2024/04/Vivo-Y03-64GB-4GB.jpg" class="card-img-top" alt="Infinix Note">
+        <img src="{{ url_for('static', filename='images/devices/vivo/y77.jpg') }}"  class="card-img-top" alt="vivo y77">
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Vivo Y03</h5>
+          <h5 class="card-title">Vivo Y77</h5>
           <h6 class="text-success"><span class="text-dark">Ksh</span> 2500</h6>
           <p class="card-text">Soft shaggy surface perfect for living areas or bedrooms.</p>
           <a href="#" class="btn btn-primary mt-auto">Add to Basket</a>
@@ -345,7 +338,7 @@
 
  <div class="col">
       <div class="card h-100 shadow-sm">
-        <img src="https://www.phoneplacekenya.com/wp-content/uploads/2024/07/Vivo-Y28-5Ga.jpg" class="card-img-top" alt="Infinix Note">
+        <img src="{{ url_for('static', filename='images/devices/vivo/y28-5g.jpg') }}"  class="card-img-top" alt="vivo y28">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">Vivo Y28 5G</h5>
           <h6 class="text-success"><span class="text-dark">Ksh</span> 2500</h6>
