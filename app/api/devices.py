@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from app.utils.image_utils import image_manager
 from flask_login import login_required, current_user
 from app.models import Device
 from app import db
@@ -164,12 +163,10 @@ def upload_device_image(device_id):
         return jsonify({'error': 'No selected file'}), 400
     
     try:
-        filename = image_manager.save_device_image(
-            device.brand,
-            device.model,
-            device.color,
-            file
-        )
+        filename = device.add_image(file)
+        device.main_image = filename
+        db.session.commit()
+
         return jsonify({
             'message': 'Image uploaded successfully',
             'image_url': f"/static/images/devices/{device.brand.lower()}/{filename}"
