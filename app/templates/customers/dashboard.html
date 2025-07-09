@@ -34,10 +34,14 @@
         <div class="col-md-4 mb-4">
           <div class="card shadow-sm h-100">
             <div class="product-image-container position-relative" style="height: 200px; background-color: #f8f9fa;">
-              <img loading="lazy" 
-                   src="{{ product.image_url }}" 
-                   class="img-fluid h-100 w-100 object-fit-cover" 
-                   alt="{{ product.brand }} {{ product.model }}"
+              <img loading="lazy"
+            src="{{ product.image_url }}"
+            class="img-fluid"
+            alt="{{ product.brand }} {{ product.model }}"
+            style="max-height: 220px; width: auto; display: block; margin: auto; object-fit: contain;"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-device.jpg') }}';"
+            data-debug-info="Brand: {{ product.brand }}, Model: {{ product.model }}, Image: {{ product.main_image }}">
+
                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-device.jpg') }}';"
                    data-debug-info="Brand: {{ product.brand }}, Model: {{ product.model }}, Image: {{ product.main_image }}">
 
