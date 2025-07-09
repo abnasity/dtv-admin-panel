@@ -123,6 +123,13 @@ class DeviceForm(FlaskForm):
                 raise ValidationError('This IMEI is already registered in the system.')
             
  
+# DEVICE SPECS FORM
+class DeviceSpecsForm(FlaskForm):
+    details = TextAreaField('Product Details & Specs', validators=[Optional()])
+    submit = SubmitField('Save')
+ 
+ 
+
 # SALE FORM           
 class SaleForm(FlaskForm):
     imei = StringField('IMEI', validators=[
