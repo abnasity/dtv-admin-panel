@@ -17,9 +17,17 @@ def home():
         elif isinstance(current_user, Customer):
             return redirect(url_for('customers.dashboard'))
 
-    # Unauthenticated users see public home page
-    return render_template('public/home.html', public_view=True)
-
-
-
-
+    # Unauthenticated public user: show up to 8 most recent active devices
+    featured_devices = (
+        Device.query
+        .filter_by(status='available')  # optional: only show available devices
+        .order_by(Device.id.desc())
+        .limit(8)
+        .all()
+    )
+    
+    return render_template(
+        'public/home.html',
+        public_view=True,
+        featured_devices=featured_devices
+    )
