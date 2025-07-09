@@ -218,7 +218,7 @@
                         {% if current_user.is_authenticated and current_user.get_id().startswith('customer-') %}
                             {{ current_user.full_name.split(' ')[0] }}
                         {% else %}
-                            My Account
+                            Account
                         {% endif %}
                     </a>
 
