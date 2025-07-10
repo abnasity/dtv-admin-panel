@@ -6,25 +6,30 @@ from app.routes.public import bp
 @bp.route('/')
 def home():
     if current_user.is_authenticated:
-        # If the logged in user is a staff/admin
+        # Redirect based on user role
         if isinstance(current_user, User):
             if current_user.is_admin():
                 return redirect(url_for('reports.dashboard'))
             elif current_user.is_staff():
                 return redirect(url_for('staff.dashboard'))
-
-        # If the logged in user is a customer
         elif isinstance(current_user, Customer):
             return redirect(url_for('customers.dashboard'))
 
-    # Unauthenticated public user: show up to 8 most recent active devices
+    # For public users: show featured devices or fallback to recent
     featured_devices = (
         Device.query
-        .filter_by(status='available')  # optional: only show available devices
-        .order_by(Device.id.desc())
-        .limit(8)
+        .filter(Device.featured.is_(True))
+        .order_by(Device.arrival_date.desc())
         .all()
     )
+
+    if not featured_devices:
+        featured_devices = (
+            Device.query
+            .filter_by(status='available')
+            .order_by(Device.id.desc())
+            .all()
+        )
     
     return render_template(
         'public/home.html',
