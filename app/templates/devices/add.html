@@ -37,7 +37,7 @@ canvas.drawing, canvas.drawingBuffer {
                     </a>
                 </div>
                 <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
+                    <form id="deviceForm" method="POST" enctype="multipart/form-data">
                         {{ form.csrf_token }}
                         {{ specs_form.csrf_token }}
                         
@@ -169,6 +169,13 @@ canvas.drawing, canvas.drawingBuffer {
     {{ specs_form.details(class="form-control", rows=10, placeholder="Enter full specs, features, key highlights, etc.") }}
 </div>
 
+
+<div class="form-check mb-3">
+    {{ form.featured(class="form-check-input") }}
+    {{ form.featured.label(class="form-check-label") }}
+</div>
+
+
 <div class="mb-3">
     {{ form.image.label(class="form-label") }}
     {{ form.image(class="form-control") }}
@@ -193,7 +200,33 @@ canvas.drawing, canvas.drawingBuffer {
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('deviceForm');
+    const featuredCheckbox = document.querySelector('input[name="featured"]');
+    const imeiInput = document.querySelector('input[name="imei"]');
 
+    function toggleIMEI() {
+        if (featuredCheckbox.checked) {
+            imeiInput.disabled = true;
+            imeiInput.value = '';
+        } else {
+            imeiInput.disabled = false;
+        }
+    }
+
+    featuredCheckbox.addEventListener('change', toggleIMEI);
+    toggleIMEI();  // Initialize on load
+
+    form.addEventListener('submit', function (e) {
+        if (!featuredCheckbox.checked && imeiInput.value.trim() === '') {
+            e.preventDefault();
+            alert('IMEI is required for non-featured devices.');
+            imeiInput.focus();
+        }
+    });
+});
+</script>
 
 
 {% endblock %}
