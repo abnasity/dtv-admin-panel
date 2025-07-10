@@ -164,7 +164,8 @@ def dashboard():
         abort(403, description="Unauthorized access: Customers only.")
 
     # Get available products
-    products = Device.query.filter_by(status='available').all()
+    products = Device.query.filter_by(status='available', featured=False).all()
+
     
     if current_app.debug:
         for device in products:
