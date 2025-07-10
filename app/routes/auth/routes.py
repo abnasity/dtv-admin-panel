@@ -230,7 +230,11 @@ def assigned_orders():
 @admin_required
 def dashboard():
     total_users = User.query.count()
-    total_devices = Device.query.filter_by(status='available').count()
+    total_devices = Device.query.filter(
+    Device.status == 'available',
+    Device.featured == False
+).count()
+
     pending_orders = CustomerOrder.query.filter_by(status='pending').count()
 
     recent_orders = CustomerOrder.query.order_by(CustomerOrder.created_at.desc()).limit(5).all()
@@ -293,7 +297,6 @@ def users():
                          customers=customers
                          )
     
-  
 
 
 # CREATE USER
