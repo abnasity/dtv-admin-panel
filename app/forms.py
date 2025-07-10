@@ -103,6 +103,7 @@ class DeviceForm(FlaskForm):
     purchase_price = DecimalField('Purchase Price', validators=[DataRequired(), NumberRange(min=0)], places=2)
     price_cash = DecimalField('Cash Price', validators=[Optional(), NumberRange(min=0)])
     price_credit = DecimalField('Credit Price', validators=[Optional(), NumberRange(min=0)])
+    description = TextAreaField('Description', validators=[Optional()])
     notes = TextAreaField('Notes')
     image = FileField('Device Image', validators=[
         FileAllowed(['jpg', 'jpeg', 'png'], 'Only images allowed!')
