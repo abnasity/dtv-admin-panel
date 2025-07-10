@@ -15,7 +15,7 @@ def inventory():
     imei = request.args.get('imei')
 
     # Start with a base query
-    query = Device.query
+    query = Device.query.filter(Device.featured == False)
 
     if brand:
         query = query.filter_by(brand=brand)
@@ -72,9 +72,9 @@ def add_device():
             slug = f"{base_slug}-{counter}"
             counter += 1
 
-
+        imei = form.imei.data.strip() if form.imei.data else None
         device = Device(
-            imei=form.imei.data,
+            imei=imei if not form.featured.data else None,
             brand=form.brand.data,
             model=form.model.data,
             slug=slug,
@@ -83,9 +83,11 @@ def add_device():
             purchase_price=form.purchase_price.data,
             price_cash=form.price_cash.data or 0,
             price_credit=form.price_credit.data or 0,
+            featured=form.featured.data,
             notes=form.notes.data
         )
 
+        device.status = 'featured' if form.featured.data else 'available'
         if form.image.data:
             try:
                 filename = device.add_image(form.image.data)
@@ -98,7 +100,7 @@ def add_device():
             return render_template('devices/add.html', form=form, specs_form=specs_form)
 
         device.specs = DeviceSpecs(details=specs_form.details.data)
-
+        
         db.session.add(device)
 
         try:
@@ -120,37 +122,59 @@ def view_device(imei):
     device = Device.query.filter_by(imei=imei).first_or_404()
     return render_template('devices/view.html', device=device)
 
+# EDIT DEVICE
 @bp.route('/device/<imei>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_device(imei):
-    """Edit device details"""
     device = Device.query.filter_by(imei=imei).first_or_404()
     form = DeviceForm(original_imei=imei, obj=device)
-    
+    specs_form = DeviceSpecsForm(obj=device.specs)
+
     if request.method == 'POST':
-        # Ensure IMEI doesn't change
-        form.imei.data = device.imei
-        
-    if form.validate_on_submit():
-        device.brand = form.brand.data
-        device.model = form.model.data
-        device.ram = form.ram.data
-        device.rom = form.rom.data
-        device.purchase_price = form.purchase_price.data
-        device.price_cash = form.price_cash.data or 0
-        device.price_credit = form.price_credit.data or 0
-        device.notes = form.notes.data
-        
-        try:
-            db.session.commit()
-            flash(f'{device.brand} {device.model} updated successfully', 'success')
-            return redirect(url_for('devices.inventory'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error updating device: {str(e)}', 'danger')
-    
-    return render_template('devices/edit.html', form=form, device=device)
+        form.imei.data = device.imei  # Prevent IMEI change
+        if form.validate_on_submit() and specs_form.validate_on_submit():
+            device.brand = form.brand.data
+            device.model = form.model.data
+            device.ram = form.ram.data
+            device.rom = form.rom.data
+            device.purchase_price = form.purchase_price.data
+            device.price_cash = form.price_cash.data or 0
+            device.price_credit = form.price_credit.data or 0
+            device.notes = form.notes.data
+            device.featured = form.featured.data
+
+            # Handle image upload
+            if form.image.data:
+                try:
+                    filename = device.add_image(form.image.data)
+                    device.main_image = filename
+                except Exception as e:
+                    flash(f"Image upload failed: {str(e)}", 'warning')
+
+            # Update or set specs
+            if device.specs:
+                device.specs.details = specs_form.details.data
+            else:
+                device.specs = DeviceSpecs(details=specs_form.details.data)
+
+            try:
+                db.session.commit()
+                flash(f'{device.brand} {device.model} updated successfully', 'success')
+                return redirect(url_for('devices.inventory'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error updating device: {str(e)}', 'danger')
+
+    return render_template('devices/edit.html', form=form, specs_form=specs_form, device=device)
+
+
+# FEATURED DEVICES
+@bp.route('/devices/featured')
+@admin_required
+def featured_devices():
+    devices = Device.query.filter_by(featured=True).all()
+    return render_template('devices/featured.html', devices=devices)
 
 
 
