@@ -279,7 +279,7 @@ class Device(db.Model):
     __tablename__ = 'devices'
 
     id = db.Column(db.Integer, primary_key=True)
-    imei = db.Column(db.String(15), unique=True, nullable=False, index=True)
+    imei = db.Column(db.String(15), unique=True, nullable=True, index=True)
     brand = db.Column(db.String(50), nullable=False)
     model = db.Column(db.String(100), nullable=False)
     ram = db.Column(db.String(20), nullable=False)
@@ -298,6 +298,9 @@ class Device(db.Model):
     image_folder = db.Column(db.String(255), nullable=True)
     specs_id = db.Column(db.Integer, db.ForeignKey('device_specs.id'), nullable=True)
     slug = db.Column(db.String(100), unique=True, index=True)
+    featured = db.Column(db.Boolean, default=False)
+    
+
  
     # Relationships
     sale = db.relationship('Sale', back_populates='device', uselist=False)
