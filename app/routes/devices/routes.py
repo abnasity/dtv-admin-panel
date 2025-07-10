@@ -177,10 +177,22 @@ def featured_devices():
     return render_template('devices/featured.html', devices=devices)
 
 
-
+# LEARN MORE
 @bp.route('/learn_more/<device_slug>')
 def learn_more_device(device_slug):
     device = Device.query.filter_by(slug=device_slug).first_or_404()
+    
+    specs = {}
+    if device.specs:
+        for col in device.specs.__table__.columns:
+            if col.name in ['id', 'device_id', 'created_at', 'updated_at']:
+                continue
+            value = getattr(device.specs, col.name)
+            if value:
+                label = col.name.replace('_', ' ').title()
+                specs[label] = value
+    
+    
     return render_template('learn_more/details.html', device=device)
 
 
