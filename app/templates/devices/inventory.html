@@ -107,11 +107,12 @@
                                     <i class="fas fa-shopping-cart"></i>
                                 </button>
                                 {% endif %}
-                                {% if device.is_available and current_user.is_admin() %}
+                                {% if device.imei and device.is_available and current_user.is_admin() %}
                                     <a href="{{ url_for('devices.edit_device', imei=device.imei) }}" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit "></i>
-                                     </a>
+                                    </a>
                                 {% endif %}
+
                                  </div>                       
                         </td>
                     </tr>
