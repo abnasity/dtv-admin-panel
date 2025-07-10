@@ -94,8 +94,7 @@ class CustomerProfileForm(FlaskForm):
 
 # DEVICE FORM
 class DeviceForm(FlaskForm):
-    imei = StringField('IMEI', validators=[
-        DataRequired(), Length(min=15, max=15, message='IMEI must be exactly 15 digits long.')
+    imei = StringField('IMEI', validators=[Optional(), Length(min=15, max=15, message='IMEI must be exactly 15 digits long.')
     ])
     brand = StringField('Brand', validators=[DataRequired(), Length(max=50)])
     model = StringField('Model', validators=[DataRequired(), Length(max=50)])
@@ -109,6 +108,7 @@ class DeviceForm(FlaskForm):
         FileAllowed(['jpg', 'jpeg', 'png'], 'Only images allowed!')
     ])
     color = StringField('Color (for image matching)')
+    featured = BooleanField('Feature this device on homepage')
     submit = SubmitField('Save Device')
     
     def __init__(self, original_imei=None, *args, **kwargs):
@@ -117,6 +117,14 @@ class DeviceForm(FlaskForm):
         
     def validate_imei(self, imei):
         from app.models import Device
+        
+         # If not a featured device, IMEI is required
+        if not self.featured.data:
+            if not imei.data:
+                raise ValidationError('IMEI is required for non-featured devices.')
+            if len(imei.data) != 15:
+                raise ValidationError('IMEI must be exactly 15 digits long.')
+            
         if self.original_imei != imei.data:
             device = Device.query.filter_by(imei=imei.data).first()
             if device:
