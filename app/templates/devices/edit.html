@@ -14,8 +14,11 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
+
                         {{ form.csrf_token }}
+                        {{ specs_form.csrf_token }}
+
                         
                         <div class="mb-3">
                             <label class="form-label">IMEI</label>
@@ -103,6 +106,48 @@
                             {% if form.price_credit.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.price_credit.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+    
+                        {% if device.main_image %}
+                            <div class="mb-3">
+                                <label class="form-label">Current Image:</label><br>
+                                <img src="{{ url_for('static', filename='images/' ~ device.main_image) }}" class="img-thumbnail" style="max-width: 200px;">
+                            </div>
+                        {% endif %}
+
+
+                        <div class="mb-3">
+                            {{ form.image.label(class="form-label") }}
+                            {{ form.image(class="form-control") }}
+                            {% if form.image.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.image.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-check mb-3">
+                            {{ form.featured(class="form-check-input") }}
+                            {{ form.featured.label(class="form-check-label") }}
+                        </div>
+
+
+                        <hr class="my-4">
+                        <h4>Device Specifications</h4>
+
+                        <div class="mb-3">
+                            {{ specs_form.details.label(class="form-label") }}
+                            {{ specs_form.details(class="form-control", rows=10, placeholder="Enter full specs, features, key highlights, etc.") }}
+                            {% if specs_form.details.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in specs_form.details.errors %}
                                     {{ error }}
                                 {% endfor %}
                             </div>
