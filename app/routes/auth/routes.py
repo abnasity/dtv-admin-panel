@@ -814,7 +814,7 @@ def delete_customer(id):
 @login_required
 @admin_required
 def admin_notifications():
-    notes = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    notes = Notification.query.filter_by(user_id=current_user.id, recipient_type=current_user.role).order_by(Notification.created_at.desc()).all()
     return render_template('admin/notifications.html', notifications=notes)
 
 # MARK ALL AS READ
