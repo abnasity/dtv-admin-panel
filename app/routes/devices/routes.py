@@ -84,6 +84,7 @@ def add_device():
             price_cash=form.price_cash.data or 0,
             price_credit=form.price_credit.data or 0,
             featured=form.featured.data,
+            description=form.description.data or specs_form.details.data,
             notes=form.notes.data
         )
 
@@ -193,7 +194,7 @@ def learn_more_device(device_slug):
                 specs[label] = value
     
     
-    return render_template('learn_more/details.html', device=device)
+    return render_template('learn_more/details.html', device=device, specs=specs)
 
 
 
