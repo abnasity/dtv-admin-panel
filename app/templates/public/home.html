@@ -184,15 +184,20 @@
         {% elif loop.index == 8 %}
           <span class="badge bg-danger position-absolute top-0 start-0 m-2">HOT</span>
         {% endif %}
-
-      <img src="{{ url_for('static', filename='images/' ~ device.image) }}" class="card-img-top" loading="lazy" alt="{{ device.name }}">
-      <div class="card-body text-center">
-        <p class="card-text fw-semibold">{{ device.name }}</p>
-        <p class="text-success mb-2">{{ device.cash_price }} | <span class="text-primary">{{ device.credit_price }}</span></p>
-        <a href="{{ url_for('devices.learn_more_device', device_slug=device.slug) }}" class="btn btn-outline-primary">Learn More</a>
-      </div>
+        
+    <img src="{{ url_for('static', filename='images/' ~ device.image_folder ~ '/' ~ device.main_image) }}" 
+         class="card-img-top" loading="lazy" alt="{{ device.brand }} {{ device.model }}">
+    
+    <div class="card-body text-center">
+      <p class="card-text fw-semibold">{{ device.brand }} {{ device.model }}</p>
+      <p class="text-success mb-2">
+        Ksh {{ device.price_cash }} | 
+        <span class="text-primary">Ksh {{ device.price_credit }}</span>
+      </p>
+      <a href="{{ url_for('devices.learn_more_device', device_slug=device.slug) }}" class="btn btn-outline-primary">Learn More</a>
     </div>
   </div>
+</div>
 {% endfor %}
   </div>
 </section>
