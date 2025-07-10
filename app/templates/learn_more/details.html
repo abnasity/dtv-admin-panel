@@ -30,6 +30,8 @@
       {% else %}
         <p class="text-muted">Specifications not available for this device.</p>
       {% endif %}
+
+
 <h4 class="fw-semibold fs-4 mt-4">
   <a class="text-decoration-none" data-bs-toggle="collapse" href="#descriptionCollapse" role="button" aria-expanded="false" aria-controls="descriptionCollapse">
     Product Description
@@ -38,7 +40,7 @@
 </h4>
 
 <div class="collapse mb-4" id="descriptionCollapse">
-  <div class="card card-body border-0 ps-0">
+  <div class="card card-body border-0 px-3 py-2 rounded">
     <p class="fs-6 text-muted mb-0">{{ device.description or "No description available." }}</p>
   </div>
 </div>
