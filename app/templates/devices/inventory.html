@@ -7,13 +7,16 @@
     <div class="col-md-8">
         <h2><i class="fas fa-warehouse me-2"></i>Device Inventory</h2>
     </div>
-    {% if current_user.is_admin() %}
-    <div class="col-md-4 text-end">
-        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
-            <i class="fas fa-plus me-1"></i>Add Device
-        </button>
+{% if current_user.is_admin() %}
+<div class="row">
+    <div class="col text-end">
+        <a href="{{ url_for('devices.add_device') }}" class="btn btn-success mb-3">
+            <i class="fas fa-plus me-1"></i> Add Device
+        </a>
     </div>
-    {% endif %}
+</div>
+{% endif %}
+
 </div>
 
 <!-- Filters -->
@@ -123,150 +126,7 @@
     </div>
 </div>
 
-<!-- Add Device Modal -->
-{% if current_user.is_admin() %}
-<div class="modal fade" id="addDeviceModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add New Device</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addDeviceForm" method="POST" action="{{ url_for('devices.add_device') }}">
-                    {{ device_form.csrf_token }}
-                    <div class="mb-3">
-                        {{ device_form.imei.label(class="form-label") }}
-                        {{ device_form.imei(class="form-control", placeholder="Enter 15-digit IMEI") }}
-                        {% if device_form.imei.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in device_form.imei.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="mb-3">
-                        {{ device_form.brand.label(class="form-label") }}
-                        {{ device_form.brand(class="form-control") }}
-                        {% if device_form.brand.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in device_form.brand.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="mb-3">
-                        {{ device_form.model.label(class="form-label") }}
-                        {{ device_form.model(class="form-control") }}
-                        {% if device_form.model.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in device_form.model.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
 
-                    <div class="mb-3">
-                        {{ device_form.ram.label(class="form-label") }}
-                        {{ device_form.ram(class="form-control") }}
-                        {% if device_form.ram.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in device_form.ram.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ device_form.rom.label(class="form-label") }}
-                        {{ device_form.rom(class="form-control") }}
-                        {% if device_form.rom.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in device_form.rom.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ device_form.purchase_price.label(class="form-label") }}
-                        <div class="input-group">
-                            <span class="input-group-text">Ksh</span>
-                            {{ device_form.purchase_price(class="form-control") }}
-                        </div>
-                        {% if device_form.purchase_price.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in device_form.purchase_price.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                  <div class="mb-3">
-                        {{ device_form.price_cash.label(class="form-label") }}
-                        <div class="input-group">
-                            <span class="input-group-text">Ksh</span>
-                            {{ device_form.price_cash(class="form-control") }}
-                        </div>
-                        {% if device_form.price_cash.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in device_form.price_cash.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-
-
-                    <div class="mb-3">
-                        {{ device_form.price_credit.label(class="form-label") }}
-                        <div class="input-group">
-                            <span class="input-group-text">Ksh</span>
-                            {{ device_form.price_credit(class="form-control") }}
-                        </div>
-                        {% if device_form.price_credit.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in device_form.price_credit.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-
-                    <div class="mb-3">
-                        {{ device_form.notes.label(class="form-label") }}
-                        {{ device_form.notes(class="form-control", rows=3) }}
-                        {% if device_form.notes.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in device_form.notes.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" form="addDeviceForm" class="btn btn-primary">Add Device</button>
-              
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<a href="{{ url_for('devices.add_device') }}" class="btn btn-secondary">
-                    <i class="fas fa-plus me-1"></i> Add Device
-                </a>
 
 {% block extra_js %}
 <script>
@@ -281,6 +141,35 @@ function createSale(imei) {
 function editDevice(imei) {
     window.location.href = "{{ url_for('devices.edit_device', imei='') }}" + imei;
 }
+
+	// FEATURED DEVICES AND IMEI TOGGLE
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('deviceForm');
+    const featuredCheckbox = document.querySelector('input[name="featured"]');
+    const imeiInput = document.querySelector('input[name="imei"]');
+
+    function toggleIMEI() {
+        if (featuredCheckbox.checked) {
+            imeiInput.disabled = true;
+            imeiInput.value = '';
+        } else {
+            imeiInput.disabled = false;
+        }
+    }
+
+    featuredCheckbox.addEventListener('change', toggleIMEI);
+    toggleIMEI();  // Initialize on load
+
+    form.addEventListener('submit', function (e) {
+        if (!featuredCheckbox.checked && imeiInput.value.trim() === '') {
+            e.preventDefault();
+            alert('IMEI is required for non-featured devices.');
+            imeiInput.focus();
+        }
+    });
+});
+
+
 </script>
 {% endblock extra_js %}
 {% endblock content %}
