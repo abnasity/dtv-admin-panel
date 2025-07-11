@@ -184,9 +184,10 @@
         {% elif loop.index == 8 %}
           <span class="badge bg-danger position-absolute top-0 start-0 m-2">HOT</span>
         {% endif %}
-        
-    <img src="{{ url_for('static', filename='images/' ~ device.image_folder ~ '/' ~ device.main_image) }}" 
-         class="card-img-top" loading="lazy" alt="{{ device.brand }} {{ device.model }}">
+
+    <img src="{{ url_for('static', filename='images/devices/' ~ device.brand|lower ~ '/' ~ device.main_image) }}"
+     class="card-img-top" loading="lazy" alt="{{ device.model }}">
+
     
     <div class="card-body text-center">
       <p class="card-text fw-semibold">{{ device.brand }} {{ device.model }}</p>
