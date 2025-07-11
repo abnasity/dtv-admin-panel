@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify, abort
+from flask import render_template, redirect, url_for, flash, request, jsonify, abort, after_this_request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db
 from app.models import User, CustomerOrder, Customer, Notification, Device
@@ -142,16 +142,8 @@ def logout():
     user_role = current_user.role 
     logout_user()
     flash('You have been logged out.', 'info')
-
-    # Redirect based on role
-    if user_role in ['admin', 'staff']:
-        return redirect(url_for('main.dashboard')) 
-    elif user_role == 'customer':
-        return redirect(url_for('customers.login'))
-    else:
-        return redirect(url_for('auth.login'))
-
-    
+    return redirect(url_for('auth.login'))
+ 
 
 # STAFF DASHBOARD
 @bp.route('/notifications')
@@ -518,7 +510,7 @@ def approve_order(order_id):
             ))
 
         # Notify the customer
-        if order.customer:
+        if order.customer and isinstance(order.customer, Customer):
             db.session.add(Notification(
                 user_id=order.customer.id,
                 message=f"Your order #{order.id} was rejected. Device(s) unavailable: {sold_names_str}",
@@ -611,7 +603,6 @@ def approve_order(order_id):
     db.session.commit()
     flash(f"Order #{order.id} approved. Awaiting sale confirmation.", "success")
     return redirect(url_for('auth.view_orders', order_id=order.id))
-
 
 
 
