@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, current_app
+from flask import Flask, request, jsonify, current_app, redirect, url_for
 from config import Config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf, mail
 from flask_wtf.csrf import generate_csrf
@@ -7,8 +7,12 @@ from app.models import CartItem, User, Customer, CustomerOrder, Notification
 import os
 
 
-login_manager.session_protection = "strong"
-login_manager.login_view = 'auth.login'
+@login_manager.unauthorized_handler
+def custom_unauthorized():
+    if request.blueprint == "customers":
+        return redirect(url_for('customers.login', next=request.full_path))
+    else:
+        return redirect(url_for('auth.login', next=request.full_path))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -20,8 +24,6 @@ def load_user(user_id):
         user_id = user_id.replace('customer-', '')
         return Customer.query.get(int(user_id))
     return None
-
-# ... (keep all your existing imports and top-level code) ...
 
 def create_app(config_class=Config):
     app = Flask(__name__)
