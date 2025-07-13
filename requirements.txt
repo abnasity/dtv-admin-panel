@@ -32,4 +32,4 @@ flask-bcrypt
 PyJWT
 pillow
 python-slugify
-wkhtmltopdf
+pdfkit
