@@ -19,7 +19,6 @@
                 <thead class="table-light">
                     <tr>
                         <th>Device</th>
-                        <th>IMEI</th>
                         <th>Price ({{ order.payment_option|capitalize }})</th>
                     </tr>
                 </thead>
@@ -27,7 +26,6 @@
                     {% for item in items %}
                     <tr>
                         <td>{{ item.device.brand }} {{ item.device.model }}</td>
-                        <td>{{ item.device.imei }}</td>
                         <td>
                             {% if order.payment_option == 'cash' %}
                                 Ksh {{ "%.2f"|format(item.device.price_cash or 0) }}
