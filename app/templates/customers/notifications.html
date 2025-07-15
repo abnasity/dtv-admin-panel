@@ -1,66 +1,67 @@
 {% extends 'layouts/base.html' %}
 {% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="fas fa-bell me-2 text-primary"></i>Notifications</h3>
+    
+    <div class="d-flex align-items-center gap-2">
+      <!-- Mark all as read -->
+      <form action="{{ url_for('customers.mark_all_notifications_read') }}" method="POST" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-sm btn-outline-primary">
+          <i class="fas fa-check-double me-1"></i> Mark All as Read
+        </button>
+      </form>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h3><i class="fas fa-bell me-2 text-primary"></i>Notifications</h3>
-  <form action="{{ url_for('customers.mark_all_notifications_read') }}" method="POST" class="d-inline">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-  <button type="submit" class="btn btn-sm btn-outline-primary">
-    <i class="fas fa-check-double me-1"></i> Mark All as Read
-  </button>
-</form>
+      <!-- Clear all -->
+      <form action="{{ url_for('customers.clear_notifications') }}" method="POST" class="d-inline"
+            onsubmit="return confirm('Clear ALL notifications?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-sm btn-outline-danger">
+          <i class="fas fa-trash-alt me-1"></i> Clear All
+        </button>
+      </form>
 
-  <div>
-    <div class="btn-group me-2" role="group">
-      <a href="{{ url_for('customers.notifications', filter='all') }}"
-         class="btn btn-sm {% if current_filter != 'unread' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-        All
-      </a>
-      <a href="{{ url_for('customers.notifications', filter='unread') }}"
-         class="btn btn-sm {% if current_filter == 'unread' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-        Unread
+      <!-- Filter -->
+      <div class="btn-group ms-2" role="group">
+        <a href="{{ url_for('customers.notifications', filter='all') }}"
+           class="btn btn-sm {% if current_filter != 'unread' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          All
+        </a>
+        <a href="{{ url_for('customers.notifications', filter='unread') }}"
+           class="btn btn-sm {% if current_filter == 'unread' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          Unread
+        </a>
+      </div>
+
+      <a href="{{ url_for('customers.rejected_orders') }}" class="btn btn-outline-danger btn-sm ms-2">
+        <i class="fas fa-times-circle me-1"></i> Rejected Orders
       </a>
     </div>
-    <a href="{{ url_for('customers.rejected_orders') }}" class="btn btn-outline-danger btn-sm">
-      <i class="fas fa-times-circle me-1"></i> Rejected Orders
-    </a>
   </div>
-</div>
-
-
-
-<form action="{{ url_for('customers.clear_notifications') }}" method="POST" class="d-inline">
-   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-  <button type="submit" class="btn btn-sm btn-outline-danger ms-2">
-    <i class="fas fa-trash-alt me-1"></i> Clear All
-  </button>
-</form>
 
   {% if notifications %}
     <ul class="list-group shadow-sm">
       {% for note in notifications %}
-        <li class="list-group-item d-flex justify-content-between align-items-start {% if not note.is_read %}fw-bold{% endif %}">
-  <div class="ms-2 me-auto">
-    <a href="{{ url_for('customers.mark_all_notifications_read', notification_id=note.id) }}"
-       class="text-decoration-none text-dark notification-link">
-      {{ note.message }}
-    </a>
-    <div><small class="text-muted">{{ note.created_at.strftime('%Y-%m-%d %H:%M') }}</small></div>
-  </div>
+      <li class="list-group-item d-flex justify-content-between align-items-start {% if not note.is_read %}fw-bold{% endif %}">
+        <div class="ms-2 me-auto">
+          {{ note.message }}
+          <div><small class="text-muted">{{ note.created_at.strftime('%Y-%m-%d %H:%M') }}</small></div>
+        </div>
 
-  <div class="d-flex flex-column align-items-end">
-    {% if not note.is_read %}
-      <span class="badge bg-primary rounded-pill mb-1">New</span>
-    {% endif %}
-    <form action="{{ url_for('customers.delete_notification', notification_id=note.id) }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-        <i class="fas fa-trash-alt"></i>
-      </button>
-    </form>
-  </div>
-</li>
-
+        <div class="d-flex flex-column align-items-end">
+          {% if not note.is_read %}
+            <span class="badge bg-primary rounded-pill mb-1">New</span>
+          {% endif %}
+          <form action="{{ url_for('customers.delete_notification', notification_id=note.id) }}"
+                method="POST" onsubmit="return confirm('Delete this notification?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </form>
+        </div>
+      </li>
       {% endfor %}
     </ul>
   {% else %}
@@ -75,5 +76,4 @@
     </a>
   </div>
 </div>
-
 {% endblock %}
