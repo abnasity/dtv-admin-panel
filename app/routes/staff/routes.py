@@ -142,6 +142,7 @@ def view_failed_orders():
 # DELETE NOTIFICATION
 @bp.route('/notifications/delete/<int:notification_id>', methods=['POST'])
 @login_required
+@staff_required
 def delete_notification(notification_id):
     notif = Notification.query.get_or_404(notification_id)
     if notif.user_id != current_user.id:
@@ -149,13 +150,14 @@ def delete_notification(notification_id):
     db.session.delete(notif)
     db.session.commit()
     flash('Notification deleted.', 'success')
-    return redirect(request.referrer or url_for('auth.view_notifications'))
+    return redirect(request.referrer or url_for('staff.dashboard'))
 
 # CLEAR NOTIFICATIONS
 @bp.route('/notifications/clear', methods=['POST'])
 @login_required
+@staff_required
 def clear_notifications():
     Notification.query.filter_by(user_id=current_user.id).delete()
     db.session.commit()
     flash('All notifications cleared.', 'info')
-    return redirect(url_for('auth.notifications'))
+    return redirect(url_for('staff.dashboard'))
