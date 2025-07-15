@@ -573,7 +573,7 @@ def notifications():
 
     notifications = query.order_by(Notification.created_at.desc()).all()
 
-    return render_template('customers/notifications.html', notifications=notifications, current_filter=show)
+    return render_template('customers/dash.html', notifications=notifications, current_filter=show)
 
 
 # MARK NOTIFICATION AS READ
@@ -589,7 +589,7 @@ def mark_all_notifications_read():
     db.session.commit()
 
     flash("All notifications marked as read.", "info")
-    return redirect(url_for('customers.notifications'))
+    return redirect(url_for('customers.dash'))
 
 
 
@@ -611,7 +611,7 @@ def delete_notification(notification_id):
     db.session.delete(notif)
     db.session.commit()
     flash('Notification deleted.', 'success')
-    return redirect(request.referrer or url_for('customers.notifications'))
+    return redirect(request.referrer or url_for('customers.dash'))
 
 
 # CLEAR all notifications
