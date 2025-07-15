@@ -31,11 +31,15 @@ def inventory():
     brands = [b[0] for b in brands]  # Unpack from tuples
 
     device_form = DeviceForm()  # Form for add modal
+    specs_form = DeviceSpecsForm()
+    
+
 
     return render_template(
         'devices/inventory.html',
         devices=devices,
         device_form=device_form,
+        specs_form=specs_form,
         brands=brands  # Needed for the Brand dropdown in template
     )
     
