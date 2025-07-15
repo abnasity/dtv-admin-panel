@@ -89,7 +89,7 @@ def register():
         customer.set_password(form.password.data)
         db.session.add(customer)
         db.session.commit()
-        login_user(customer, remember=True)
+        login_user(customer, remember=False)
         flash('Registration successful! Welcome!', 'success')
         return redirect(url_for('customers.dashboard'))
 
@@ -137,23 +137,23 @@ def login():
 @bp.route('/logout')
 @login_required
 def logout():
-    # 1. First logout the user
-    logout_user()
-    
-    # 2. Clear all session data (recommended for security)
-    session.clear()
-    
-    # 3. Create response before flashing to ensure headers are set
-    response = make_response(redirect(url_for('public.home')))
-    
-    # 4. Add cache-control headers to prevent back-button access
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0'
+    logout_user()                # Remove the user from session
+    session.clear()              # Clear session data
+
+    response = make_response(redirect(url_for('public.logged_out')))
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '-1'
-    
-    # 5. Flash message after response is created
-    flash('You have been successfully logged out.', 'success') 
+    response.headers['Expires'] = '0'
+
+    # ✅ Clear both session and remember_token cookies
+    response.set_cookie('session', '', expires=0)
+    response.set_cookie('remember_token', '', expires=0)
+
     return response
+
+
+
+
  
 # CUSTOMER DASHBOARD (Primary dashboard with products)
 @bp.route('/dashboard')
@@ -380,6 +380,10 @@ def checkout():
     if current_user.delivery_address:
         form.delivery_address.data = current_user.delivery_address
 
+
+    if current_user.id_number:
+      form.id_number.data = current_user.id_number
+
     # Cart setup
     cart_items = CartItem.query.filter_by(customer_id=current_user.id, status='active').all()
     products = [item.device for item in cart_items]
@@ -433,6 +437,10 @@ def place_order():
     id_number = form.id_number.data.strip() if form.id_number.data else None
     if current_user.delivery_address != selected_address:
         current_user.delivery_address = selected_address
+    
+    if form.payment_type.data == 'credit' and not id_number:
+      flash("National ID number is required for credit payments.", "danger")
+      return redirect(url_for('customers.checkout'))
     
     if id_number and current_user.id_number != id_number:
         current_user.id_number = id_number

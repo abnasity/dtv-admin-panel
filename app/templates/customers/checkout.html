@@ -38,7 +38,9 @@
                             <td>
                             {% if device.price_credit is not none %}
                                 <span class="badge fs-6 bg-success p-2">
-                                Ksh {{ "%.2f"|format(device.price_credit) }}
+                                Ksh {{ "%.2f"|format(device.price_credit) }}                               {{ form.id_number.label(class="form-label") }}
+                                {{ form.id_number(class="form-control", placeholder="Enter your National ID Number") }}
+                            </div>
                                 </span>
                             {% else %}
                                 <span class="text-muted">N/A</span>
@@ -87,7 +89,7 @@
                                 {{ form.delivery_address(class="form-control", placeholder="Enter your delivery address") }}
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-3" id="id-number-group">
                                 {{ form.id_number.label(class="form-label") }}
                                 {{ form.id_number(class="form-control", placeholder="Enter your National ID Number") }}
                             </div>
@@ -115,4 +117,22 @@
         </div>
     {% endif %}
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const paymentSelect = document.querySelector('select[name="payment_type"]');
+  const idFieldGroup = document.getElementById('id-number-group');
+
+  function toggleIDField() {
+    if (paymentSelect.value === 'credit') {
+      idFieldGroup.style.display = 'block';
+    } else {
+      idFieldGroup.style.display = 'none';
+    }
+  }
+
+  paymentSelect.addEventListener('change', toggleIDField);
+  toggleIDField();  // call on page load
+});
+</script>
+
 {% endblock %}

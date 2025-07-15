@@ -36,3 +36,24 @@ def home():
         public_view=True,
         featured_devices=featured_devices
     )
+
+@bp.route('/logged-out')
+def logged_out():
+    # Here we don’t check current_user to avoid re-auth issues
+     # For public users: show featured devices or fallback to recent
+    featured_devices = (
+        Device.query
+        .filter(Device.featured.is_(True))
+        .order_by(Device.arrival_date.desc())
+        .all()
+    )
+
+    if not featured_devices:
+        featured_devices = (
+            Device.query
+            .filter_by(status='available')
+            .order_by(Device.id.desc())
+            .all()
+        )
+    return render_template('public/home.html',  public_view=True,
+        featured_devices=featured_devices)
