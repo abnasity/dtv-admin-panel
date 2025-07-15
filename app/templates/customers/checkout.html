@@ -38,8 +38,7 @@
                             <td>
                             {% if device.price_credit is not none %}
                                 <span class="badge fs-6 bg-success p-2">
-                                Ksh {{ "%.2f"|format(device.price_credit) }}                               {{ form.id_number.label(class="form-label") }}
-                                {{ form.id_number(class="form-control", placeholder="Enter your National ID Number") }}
+                                Ksh {{ "%.2f"|format(device.price_credit) }}                               
                             </div>
                                 </span>
                             {% else %}
