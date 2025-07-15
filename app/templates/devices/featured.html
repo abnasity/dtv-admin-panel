@@ -1,0 +1,45 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Featured Devices{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Featured Devices</h2>
+
+    {% if devices %}
+        <div class="row">
+            {% for device in devices %}
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <img src="{{ device.image_url }}" class="card-img-top" alt="{{ device.model }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ device.brand }} {{ device.model }}</h5>
+                            <p class="card-text text-muted">Ksh {{ device.purchase_price }}</p>
+                        
+                            {% if specs_dict[device.id] %}
+                                <button class="btn btn-sm btn-outline-secondary w-100 mt-2 mb-2"
+                                        type="button" data-bs-toggle="collapse" data-bs-target="#specs-{{ device.id }}">
+                                    View Specifications
+                                </button>
+
+                                <div class="collapse" id="specs-{{ device.id }}">
+                                    <ul class="list-group list-group-flush">
+                                        {% for label, value in specs_dict[device.id].items() %}
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                <span class="text-muted">{{ label }}</span>
+                                                <span>{{ value }}</span>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">No featured devices found.</p>
+    {% endif %}
+</div>
+{% endblock %}
