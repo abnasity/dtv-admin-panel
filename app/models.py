@@ -171,6 +171,7 @@ class CustomerOrder(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(20), default='pending')  # 'pending', 'approved', 'cancelled', 'rejected'
     approved_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
     approved_at = db.Column(db.DateTime, nullable=True)
     delivery_address = db.Column(db.String(255))
     payment_option = db.Column(db.String(20), nullable=False)
