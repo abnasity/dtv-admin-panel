@@ -48,6 +48,7 @@ def mark_task_failed(order_id):
     for admin in admin_users:
         notif = Notification(
             user_id=admin.id,
+            recipient_type='admin',
             message=f"Order #{order.id} marked as failed by staff. Reason: {reason}"
         )
         db.session.add(notif)
@@ -94,6 +95,7 @@ def mark_task_success(order_id):
     for admin in admin_users:
         db.session.add(Notification(
             user_id=admin.id,
+            recipient_type='admin',
             message=f"Order #{order.id} marked as successful by staff."
         ))
 
