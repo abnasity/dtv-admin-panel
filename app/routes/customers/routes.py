@@ -430,8 +430,12 @@ def place_order():
 
     # Save delivery address to customer if it's not already saved
     selected_address = form.delivery_address.data.strip()
+    id_number = form.id_number.data.strip() if form.id_number.data else None
     if current_user.delivery_address != selected_address:
         current_user.delivery_address = selected_address
+    
+    if id_number and current_user.id_number != id_number:
+        current_user.id_number = id_number
         db.session.add(current_user)
 
     # Create the order
