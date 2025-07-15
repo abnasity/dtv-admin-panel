@@ -152,8 +152,7 @@ def logout():
     response.headers['Expires'] = '-1'
     
     # 5. Flash message after response is created
-    flash('You have been successfully logged out.', 'success')
-    
+    flash('You have been successfully logged out.', 'success') 
     return response
  
 # CUSTOMER DASHBOARD (Primary dashboard with products)
@@ -592,18 +591,22 @@ def rejected_orders():
 @login_required
 def delete_notification(notification_id):
     notif = Notification.query.get_or_404(notification_id)
-    if notif.user_id != current_user.id:
+    if notif.user_id != current_user.id or current_user.role != 'customer':
         abort(403)
     db.session.delete(notif)
     db.session.commit()
     flash('Notification deleted.', 'success')
     return redirect(request.referrer or url_for('customers.notifications'))
 
+
 # CLEAR all notifications
 @bp.route('/notifications/clear', methods=['POST'])
 @login_required
 def clear_notifications():
+    if current_user.role != 'customer':
+        abort(403)
     Notification.query.filter_by(user_id=current_user.id).delete()
     db.session.commit()
     flash('All notifications cleared.', 'info')
     return redirect(url_for('customers.notifications'))
+
