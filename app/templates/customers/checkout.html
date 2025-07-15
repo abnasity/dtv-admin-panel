@@ -87,6 +87,12 @@
                                 {{ form.delivery_address(class="form-control", placeholder="Enter your delivery address") }}
                             </div>
 
+                            <div class="mb-3">
+                                {{ form.id_number.label(class="form-label") }}
+                                {{ form.id_number(class="form-control", placeholder="Enter your National ID Number") }}
+                            </div>
+
+
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="fas fa-check-circle me-1"></i> Confirm Order
                             </button>
