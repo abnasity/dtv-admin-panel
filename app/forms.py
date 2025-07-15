@@ -237,6 +237,7 @@ class CheckoutForm(FlaskForm):
         choices=[], 
         validators=[DataRequired()]
     )
+    id_number = StringField('National ID Number', validators=[Optional(), Length(max=30)])
     submit = SubmitField('Confirm Order')
     
     
