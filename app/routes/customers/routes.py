@@ -524,7 +524,7 @@ def my_devices():
     completed_orders = CustomerOrder.query.filter_by(
         customer_id=current_user.id,
         status='completed'
-    ).all()
+    ).order_by(CustomerOrder.completed_at.desc()).all()
 
     # Flatten all purchased devices
     purchased_items = []
@@ -533,8 +533,11 @@ def my_devices():
             if item.device and item.device.status == 'sold':
                 purchased_items.append({
                     'device': item.device,
-                    'order': order
+                    'order': order,
+                    'completed_at': order.completed_at
                 })
+    purchased_items.sort(key=lambda x: x['completed_at'] or x['order'].created_at, reverse=True)
+
 
     return render_template('customers/my_devices.html', purchased_items=purchased_items)
 

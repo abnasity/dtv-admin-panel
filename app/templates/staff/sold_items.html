@@ -14,16 +14,20 @@
     </tr>
   </thead>
   <tbody>
+    {% set ns = namespace(count=1) %}
     {% for order in sold_items %}
-    <tr>
-      <td>{{ loop.index }}</td>
-      <td>{{ order.id }}</td>
-      <td>{{ order.customer.full_name }}</td>
       {% for item in order.items %}
-      <td>{{ item.device.brand }} {{ item.device.model }}</td> 
+        {% if item.device and item.device.status == 'sold' %}
+        <tr>
+          <td>{{ ns.count }}</td>
+          <td>{{ order.id }}</td>
+          <td>{{ order.customer.full_name }}</td>
+          <td>{{ item.device.brand }} {{ item.device.model }}</td>
+          <td>{{ order.completed_at.strftime('%Y-%m-%d') if order.completed_at else 'N/A' }}</td>
+        </tr>
+        {% set ns.count = ns.count + 1 %}
+        {% endif %}
       {% endfor %}
-      <td>{{ order.created_at.strftime('%Y-%m-%d') }}</td>
-    </tr>
     {% endfor %}
   </tbody>
 </table>

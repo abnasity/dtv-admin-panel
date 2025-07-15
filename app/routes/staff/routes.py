@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from flask import render_template, flash, redirect, url_for, request, abort
 from app.models import CustomerOrder, User, Notification
 from app.extensions import db
+from datetime import datetime
 
 
 
@@ -88,8 +89,10 @@ def mark_task_success(order_id):
 
     # Optionally, update the order status if needed
     order.status = 'completed'
+    order.completed_at = datetime.utcnow()
+    print(f"COMPLETED AT being set: {order.completed_at}")
     db.session.commit()
-
+    print(f"After commit: {order.completed_at}")
     # Notify all admins
     admin_users = User.query.filter_by(role='admin').all()
     for admin in admin_users:
@@ -116,18 +119,17 @@ def mark_task_success(order_id):
 
 
 
-
-
 # staff sold items
 @bp.route('/staff/sold-items')
 @login_required
-@staff_required  # If you have a decorator to restrict to staff
+@staff_required
 def view_sold_items():
     sold_items = CustomerOrder.query.filter_by(
         assigned_staff_id=current_user.id,
         status='completed'
-    ).all()
+    ).filter(CustomerOrder.completed_at.isnot(None)) .order_by(CustomerOrder.completed_at.desc()).all() 
     return render_template('staff/sold_items.html', sold_items=sold_items)
+
 
 
 # FAILED ORDERS

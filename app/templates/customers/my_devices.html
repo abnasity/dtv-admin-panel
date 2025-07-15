@@ -19,10 +19,14 @@
             {% for item in purchased_items %}
             <tr>
                 <td>{{ item.order.id }}</td>
-                <td>{{ item.order.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>{{ item.completed_at.strftime('%Y-%m-%d') }}</td>
                 <td>{{ item.device.brand }}</td>
                 <td>{{ item.device.model }}</td>
-                <td>{{ item.device.purchase_price }}</td>
+              {% if item.order.payment_option == 'cash' %}
+                <td>{{ item.device.price_cash }}</td>
+            {% else %}
+                <td>{{ item.device.price_credit }}</td>
+            {% endif %}
             </tr>
             {% endfor %}
         </tbody>
