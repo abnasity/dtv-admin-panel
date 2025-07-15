@@ -9,6 +9,7 @@ from app.utils.helpers import assign_staff_to_order
 from app.routes.auth import bp
 from datetime import datetime
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 from flask_mail import Message
 from app.extensions import mail
 
@@ -184,7 +185,9 @@ def mark_awaiting_approval(order_id):
 @login_required
 @staff_required
 def view_order_staff(order_id):
-    order = CustomerOrder.query.get_or_404(order_id)
+
+    order = CustomerOrder.query.options(joinedload(CustomerOrder.customer)).get_or_404(order_id)
+
 
     # Ensure staff is only seeing orders assigned to them
     if order.assigned_staff_id != current_user.id:
@@ -211,7 +214,10 @@ def view_order_staff(order_id):
 @login_required
 @staff_required
 def assigned_orders():
-    orders = CustomerOrder.query.filter_by(assigned_staff_id=current_user.id).order_by(CustomerOrder.created_at.desc()).all()
+    orders = CustomerOrder.query.options(joinedload(CustomerOrder.customer)).filter_by(
+    assigned_staff_id=current_user.id
+).order_by(CustomerOrder.created_at.desc()).all()
+
     return render_template('staff/assigned_orders.html', orders=orders)
 
 
