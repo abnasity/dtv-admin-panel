@@ -86,7 +86,7 @@ class Customer(UserMixin, db.Model):
     __tablename__ = 'customers'
 
     id = db.Column(db.Integer, primary_key=True)
-    id_number = db.Column(db.String(30), nullable=True, comment="Kenyan National ID Number")
+    id_number = db.Column(db.String(30), nullable=True, unique=True, comment="Kenyan National ID Number")
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
