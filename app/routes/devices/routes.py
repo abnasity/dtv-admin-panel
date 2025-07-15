@@ -1,5 +1,5 @@
-from flask import render_template, redirect, url_for, flash, request, abort
-from flask_login import login_required
+from flask import render_template, redirect, url_for, flash, request, abort, jsonify
+from flask_login import login_required, current_user
 from app.models import Device, DeviceSpecs
 from app.decorators import admin_required
 from app.forms import DeviceForm, DeviceSpecsForm
@@ -179,7 +179,23 @@ def edit_device(imei):
 @admin_required
 def featured_devices():
     devices = Device.query.filter_by(featured=True).all()
-    return render_template('devices/featured.html', devices=devices)
+
+    # Build a dictionary of device_id -> specs_dict
+    specs_dict = {}
+    for device in devices:
+        if device.specs:
+            specs = {}
+            for col in device.specs.__table__.columns:
+                if col.name in ['id', 'device_id', 'created_at', 'updated_at']:
+                    continue
+                value = getattr(device.specs, col.name)
+                if value:
+                    label = col.name.replace('_', ' ').title()
+                    specs[label] = value
+            specs_dict[device.id] = specs
+
+    return render_template('devices/featured.html', devices=devices, specs_dict=specs_dict)
+
 
 
 # LEARN MORE
@@ -200,5 +216,30 @@ def learn_more_device(device_slug):
     
     return render_template('learn_more/details.html', device=device, specs=specs)
 
+
+# SCAN IMEI
+@bp.route('/scan/device')
+@login_required
+def scan_device():
+    imei = request.args.get('imei')
+    device = Device.query.filter_by(imei=imei).first()
+
+    if not device:
+        return jsonify(success=False, message="Device not found")
+
+    return jsonify(success=True, device={
+        'imei': device.imei,
+        'brand': device.brand,
+        'model': device.model,
+        'price_cash': device.price_cash,
+        'status': device.status,
+        'description': device.description
+    })
+    
+# SCANNER ROUTE  
+@bp.route('/devices/scan')
+@login_required
+def scan_page():
+    return render_template('devices/barcode_scanner.html')
 
 
