@@ -3,3 +3,13 @@ __pycache__
 diamond.db
 migrations/
 .env
+# Ignore all image files
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.gif
+*.svg
+
+# Ignore device image folder recursively
+app/static/images/devices/
