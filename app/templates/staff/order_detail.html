@@ -2,7 +2,11 @@
 {% block content %}
 <h2 class="mt-4">Order #{{ order.id }}</h2>
 
-<p><strong>Customer:</strong> {{ order.customer.full_name }}</p>
+<p>
+  <strong>Customer:</strong> {{ order.customer.full_name }}<br>
+  <strong>ID No:</strong> {{ order.customer.id_number or "N/A" }}
+</p>
+
 
 <p><strong>Status:</strong>
     {% if order.status == 'pending' %}
@@ -15,6 +19,8 @@
         <span class="badge fs-6 bg-danger">Cancelled</span>
     {% elif order.status == 'rejected' %}
         <span class="badge fs-6 bg-dark">Rejected</span> 
+     {% elif order.status == 'completed' %}
+        <span class="badge fs-6 bg-success">completed</span> 
     {% endif %}
 </p>
 
@@ -27,17 +33,19 @@
     <p><strong>Approved At:</strong> {{ order.approved_at.strftime('%Y-%m-%d %H:%M') }}</p>
 {% endif %}
 
-<h4 class="mt-4">Items:</h4>
+<h4 class="mt-4">Item(s):</h4>
 <table class="table table-bordered">
     <thead>
         <tr>
+            <th>Device</th>
             <th>IMEI</th>          
-            <th>Order Price</th>
+            <th>Order Price</th>           
         </tr>
     </thead>
     <tbody>
         {% for item in order.items %}
             <tr>
+                <td>{{ item.device.brand }} {{ item.device.model }}</td>
                 <td>{{ item.device.imei }}</td>               
                  <td>
                     {% if order.payment_option == 'cash' %}
