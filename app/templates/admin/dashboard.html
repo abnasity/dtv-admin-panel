@@ -42,6 +42,8 @@
           <tr>
             <th scope="col">Order ID</th>
             <th>Customer</th>
+            <th>ID Number</th>
+            <th>Phone Number</th>
             <th>Status</th>
             <th>Created At</th>
             <th>Action</th>
@@ -52,6 +54,8 @@
           <tr>
             <td>#{{ order.id }}</td>
             <td>{{ order.customer.full_name }}</td>
+            <td>{{ order.customer.id_number or 'N/A' }}</td>
+            <td>{{ order.customer.phone_number }}</td>
            <td>
             {% if order.status == 'pending' %}
               <span class="badge fs-6 bg-warning text-dark">Pending</span>

@@ -10,6 +10,7 @@
             <tr>
                 <th class="text-primary">#Order ID</th>
                 <th class="text-primary">Customer</th>
+                <th class="text-primary">Phone Number</th>
                 <th class="text-primary">Device</th>
                 <th class="text-primary">Status</th>
                 <th class="text-primary">Created At</th>
@@ -26,6 +27,7 @@
                 <strong>{{ order.customer.full_name }}</strong><br>
                 <small>ID No: {{ order.customer.id_number or "N/A" }}</small>
                 </td>
+                <td>{{ order.customer.phone_number }}</td>
 
                  {% for item in order.items %}
                 <td>{{ item.device.brand }} {{ item.device.model }}</td> 
