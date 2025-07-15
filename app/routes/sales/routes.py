@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, make_response
 from flask_login import login_required, current_user
 from app.models import Device, Sale
 from app.forms import SaleForm
@@ -7,6 +7,7 @@ from app.utils.decorators import staff_required
 from app import db
 from decimal import Decimal
 from datetime import datetime
+import pdfkit
 
 @bp.route('/')
 @login_required
@@ -160,3 +161,50 @@ def update_payment(sale_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+
+# RECEIPT/INVOICE DOWNLOAD
+
+@bp.route('/receipt/<int:receipt_id>/download')
+def download_receipt_pdf(receipt_id):
+    sale = Sale.query.get_or_404(receipt_id)
+    customer = sale.customer  # Ensure sale.customer exists
+    # 1️⃣  Fetch the receipt record from your database
+      # Assemble receipt dictionary with id_number included
+    receipt = {
+        "number": sale.id,
+        "date": sale.date.strftime("%d-%b-%Y"),
+        "time": sale.date.strftime("%I:%M %p"),
+        "user": sale.user.username,
+        "customer_name": customer.full_name,
+        "customer_phone": customer.phone_number,
+        "customer_id": customer.id_number,  # ✅ this is key!
+        "items": [
+            {
+                "name": item.device.model,
+                "imei": item.device.imei,
+                "qty": 1,
+                "price": item.price,
+                "total": item.price
+            }
+            for item in sale.items
+        ],
+        "total": sale.total
+    }
+
+    # 2️⃣  Render the same HTML template you show in the browser
+    html = render_template("receipt.html", receipt=receipt)
+
+    # 3️⃣  Generate PDF (use explicit config if wkhtmltopdf isn't on PATH)
+    # config = pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')
+    # pdf = pdfkit.from_string(html, False, configuration=config)
+    pdf = pdfkit.from_string(html, False)
+
+    # 4️⃣  Send it back as a download
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = (
+        f'attachment; filename=receipt_{receipt.id}.pdf'
+    )
+    return response
