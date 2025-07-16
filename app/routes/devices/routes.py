@@ -67,8 +67,26 @@ def add_device():
     form = DeviceForm()
     specs_form = DeviceSpecsForm()
 
+    # Prefill only on GET request
+    if request.method == 'GET':
+        specs_form.details.data = """\
+• RAM:
+• Storage:
+• Battery:
+• Processor:
+• Rear Camera:
+• Front Camera:
+• Display:
+• Network:
+• OS:
+• Charging:
+• Fingerprint:
+• Ports:
+• Extras:
+"""
+
     if form.validate_on_submit() and specs_form.validate_on_submit():
-        # Slug generation with uniqueness check
+        # Generate unique slug
         base_slug = slugify(f"{form.brand.data} {form.model.data}")
         slug = base_slug
         counter = 1
@@ -76,7 +94,9 @@ def add_device():
             slug = f"{base_slug}-{counter}"
             counter += 1
 
+        # Get optional IMEI (skip if featured device)
         imei = form.imei.data.strip() if form.imei.data else None
+
         device = Device(
             imei=imei if not form.featured.data else None,
             brand=form.brand.data,
@@ -93,6 +113,8 @@ def add_device():
         )
 
         device.status = 'featured' if form.featured.data else 'available'
+
+        # Handle image upload
         if form.image.data:
             try:
                 filename = device.add_image(form.image.data)
@@ -100,14 +122,15 @@ def add_device():
             except Exception as e:
                 flash(f"Image upload failed: {str(e)}", 'warning')
 
-        if not specs_form.details.data:
+        # Ensure specs are provided
+        if not specs_form.details.data.strip():
             flash("Please provide full specifications.", "warning")
             return render_template('devices/add.html', form=form, specs_form=specs_form)
 
-        device.specs = DeviceSpecs(details=specs_form.details.data)
-        
-        db.session.add(device)
+        # Attach specs
+        device.specs = DeviceSpecs(details=specs_form.details.data.strip())
 
+        db.session.add(device)
         try:
             db.session.commit()
             flash(f'{device.brand} {device.model} added successfully', 'success')
@@ -117,6 +140,7 @@ def add_device():
             flash(f'Error adding device: {str(e)}', 'danger')
 
     return render_template('devices/add.html', form=form, specs_form=specs_form)
+
 
 
 # VIEW DEVICE
