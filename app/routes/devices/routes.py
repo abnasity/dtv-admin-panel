@@ -220,7 +220,22 @@ def featured_devices():
 
     return render_template('devices/featured.html', devices=devices, specs_dict=specs_dict)
 
+# DELETE FEATURED DEVICES
+@bp.route('/devices/<int:device_id>/delete', methods=['POST'])
+@login_required
+def delete_featured(device_id):
+    if not current_user.is_admin():  # Ensure only admins can delete
+        flash("Unauthorized", "danger")
+        return redirect(url_for('public.home'))
 
+    device = Device.query.get_or_404(device_id)
+
+    # Optional: delete associated image files from static if needed
+
+    db.session.delete(device)
+    db.session.commit()
+    flash(f"Device '{device.brand} {device.model}' has been deleted.", "success")
+    return redirect(url_for('devices.featured_devices'))
 
 # LEARN MORE
 @bp.route('/learn_more/<device_slug>')
