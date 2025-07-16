@@ -7,10 +7,16 @@
   .carousel-caption-bg {
     background-color: rgba(0, 0, 0, 0.6); /* Dark semi-transparent */
     color: white;
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 0.5rem;
     max-width: 90%;
   }
+
+  @media (min-width: 768px) {
+  .carousel-caption-bg {
+    padding: 1.5rem;
+  }
+}
 
 
   .festive-banner {
@@ -19,11 +25,17 @@
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: rgba(71, 70, 70, 0.85);
-    padding: 2rem;
+    padding: 1rem;
     border-radius: 8px;
-    width: 80%;
+    width: 90%;
     max-width: 600px;
   }
+
+  @media (min-width: 768px) {
+  .festive-banner {
+    padding: 2rem;
+  }
+}
 
   .festive-title {
     font-size: 2rem;
@@ -59,9 +71,16 @@
   }
 
   .carousel-item {
+  height: auto;
+  min-height: 300px;
+}
+
+@media (min-width: 768px) {
+  .carousel-item {
     height: 500px;
-    position: relative;
   }
+}
+
 
   .carousel-item img {
     object-fit: cover;
@@ -80,6 +99,43 @@
   z-index: 10;
 }
 
+.festive-title {
+  font-size: 1.5rem;
+}
+
+.festive-subtitle {
+  font-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  .festive-title {
+    font-size: 2rem;
+  }
+
+  .festive-subtitle {
+    font-size: 1.2rem;
+  }
+}
+
+.image-wrapper {
+  height: 220px;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+}
+
+.product-image {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+}
+
+
+
 
 </style>
 
@@ -90,8 +146,9 @@
   <div class="carousel-inner">
 
     <div class="carousel-item active" data-bs-interval="5000">
-      <div class="row g-0">
-        <div class="col-md-6">
+     <div class="row g-0 flex-column flex-md-row">
+     <div class="col-12 col-md-6">
+
           <img src="https://media.istockphoto.com/id/1316900410/photo/samsung-galaxy-a32-5g.jpg?s=612x612&w=0&k=20&c=px7rssNsW6PfhqD6l9L8w1P7CqV1MBzqZedXQjwKEbc=" class="d-block w-100" alt="Smartphone">
         </div>
         <div class="col-md-6 d-flex align-items-center justify-content-center">
@@ -161,7 +218,7 @@
   <!-- Featured Products -->
   <section class="container mb-5">
   <h1 class="text-center fw-bold mb-4">Featured Products</h1>
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
     
 {% for device in featured_devices %}
     <div class="col">
@@ -184,10 +241,12 @@
         {% elif loop.index == 8 %}
           <span class="badge bg-danger position-absolute top-0 start-0 m-2">HOT</span>
         {% endif %}
+<div class="image-wrapper">
+   <img src="{{ url_for('static', filename='images/devices/' ~ device.brand|lower ~ '/' ~ device.main_image) }}"
+     class="card-img-top product-image" loading="lazy" alt="{{ device.model }}">
 
-    <img src="{{ url_for('static', filename='images/devices/' ~ device.brand|lower ~ '/' ~ device.main_image) }}"
-     class="card-img-top" loading="lazy" alt="{{ device.model }}">
-
+</div>
+   
     
     <div class="card-body text-center">
       <p class="card-text fw-semibold">{{ device.brand }} {{ device.model }}</p>
