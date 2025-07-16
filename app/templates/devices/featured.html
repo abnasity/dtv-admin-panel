@@ -8,38 +8,50 @@
 
     {% if devices %}
         <div class="row">
-            {% for device in devices %}
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <img src="{{ device.image_url }}" class="card-img-top" alt="{{ device.model }}">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ device.brand }} {{ device.model }}</h5>
-                            <p class="card-text text-muted">Ksh {{ device.purchase_price }}</p>
-                        
-                            {% if specs_dict[device.id] %}
-                                <button class="btn btn-sm btn-outline-secondary w-100 mt-2 mb-2"
-                                        type="button" data-bs-toggle="collapse" data-bs-target="#specs-{{ device.id }}">
-                                    View Specifications
-                                </button>
+           {% for device in devices %}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <img src="{{ device.image_url }}" class="card-img-top" alt="{{ device.model }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ device.brand }} {{ device.model }}</h5>
+                <p class="card-text text-muted">Ksh {{ device.purchase_price }}</p>
 
-                                <div class="collapse" id="specs-{{ device.id }}">
-                                    <ul class="list-group list-group-flush">
-                                        {% for label, value in specs_dict[device.id].items() %}
-                                            <li class="list-group-item d-flex justify-content-between">
-                                                <span class="text-muted">{{ label }}</span>
-                                                <span>{{ value }}</span>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            {% endif %}
-                        </div>
+                {% if specs_dict[device.id] %}
+                    <button class="btn btn-sm btn-outline-secondary w-100 mt-2 mb-2"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#specs-{{ device.id }}">
+                        View Specifications
+                    </button>
+
+                    <div class="collapse" id="specs-{{ device.id }}">
+                        <ul class="list-group list-group-flush">
+                            {% for label, value in specs_dict[device.id].items() %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="text-muted">{{ label }}</span>
+                                    <span>{{ value }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     </div>
-                </div>
-            {% endfor %}
+                {% endif %}
+
+                {% if current_user.is_authenticated and current_user.is_admin() %}
+                    <form method="POST" action="{{ url_for('devices.delete_featured', device_id=device.id) }}" onsubmit="return confirm('Are you sure you want to delete this device?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn btn-sm btn-danger w-100 mt-3">
+                            <i class="fas fa-trash-alt me-1"></i> Delete
+                        </button>
+                    </form>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
         </div>
     {% else %}
         <p class="text-muted">No featured devices found.</p>
     {% endif %}
+
 </div>
 {% endblock %}
