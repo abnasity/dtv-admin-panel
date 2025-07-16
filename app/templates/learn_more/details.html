@@ -4,9 +4,13 @@
 
 {% block content %}
 <div class="container py-5">
-  <div class="row">
-    <div class="col-md-5">
-      <img src="{{ device.image_url }}" alt="{{ device.brand }} {{ device.model }}" class="img-fluid rounded shadow-sm">
+   <div class="row align-items-start product-details-row">
+    <div class="col-md-5 d-flex justify-content-center md-4">
+      <div class="product-detail-image-wrapper w-100">
+         <img src="{{ device.image_url }}" alt="{{ device.brand }} {{ device.model }}" 
+           class="img-fluid rounded shadow-sm product-detail-image">
+      </div>
+     
     </div>
     <div class="col-md-7">
       <h2 class="fw-bold fs-2 mb-3">{{ device.brand }} {{ device.model }}</h2>
@@ -17,23 +21,60 @@
 
       <h4 class="fw-semibold fs-4">Product Details</h4>
 
-      {% if specs %}
-      <h5 class="mt-3 mb-3 text-muted">Specifications</h5>
-      <ul class="list-group mb-4" id="spec-list">
-        {% for label, value in specs.items() %}
-          <li class="list-group-item py-2">
-            <strong class="text-capitalize">{{ label }}:</strong>
-            <span class="float-end">{{ value }}</span>
-          </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-        <p class="text-muted">Specifications not available for this device.</p>
-      {% endif %}
+    {% if device.specs and device.specs.details %}
+  <button class="btn btn-sm btn-outline-secondary w-100 mt-2 mb-2" 
+          type="button" data-bs-toggle="collapse" data-bs-target="#specs-{{ device.id }}">
+    View Specifications
+  </button>
+
+  <div class="collapse" id="specs-{{ device.id }}">
+    <div class="card mt-2">
+      <div class="card-body">
+        <h6 class="card-title text-muted">Product Details</h6>
+        <div class="product-description small" style="white-space: pre-line;">
+          {{ device.specs.details | safe }}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
 
       <a href="{{ url_for('customers.login') }}" class="btn btn-primary btn-lg me-2">Login to Buy</a>
       <a href="{{ url_for('public.home') }}" class="btn btn-outline-secondary btn-lg">Back to Home</a>
     </div>
   </div>
 </div>
+
+<style>
+
+.product-detail-image-wrapper {
+  height: 400px;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  position: relative;
+}
+
+
+.product-detail-image {
+  max-height: 100%;
+  width: auto;
+  object-fit: contain;
+}
+
+.product-details-row {
+  min-height: 500px;
+  align-items: flex-start;
+}
+
+
+</style>
+
+
 {% endblock %}

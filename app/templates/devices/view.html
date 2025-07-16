@@ -18,6 +18,15 @@
                         <a href="{{ url_for('devices.inventory') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left me-1"></i>Back to Inventory
                         </a>
+                         <!-- DELETE FORM FOR ADMINS -->
+                        {% if current_user.is_authenticated and current_user.is_admin() %}
+                        <form method="POST" action="{{ url_for('devices.delete_inventory', device_id=device.id) }}" onsubmit="return confirm('Delete this device?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn btn-sm btn-danger w-50 mt-2">
+                            <i class="fas fa-trash-alt me-1"></i> Delete
+                            </button>
+                        </form>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-body">

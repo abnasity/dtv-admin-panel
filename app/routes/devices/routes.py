@@ -15,7 +15,7 @@ def inventory():
     imei = request.args.get('imei')
 
     # Start with a base query
-    query = Device.query.filter(Device.featured == False)
+    query = Device.query.filter(Device.featured == False, Device.deleted == False)
 
     if brand:
         query = query.filter_by(brand=brand)
@@ -196,6 +196,41 @@ def edit_device(imei):
                 flash(f'Error updating device: {str(e)}', 'danger')
 
     return render_template('devices/edit.html', form=form, specs_form=specs_form, device=device)
+
+# DELETE DEVICE
+@bp.route('/devices/<int:device_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_inventory(device_id):
+    if not current_user.is_admin():
+        flash("Unauthorized", "danger")
+        return redirect(url_for('public.home'))
+
+    device = Device.query.get_or_404(device_id)
+    device.deleted = True  # ← Soft delete instead of real delete
+    db.session.commit()
+    flash(f"Device '{device.brand} {device.model}' has been deleted.", "success")
+
+    return redirect(url_for('devices.inventory'))
+
+# DELETED INVENTORY
+@bp.route('/inventory/deleted')
+@login_required
+@admin_required
+def deleted_inventory():
+    devices = Device.query.filter_by(deleted=True).order_by(Device.id.desc()).all()
+    return render_template('devices/deleted_inventory.html', devices=devices)
+
+# RESTORE DELETED INVENTORY
+@bp.route('/devices/<int:device_id>/restore', methods=['POST'])
+@login_required
+@admin_required
+def restore_device(device_id):
+    device = Device.query.get_or_404(device_id)
+    device.deleted = False
+    db.session.commit()
+    flash(f"Device '{device.brand} {device.model}' has been restored.", "success")
+    return redirect(url_for('devices.deleted_inventory'))
 
 
 # FEATURED DEVICES

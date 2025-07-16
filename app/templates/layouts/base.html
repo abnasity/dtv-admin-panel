@@ -105,6 +105,9 @@
           <i class="fas fa-mobile-alt text-info me-2 small"></i> Sold Devices
         </a>
       </li>
+      <li><a class="dropdown-item" href="{{ url_for('devices.deleted_inventory') }}">
+        <i class="fas fa-trash-restore-alt me-2"></i> Deleted Inventory
+      </a></li>
       <li> <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('devices.featured_devices') }}">
         <i class="fas fa-star"></i> Featured Devices
     </a></li>

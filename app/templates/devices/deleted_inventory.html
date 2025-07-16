@@ -1,0 +1,36 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Deleted Inventory{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Deleted Devices</h2>
+
+  {% if devices %}
+    <div class="row">
+      {% for device in devices %}
+        <div class="col-md-4 mb-4">
+          <div class="card shadow-sm h-100">
+            <img src="{{ device.image_url }}" class="card-img-top" alt="{{ device.brand }} {{ device.model }}">
+            <div class="card-body">
+              <h5 class="card-title">{{ device.brand }} {{ device.model }}</h5>
+              <p class="card-text text-muted">IMEI: {{ device.imei or "N/A" }}</p>
+              <p class="text-danger fw-bold">Marked as deleted</p>
+
+              <!-- Optional Restore Button -->
+              <form method="POST" action="{{ url_for('devices.restore_device', device_id=device.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-sm btn-outline-success w-100">
+                  <i class="fas fa-undo me-1"></i> Restore
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted">No deleted devices found.</p>
+  {% endif %}
+</div>
+{% endblock %}
