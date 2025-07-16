@@ -4,65 +4,64 @@
 <h2 class="mt-4">Assigned Orders</h2>
 
 {% if orders %}
-<div class="table-responsive mt-3">
+<!-- DESKTOP TABLE -->
+<div class="table-responsive d-none d-md-block mt-3">
     <table class="table table-striped table-hover align-middle">
         <thead class="table-dark">
             <tr>
-                <th class="text-primary">#Order ID</th>
-                <th class="text-primary">Customer</th>
-                <th class="text-primary">Phone Number</th>
-                <th class="text-primary">Device</th>
-                <th class="text-primary">Status</th>
-                <th class="text-primary">Created At</th>
-                <th class="text-primary">Delivery Address</th>
-                <th class="text-primary">Payment Option</th>
-                <th class="text-primary">Action</th>
+                <th>#Order ID</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Device</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Address</th>
+                <th>Payment</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             {% for order in orders %}
             <tr>
                 <td>#{{ order.id }}</td>
-                <td>
-                <strong>{{ order.customer.full_name }}</strong><br>
-                <small>ID No: {{ order.customer.id_number or "N/A" }}</small>
-                </td>
+                <td><strong>{{ order.customer.full_name }}</strong><br><small>ID No: {{ order.customer.id_number or "N/A" }}</small></td>
                 <td>{{ order.customer.phone_number }}</td>
-
-                 {% for item in order.items %}
-                <td>{{ item.device.brand }} {{ item.device.model }}</td> 
-                {% endfor %}
                 <td>
-                    <span class="badge fs-6 bg-{{ 
-                        'secondary' if order.status == 'pending' else 
-                        'primary' if order.status == 'awaiting_approval' else 
-                        'success' if order.status == 'approved' else 
-                        'danger' if order.status == 'cancelled' else 'dark' 
-                    }}">{{ order.status | capitalize }}</span>
+                    {% for item in order.items %}
+                        {{ item.device.brand }} {{ item.device.model }}
+                    {% endfor %}
+                </td>
+                <td>
+                    <span class="badge bg-{{ 
+                    'secondary' if order.status == 'pending' else 
+                    'primary' if order.status == 'awaiting_approval' else 
+                    'success' if order.status == 'approved' else 
+                    'danger' if order.status == 'cancelled' else 'dark' 
+                }} fw-semibold px-3 py-2" style="font-size: 1rem;">
+                    {{ order.status | capitalize }}
+                </span>
+
                 </td>
                 <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                 <td>{{ order.delivery_address }}</td>
                 <td>{{ order.payment_option }}</td>
-
                 <td>
                     <a href="{{ url_for('auth.view_order_staff', order_id=order.id) }}" class="btn btn-sm btn-primary mb-2">
                         <i class="fas fa-eye me-1"></i> View
                     </a>
 
                     {% if order.status == 'approved' %}
-                    <!-- Mark as Failed -->
                     <form action="{{ url_for('staff.mark_task_failed', order_id=order.id) }}" method="POST" class="d-flex align-items-center mb-2">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="text" name="reason" class="form-control form-control-sm me-2" placeholder="Failure reason" required style="max-width: 200px;">
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to mark this task as failed? This action cannot be undone.')">
+                        <button type="submit" class="btn btn-sm btn-danger">
                             <i class="fas fa-times-circle me-1"></i> Failed
                         </button>
                     </form>
 
-                    <!-- Mark as Successful -->
                     <form action="{{ url_for('staff.mark_task_success', order_id=order.id) }}" method="POST" class="d-flex align-items-center">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Are you sure you want to mark this task as successful? This action cannot be undone.')">
+                        <button type="submit" class="btn btn-sm btn-success">
                             <i class="fas fa-check-circle me-1"></i> Successful
                         </button>
                     </form>
@@ -73,6 +72,57 @@
         </tbody>
     </table>
 </div>
+
+<!-- MOBILE CARDS -->
+<div class="d-block d-md-none mt-3">
+    {% for order in orders %}
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <h5 class="card-title text-primary mb-1">Order #{{ order.id }}</h5>
+            <p class="mb-1"><strong>Customer:</strong> {{ order.customer.full_name }} <br> <small>ID No: {{ order.customer.id_number or 'N/A' }}</small></p>
+            <p class="mb-1"><strong>Phone:</strong> {{ order.customer.phone_number }}</p>
+            <p class="mb-1"><strong>Device:</strong>
+                {% for item in order.items %}
+                    {{ item.device.brand }} {{ item.device.model }}
+                {% endfor %}
+            </p>
+            <p class="mb-1"><strong>Status:</strong> 
+                <span class="badge bg-{{ 
+                    'secondary' if order.status == 'pending' else 
+                    'primary' if order.status == 'awaiting_approval' else 
+                    'success' if order.status == 'approved' else 
+                    'danger' if order.status == 'cancelled' else 'dark' 
+                }}">{{ order.status | capitalize }}</span>
+            </p>
+            <p class="mb-1"><strong>Created:</strong> {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p class="mb-1"><strong>Address:</strong> {{ order.delivery_address }}</p>
+            <p class="mb-2"><strong>Payment:</strong> {{ order.payment_option }}</p>
+
+            <a href="{{ url_for('auth.view_order_staff', order_id=order.id) }}" class="btn btn-sm btn-primary mb-2 w-100">
+                <i class="fas fa-eye me-1"></i> View
+            </a>
+
+            {% if order.status == 'approved' %}
+            <form action="{{ url_for('staff.mark_task_failed', order_id=order.id) }}" method="POST" class="d-flex flex-column mb-2">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="text" name="reason" class="form-control form-control-sm mb-2" placeholder="Failure reason" required>
+                <button type="submit" class="btn btn-sm btn-danger w-100">
+                    <i class="fas fa-times-circle me-1"></i> Mark as Failed
+                </button>
+            </form>
+
+            <form action="{{ url_for('staff.mark_task_success', order_id=order.id) }}" method="POST" class="d-grid">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-sm btn-success w-100">
+                    <i class="fas fa-check-circle me-1"></i> Mark as Successful
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
 {% else %}
     <p class="text-muted mt-3">No orders have been assigned to you.</p>
 {% endif %}
