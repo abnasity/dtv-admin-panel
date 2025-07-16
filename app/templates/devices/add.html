@@ -55,7 +55,7 @@ canvas.drawing, canvas.drawingBuffer {
                         
                         <div class="mb-3">
                             {{ form.brand.label(class="form-label") }}
-                            {{ form.brand(class="form-control") }}
+                            {{ form.brand(class="form-control", required=true) }}
                             {% if form.brand.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.brand.errors %}
@@ -67,7 +67,7 @@ canvas.drawing, canvas.drawingBuffer {
                         
                         <div class="mb-3">
                             {{ form.model.label(class="form-label") }}
-                            {{ form.model(class="form-control") }}
+                            {{ form.model(class="form-control", required=true) }}
                             {% if form.model.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.model.errors %}
@@ -79,7 +79,7 @@ canvas.drawing, canvas.drawingBuffer {
 
                         <div class="mb-3">
                             {{ form.ram.label(class="form-label") }}
-                            {{ form.ram(class="form-control") }}
+                            {{ form.ram(class="form-control", required=true) }}
                             {% if form.ram.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.ram.errors %}
@@ -91,7 +91,7 @@ canvas.drawing, canvas.drawingBuffer {
 
                         <div class="mb-3">
                             {{ form.rom.label(class="form-label") }}
-                            {{ form.rom(class="form-control") }}
+                            {{ form.rom(class="form-control", required=true) }}
                             {% if form.rom.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.rom.errors %}
@@ -105,7 +105,7 @@ canvas.drawing, canvas.drawingBuffer {
                             {{ form.purchase_price.label(class="form-label") }}
                             <div class="input-group">
                                 <span class="input-group-text">Ksh</span>
-                                {{ form.purchase_price(class="form-control") }}
+                                {{ form.purchase_price(class="form-control", required=true) }}
                             </div>
                             {% if form.purchase_price.errors %}
                             <div class="invalid-feedback d-block">
@@ -121,7 +121,7 @@ canvas.drawing, canvas.drawingBuffer {
                             {{ form.price_cash.label(class="form-label") }}
                             <div class="input-group">
                                 <span class="input-group-text">Ksh</span>
-                                {{ form.price_cash(class="form-control") }}
+                                {{ form.price_cash(class="form-control", required=true) }}
                             </div>
                             {% if form.price_cash.errors %}
                             <div class="invalid-feedback d-block">
@@ -136,7 +136,7 @@ canvas.drawing, canvas.drawingBuffer {
                             {{ form.price_credit.label(class="form-label") }}
                             <div class="input-group">
                                 <span class="input-group-text">Ksh</span>
-                                {{ form.price_credit(class="form-control") }}
+                                {{ form.price_credit(class="form-control", required=true) }}
                             </div>
                             {% if form.price_credit.errors %}
                             <div class="invalid-feedback d-block">
@@ -162,11 +162,25 @@ canvas.drawing, canvas.drawingBuffer {
                         
 
 <hr class="my-4">
-<h4>Device Specifications</h4>
+<h4 class="mb-3">Device Specifications</h4>
 
 <div class="mb-3">
     {{ specs_form.details.label(class="form-label") }}
-    {{ specs_form.details(class="form-control", rows=10, placeholder="Enter full specs, features, key highlights, etc.") }}
+    {{ specs_form.details(class="form-control", rows=10,required=true, placeholder="""
+• RAM:
+• Storage:
+• Battery:
+• Processor:
+• Rear Camera:
+• Front Camera:
+• Display:
+• Network:
+• OS:
+• Charging:
+• Fingerprint:
+• Ports:
+• Extras:
+""") }}
 </div>
 
 
