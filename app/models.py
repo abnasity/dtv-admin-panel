@@ -301,6 +301,7 @@ class Device(db.Model):
     specs_id = db.Column(db.Integer, db.ForeignKey('device_specs.id'), nullable=True)
     slug = db.Column(db.String(100), unique=True, index=True)
     featured = db.Column(db.Boolean, default=False)
+    deleted = db.Column(db.Boolean, default=False)
     
 
  
