@@ -145,7 +145,7 @@ def logout():
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
 
-    # ✅ Clear both session and remember_token cookies
+    # Clear both session and remember_token cookies
     response.set_cookie('session', '', expires=0)
     response.set_cookie('remember_token', '', expires=0)
 
@@ -599,29 +599,4 @@ def mark_all_notifications_read():
 def rejected_orders():
     orders = CustomerOrder.query.filter_by(customer_id=current_user.id, status='rejected').order_by(CustomerOrder.created_at.desc()).all()
     return render_template('customers/rejected_orders.html', orders=orders)
-
-
-# DELETE a single notification
-@bp.route('/notifications/delete/<int:notification_id>', methods=['POST'])
-@login_required
-def delete_notification(notification_id):
-    notif = Notification.query.get_or_404(notification_id)
-    if notif.user_id != current_user.id or current_user.role != 'customer':
-        abort(403)
-    db.session.delete(notif)
-    db.session.commit()
-    flash('Notification deleted.', 'success')
-    return redirect(request.referrer or url_for('customers.dash'))
-
-
-# CLEAR all notifications
-@bp.route('/notifications/clear', methods=['POST'])
-@login_required
-def clear_notifications():
-    if current_user.role != 'customer':
-        abort(403)
-    Notification.query.filter_by(user_id=current_user.id).delete()
-    db.session.commit()
-    flash('All notifications cleared.', 'info')
-    return redirect(url_for('customers.notifications'))
 
