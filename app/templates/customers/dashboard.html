@@ -31,20 +31,18 @@
     <div class="row">
       {% for product in products %}
         {% if product %}
-        <div class="col-md-4 mb-4">
+        <div class="col-12 col-sm-6 col-md-4 mb-4">
+
+
           <div class="card shadow-sm h-100">
             <div class="product-image-container position-relative" style="height: 200px; background-color: #f8f9fa;">
-              <img loading="lazy"
-            src="{{ product.image_url }}"
-            class="img-fluid"
-            alt="{{ product.brand }} {{ product.model }}"
-            style="max-height: 220px; width: auto; display: block; margin: auto; object-fit: contain;"
-            onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-device.jpg') }}';"
-            data-debug-info="Brand: {{ product.brand }}, Model: {{ product.model }}, Image: {{ product.main_image }}">
-
-                   onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-device.jpg') }}';"
-                   data-debug-info="Brand: {{ product.brand }}, Model: {{ product.model }}, Image: {{ product.main_image }}">
-
+             <img loading="lazy"
+              src="{{ product.image_url }}"
+              class="img-fluid h-100 w-100 object-fit-contain"
+              alt="{{ product.brand }} {{ product.model }}"
+              style="max-height: 220px;"
+              onerror="this.onerror=null; this.src={{ url_for('static', filename='images/default-device.jpg') | tojson | safe }};"
+              data-debug-info="Brand: {{ product.brand }}, Model: {{ product.model }}, Image: {{ product.main_image }}">
               {% if product.color %}
                 <span class="badge bg-primary position-absolute" style="bottom: 10px; right: 10px;">
                   {{ product.color|capitalize }}
@@ -148,6 +146,19 @@
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
   }
+
+  @media (max-width: 576px) {
+  .card-title {
+    font-size: 1rem;
+  }
+  .card-text {
+    font-size: 0.9rem;
+  }
+  .btn {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
 </style>
 
 {% endblock %}
