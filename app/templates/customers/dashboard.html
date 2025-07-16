@@ -28,12 +28,10 @@
   <h2 class="mb-4 text-center">Available Phones</h2>
 
   {% if products %}
-    <div class="row">
+    <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-2">
       {% for product in products %}
         {% if product %}
-        <div class="col-12 col-sm-6 col-md-4 mb-4">
-
-
+        <div class="col">
           <div class="card shadow-sm h-100">
             <div class="product-image-container position-relative" style="height: 200px; background-color: #f8f9fa;">
              <img loading="lazy"
@@ -105,7 +103,7 @@
               <!-- Add to Cart Button -->
               <form method="POST" action="{{ url_for('customers.add_to_cart', device_id=product.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <button type="submit" class="btn btn-primary w-100" {% if not product.is_available %}disabled{% endif %}>
+                <button type="submit" class="btn btn-primary btn-sm w-100" {% if not product.is_available %}disabled{% endif %}>
                   <i class="fas fa-cart-plus me-1"></i> 
                   {% if product.is_available %}Add to Cart{% else %}Out of Stock{% endif %}
                 </button>
@@ -157,6 +155,33 @@
   .btn {
     font-size: 0.85rem;
     padding: 0.4rem 0.8rem;
+  }
+}
+@media (max-width: 576px) {
+  .card-title {
+    font-size: 0.9rem;
+  }
+
+  .card-text {
+    font-size: 0.8rem;
+  }
+
+  .btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.7rem;
+  }
+
+  .product-description {
+    font-size: 0.75rem;
+  }
+
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .card-body {
+    padding: 0.75rem;
   }
 }
 </style>
