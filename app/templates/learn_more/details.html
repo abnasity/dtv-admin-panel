@@ -19,8 +19,6 @@
         {{ "{:,.2f}".format(device.price_credit or 0) }} (Credit)
       </h4>
 
-      <h4 class="fw-semibold fs-4">Product Details</h4>
-
     {% if device.specs and device.specs.details %}
   <button class="btn btn-sm btn-outline-secondary w-100 mt-2 mb-2" 
           type="button" data-bs-toggle="collapse" data-bs-target="#specs-{{ device.id }}">
