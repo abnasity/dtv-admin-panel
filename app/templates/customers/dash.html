@@ -103,13 +103,7 @@
                 <a href="{{ note.link or url_for('customers.dashboard') }}" class="btn btn-sm btn-outline-info mb-2">
                   View
                 </a>
-                <form action="{{ url_for('customers.delete_notification', notification_id=note.id) }}"
-                      method="POST" onsubmit="return confirm('Delete this notification?');">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                  <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </form>
+            
               </div>
             </li>
           {% endfor %}
