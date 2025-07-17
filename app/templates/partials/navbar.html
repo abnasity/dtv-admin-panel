@@ -76,6 +76,12 @@
       <li> <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('devices.featured_devices') }}">
         <i class="fas fa-star"></i> Featured Devices
     </a></li>
+    <li>
+       <a class="dropdown-item d-flex align-items-center small"  href="{{ url_for('devices.deleted_featured') }}" class="btn btn-outline-danger">
+      <i class="fas fa-trash-alt me-1"></i> View Deleted Featured Devices
+    </a>
+    </li>
+   
     {% else %}
       <li>
         <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('staff.view_sold_items') }}">
