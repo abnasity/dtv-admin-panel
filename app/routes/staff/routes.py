@@ -59,7 +59,7 @@ def mark_task_failed(order_id):
     if order.customer:
         notif_link_customer = url_for('customers.order_detail', order_id=order.id)
         db.session.add(Notification(
-            user_id=order.customer.id,
+            customer_id=order.customer.id,
             message=f"Your order #{order.id} failed. Reason: {reason}",
             recipient_type='customer',
             link=notif_link_customer
@@ -106,7 +106,7 @@ def mark_task_success(order_id):
     if order.customer:
         notif_link_customer = url_for('customers.order_detail', order_id=order.id)
         db.session.add(Notification(
-            user_id=order.customer.id,
+            customer_id=order.customer.id,
             message=f"Your order #{order.id} was completed successfully. Thank you for shopping with us!",
             recipient_type='customer',
             link=notif_link_customer

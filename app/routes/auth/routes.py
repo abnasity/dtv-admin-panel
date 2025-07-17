@@ -161,6 +161,11 @@ def notifications():
 @staff_required
 def mark_awaiting_approval(order_id):
     order = CustomerOrder.query.get_or_404(order_id)
+    
+    if order.status == 'awaiting_approval':
+        flash(f"Order #{order.id} is already marked as awaiting approval.", "warning")
+        return redirect(url_for('auth.view_order_staff', order_id=order.id))
+    
     order.status = 'awaiting_approval'
     db.session.commit()
 
@@ -518,7 +523,7 @@ def approve_order(order_id):
         # Notify the customer
         if order.customer and isinstance(order.customer, Customer):
             db.session.add(Notification(
-                user_id=order.customer.id,
+                Customer_id=order.customer.id,
                 message=f"Your order #{order.id} was rejected. Device(s) unavailable: {sold_names_str}",
                 recipient_type='customer',
                 link=notif_link_customer
@@ -566,7 +571,7 @@ def approve_order(order_id):
         # Notify the customer
         if order.customer:
             db.session.add(Notification(
-                user_id=order.customer.id,
+                customer_id=order.customer.id,
                 message=f"Your order #{order.id} was rejected. Device(s) in use: {conflict_names_str}",
                 recipient_type='customer',
                 link=notif_link_customer
@@ -600,7 +605,7 @@ def approve_order(order_id):
     notif_link_customer = url_for('customers.order_detail', order_id=order.id)
     if order.customer:
         db.session.add(Notification(
-            user_id=order.customer.id,
+            customer_id=order.customer.id,
             message=f"Your order #{order.id} has been approved! You will be contacted shortly.",
             recipient_type='customer',
             link=notif_link_customer
@@ -847,26 +852,3 @@ def failed_orders():
     orders = CustomerOrder.query.filter_by(status='failed').all()
     return render_template('admin/failed_orders.html', orders=orders)
 
-# DELETE NOTIFICATIONS
-@bp.route('/notifications/delete/<int:notification_id>', methods=['POST'])
-@login_required
-def delete_notification(notification_id):
-    notif = Notification.query.get_or_404(notification_id)
-
-    # Optional: only allow user to delete their own notifications
-    if notif.user_id != current_user.id:
-        abort(403)
-
-    db.session.delete(notif)
-    db.session.commit()
-    flash('Notification deleted.', 'success')
-    return redirect(request.referrer or url_for('auth.notifications'))  # fallback
-
-# CLEAR NOTIFICATIONS
-@bp.route('/notifications/clear', methods=['POST'])
-@login_required
-def clear_notifications():
-    Notification.query.filter_by(user_id=current_user.id).delete()
-    db.session.commit()
-    flash('All notifications cleared.', 'info')
-    return redirect(request.referrer or url_for('auth.notifications'))
