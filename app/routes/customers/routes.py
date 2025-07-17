@@ -7,8 +7,8 @@ from datetime import datetime
 from app.routes.customers import bp
 from app.utils.helpers import assign_staff_to_order, get_device_debug_info
 from app.utils.email import send_customer_reset_email
-from sqlalchemy import and_
-from sqlalchemy.orm import load_only 
+from sqlalchemy import and_, func
+from sqlalchemy.orm import load_only , aliased
 import os
 
 
@@ -160,33 +160,51 @@ def logout():
 @login_required
 def dashboard():
     if not isinstance(current_user, Customer):
-        abort(403, description="Unauthorized access: Customers only.")
+        abort(403)
 
-    # Get available products
-    products = Device.query.filter_by(status='available', featured=False).all()
+    # Subquery to get one device per unique model spec
+    subq = (
+        db.session.query(
+            Device.brand,
+            Device.model,
+            Device.ram,
+            Device.rom,
+            Device.color,
+            func.min(Device.id).label('min_id')
+        )
+        .filter(
+            Device.status == 'available',
+            Device.deleted == False,
+            Device.featured == False
+        )
+        .group_by(Device.brand, Device.model, Device.ram, Device.rom, Device.color)
+        .subquery()
+    )
 
-    
-    if current_app.debug:
-        for device in products:
-            device.debug_info = get_device_debug_info(device)
-    
-        # Add file existence info to each device
+    DeviceAlias = aliased(Device)
+    products = (
+        db.session.query(DeviceAlias)
+        .join(subq, DeviceAlias.id == subq.c.min_id)
+        .all()
+    )
+
+    # Optional: attach file existence info
     for device in products:
         if device.image_url.startswith('/static/'):
-            static_path = device.image_url[1:]  # Remove leading slash
+            static_path = device.image_url[1:]
             device.file_exists = os.path.exists(os.path.join(current_app.root_path, static_path))
         else:
             device.file_exists = False
-    
-    # Get customer notifications (last 5)
+
     notifications = Notification.query.filter(
         Notification.user_id == current_user.id,
         Notification.recipient_type == 'customer'
     ).order_by(Notification.created_at.desc()).limit(5).all()
 
-    return render_template('customers/dashboard.html', 
-                         products=products,
-                         notifications=notifications)
+    return render_template('customers/dashboard.html',
+                           products=products,
+                           notifications=notifications)
+
     
 
 # CUSTOMER DASH (Order-focused dashboard)
