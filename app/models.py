@@ -512,7 +512,8 @@ class Sale(db.Model):
 class Notification(db.Model):
     __tablename__ = 'notifications'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     message = db.Column(db.String(255), nullable=False)
     link = db.Column(db.String(255))
     is_read = db.Column(db.Boolean, default=False)
