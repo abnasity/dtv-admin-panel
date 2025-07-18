@@ -225,9 +225,10 @@ class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)  
+    quantity = db.Column(db.Integer, default=1)
     status = db.Column(db.String(20), default='active')  # active, ordered, received 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    
     # Relationships
     device = db.relationship(
         "Device",
@@ -239,7 +240,8 @@ class CartItem(db.Model):
     )
 
     def __repr__(self):
-        return f"<CartItem customer={self.customer_id} device={self.device_id}>"
+        return f"<CartItem customer={self.customer_id} device={self.device_id} quantity={self.quantity}>"
+
 
 
 # CUSTOMER ORDER ITEM MODEL
