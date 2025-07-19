@@ -10,8 +10,10 @@ class Config:
         SECRET_KEY = 'dev-key-please-change-in-production'
     
     # Database configuration
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') #or \
-        # 'sqlite:///' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'diamond.db')
+   # Database configuration
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    'sqlite:///' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'diamond.db')
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # JWT configuration
