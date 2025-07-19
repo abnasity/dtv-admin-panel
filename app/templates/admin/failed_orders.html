@@ -41,7 +41,7 @@
                         <span class="badge bg-light fs-6 text-dark">{{ order.status }}</span>
                         {% endif %}
                     </td>
-                    <td>{{ order.reason or '—' }}</td>
+                    <td>{{ order.notes or '—' }}</td>
                     <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
                     <td>
                         <a href="{{ url_for('auth.view_order', order_id=order.id) }}" class="btn btn-sm btn-outline-primary mb-1">
