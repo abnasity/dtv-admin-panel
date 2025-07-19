@@ -6,6 +6,13 @@
     <h2 class="mb-4 text-center">Order #{{ order.id }}</h2>
 
     <p><strong>Status:</strong> {{ order.status }}</p>
+    {% if order.status in ['rejected', 'cancelled', 'failed'] and order.notes %}
+<div class="alert alert-danger">
+    <strong>{{ order.status|capitalize }} Reason:</strong><br>
+    {{ order.notes }}
+</div>
+{% endif %}
+
     <p><strong>Placed on:</strong> {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
     <p><strong>Delivery Address:</strong> {{ order.delivery_address }}</p>
 
