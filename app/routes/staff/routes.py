@@ -27,35 +27,29 @@ def mark_task_failed(order_id):
         flash('Only approved orders can be marked as failed.', 'warning')
         return redirect(url_for('staff.dashboard'))
 
-    #  Get reason from form
     reason = request.form.get('reason', '').strip()
     if not reason:
         flash('Please provide a reason for failure.', 'warning')
         return redirect(url_for('staff.dashboard'))
 
-    # Mark the order as failed
+    # Mark the order as failed and restock devices
     order.status = 'failed'
-    order.notes = reason  #  Save reason to notes
+    order.notes = f"Marked failed by staff ({current_user.username}) at {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}. Reason: {reason}"
 
-    # Restock each device in the order
     for item in order.items:
         if item.device and item.device.status != 'available':
             item.device.status = 'available'
 
-    db.session.commit()
-
-    # Notify all admin users
+    # Notify all admins
     admin_users = User.query.filter_by(role='admin').all()
     for admin in admin_users:
-        notif = Notification(
+        db.session.add(Notification(
             user_id=admin.id,
             recipient_type='admin',
             message=f"Order #{order.id} marked as failed by staff. Reason: {reason}"
-        )
-        db.session.add(notif)
-        
-   
-      # Notify customer
+        ))
+
+    # Notify customer
     if order.customer:
         notif_link_customer = url_for('customers.order_detail', order_id=order.id)
         db.session.add(Notification(
@@ -66,9 +60,9 @@ def mark_task_failed(order_id):
         ))
 
     db.session.commit()
-
     flash('Order marked as failed and notifications sent.', 'danger')
     return redirect(url_for('staff.dashboard'))
+
 
 
 # MARK TASK AS SUCCESSFUL
