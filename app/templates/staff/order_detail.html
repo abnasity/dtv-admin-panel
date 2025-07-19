@@ -20,7 +20,9 @@
         <span class="badge fs-6 bg-danger">Cancelled</span>
     {% elif order.status == 'rejected' %}
         <span class="badge fs-6 bg-dark">Rejected</span> 
-     {% elif order.status == 'completed' %}
+    {% elif order.status == 'failed' %}
+       <span class="badge bg-danger fs-6 text-dark">failed</span>
+    {% elif order.status == 'completed' %}
         <span class="badge fs-6 bg-success">completed</span> 
     {% endif %}
 </p>
