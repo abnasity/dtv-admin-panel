@@ -59,7 +59,7 @@ def create_app(config_class=Config):
         cart_count = 0
         confirmed_orders_count = 0
         if hasattr(current_user, 'is_customer') and current_user.is_authenticated and current_user.is_customer():
-            cart_count = CartItem.query.filter_by(customer_id=current_user.id).count()
+            cart_count = CartItem.query.filter_by(customer_id=current_user.id, status='active').count()
             confirmed_orders_count = CustomerOrder.query.filter_by(
                 customer_id=current_user.id, 
                 status='approved'
