@@ -223,8 +223,8 @@ class CartItem(db.Model):
     __tablename__ = 'cart_items'
     
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
-    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), nullable=False)  
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete='CASCADE'), nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='CASCADE'), nullable=False)  
     quantity = db.Column(db.Integer, default=1)
     status = db.Column(db.String(20), default='active')  # active, ordered, received 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
