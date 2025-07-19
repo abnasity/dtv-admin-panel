@@ -643,7 +643,7 @@ def cancel_order(order_id):
     order = CustomerOrder.query.get_or_404(order_id)
 
     if order.status not in ['pending', 'awaiting_approval']:
-        flash("Only pending or awaiting approval orders can be cancelled.", "warning")
+        flash(f"Order #{order.id} cannot be cancelled because its current status is '{order.status}'.", "warning")
         return redirect(url_for('auth.view_order', order_id=order.id))
 
     reason = request.form.get('cancel_reason', '').strip()
@@ -652,9 +652,10 @@ def cancel_order(order_id):
         return redirect(url_for('auth.view_order', order_id=order.id))
 
     order.status = 'cancelled'
+    order.rejection_reason = reason  # REQUIRED for display
     order.approved_by_id = current_user.id
     order.approved_at = datetime.utcnow()
-    order.notes = f"Cancelled by admin: {reason}"
+    order.notes = f"{reason}"
 
     # Notify staff if assigned
     if order.assigned_staff_id:
@@ -671,7 +672,7 @@ def cancel_order(order_id):
     if order.customer:
         notif_link_customer = url_for('customers.order_detail', order_id=order.id)
         db.session.add(Notification(
-            user_id=order.customer.id,
+            customer_id=order.customer.id,
             message=f"Your order #{order.id} was cancelled. Reason: {reason}",
             recipient_type='customer',
             link=notif_link_customer
@@ -680,6 +681,7 @@ def cancel_order(order_id):
     db.session.commit()
     flash("Order has been cancelled and notifications sent.", "success")
     return redirect(url_for('auth.view_orders'))
+
 
 # ADMIN DELETE ORDER
 @bp.route('/admin/orders/<int:order_id>/delete', methods=['POST'])
