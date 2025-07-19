@@ -272,6 +272,15 @@ def delete_featured(device_id):
     flash(f"Device '{device.brand} {device.model}' has been deleted.", "success")
     return redirect(url_for('devices.featured_devices'))
 
+# DELETED FEATURED DEVICES
+@bp.route('/devices/featured/deleted')
+@login_required
+@admin_required
+def deleted_featured_devices():
+    devices = Device.query.filter_by(featured=True, deleted=True).all()
+    return render_template('devices/deleted_featured.html', devices=devices)
+
+
 # LEARN MORE
 @bp.route('/learn_more/<device_slug>')
 def learn_more_device(device_slug):
