@@ -346,7 +346,11 @@ def add_to_cart(device_id):
     if not isinstance(current_user, Customer):
         abort(403)
 
-    device = Device.query.get_or_404(device_id)
+    device = Device.query.filter_by(id=device_id, status='available').first()
+    if not device:
+        flash("This device is no longer available.", "warning")
+        return redirect(request.referrer or url_for('customers.dashboard'))
+
 
     # Check if item already exists in cart
     cart_item = CartItem.query.filter_by(customer_id=current_user.id, device_id=device.id).first()
@@ -404,6 +408,7 @@ def checkout():
 
     # Cart setup
     cart_items = CartItem.query.filter_by(customer_id=current_user.id, status='active').all()
+    cart_items = [item for item in cart_items if item.device and item.device.status == 'available']
     products = [item.device for item in cart_items]
     total_price = sum(device.purchase_price for device in products)
 
@@ -419,7 +424,7 @@ def place_order():
 
     form = CheckoutForm()
 
-    # Re-populate delivery address choices
+    # Load delivery address choices again
     staff_addresses = db.session.query(User.address).filter(
         User.role == 'staff',
         User.address.isnot(None)
@@ -430,14 +435,17 @@ def place_order():
         flash("Please fill the form correctly.", "danger")
         return redirect(url_for('customers.checkout'))
 
-    # Fetch active cart items
+    # properly fetch cart items
     cart_items = CartItem.query.filter_by(customer_id=current_user.id, status='active').all()
+
     if not cart_items:
         flash("Your cart is empty.", "warning")
         return redirect(url_for('customers.view_cart'))
 
+
     cart_item_ids = sorted([item.device_id for item in cart_items if item.device_id])
 
+    # Prevent duplicate orders
     existing_orders = CustomerOrder.query.filter(
         CustomerOrder.customer_id == current_user.id,
         CustomerOrder.status.in_(['pending', 'approved'])
@@ -450,21 +458,22 @@ def place_order():
             flash("You already have an identical order that is pending or confirmed.", "danger")
             return redirect(url_for('customers.view_cart'))
 
-    # Save delivery address to customer if it's not already saved
+    # Save delivery info
     selected_address = form.delivery_address.data.strip()
     id_number = form.id_number.data.strip() if form.id_number.data else None
+
     if current_user.delivery_address != selected_address:
         current_user.delivery_address = selected_address
     
     if form.payment_type.data == 'credit' and not id_number:
-      flash("National ID number is required for credit payments.", "danger")
-      return redirect(url_for('customers.checkout'))
+        flash("National ID number is required for credit payments.", "danger")
+        return redirect(url_for('customers.checkout'))
     
     if id_number and current_user.id_number != id_number:
         current_user.id_number = id_number
         db.session.add(current_user)
 
-    # Create the order
+    # Create order
     order = CustomerOrder(
         customer_id=current_user.id,
         delivery_address=selected_address,
@@ -473,37 +482,26 @@ def place_order():
         created_at=datetime.utcnow()
     )
     db.session.add(order)
-    db.session.flush()
+    db.session.flush()  # Get order.id
 
-    # Assign staff based on delivery address
-    assigned = assign_staff_to_order(order)
-    if assigned:
-        print(f"[SUCCESS] Assigned staff: {assigned.username}")
-    else:
-        print("[WARNING] No matching staff found.")
+    # Assign staff
+    assign_staff_to_order(order)
 
-    # Add items to order
+    # Add order items and delete cart items
     for item in cart_items:
         device = item.device
-        if not device or device.status != 'available':
-            continue
+        if device.status != 'available':
+            flash("Some items in your cart are no longer available.", "danger")
+            return redirect(url_for('customers.view_cart'))
 
-        order_item = CustomerOrderItem(
+        db.session.add(CustomerOrderItem(
             order_id=order.id,
             device_id=device.id,
             unit_price=device.purchase_price
-        )
-        db.session.add(order_item)
+        ))
 
-        # Optional: mark cart item as 'ordered'
-        item.status = 'ordered'
-        db.session.add(item)
+        db.session.delete(item)  # remove from cart
 
-        # Commit order and items first
-    db.session.commit()
-
-    # Now clear ordered items from cart
-    CartItem.query.filter_by(customer_id=current_user.id, status='ordered').delete()
     db.session.commit()
 
     flash("Your order has been placed successfully!", "success")
