@@ -303,7 +303,7 @@ class Device(db.Model):
     specs_id = db.Column(db.Integer, db.ForeignKey('device_specs.id'), nullable=True)
     slug = db.Column(db.String(100), unique=True, index=True)
     featured = db.Column(db.Boolean, default=False)
-    deleted = db.Column(db.Boolean, default=False)
+    deleted = db.Column(db.Boolean, default=False, nullable=False)
     
 
  
@@ -321,6 +321,17 @@ class Device(db.Model):
     transactions = db.relationship('InventoryTransaction', back_populates='device')
     alerts = db.relationship('Alert', back_populates='device')
     
+    @classmethod
+    def get_featured(cls):
+        return cls.query.filter(cls.featured == True, cls.deleted == False).all()
+
+
+
+    @staticmethod
+    def get_available():
+        return Device.query.filter_by(deleted=False, is_available=True).all()
+
+
     @property
     def is_available(self):
      """Check if device is available for sale"""
