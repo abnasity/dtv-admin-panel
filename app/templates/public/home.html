@@ -233,6 +233,7 @@
 </div>
 
 
+{% if featured_devices %}
   <!-- Featured Products -->
   <section class="container mb-5">
   <h1 class="text-center fw-bold mb-4">Featured Products</h1>
@@ -279,7 +280,10 @@
 {% endfor %}
   </div>
 </section>
-  
+{% else %}
+  <p class="text-center text-muted">No featured products available at the moment.</p>
+{% endif %}
+
 
 {% endblock %}
 
