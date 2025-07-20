@@ -26,7 +26,8 @@
               </form>
 
               <!-- Permanently Delete -->
-              <form method="POST" action="{{ url_for('devices.delete_featured_permanently', device_id=device.id) }}">
+              <form method="POST" action="{{ url_for('devices.permanent_delete_featured', device_id=device.id) }}">
+
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Permanently delete this device? This action cannot be undone.')">
                   <i class="fas fa-trash me-1"></i> Delete Permanently
