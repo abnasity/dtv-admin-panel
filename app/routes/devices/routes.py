@@ -237,7 +237,7 @@ def restore_device(device_id):
 @bp.route('/devices/featured')
 @admin_required
 def featured_devices():
-    devices = Device.query.filter_by(featured=True).all()
+    devices = Device.query.filter_by(featured=True, deleted=False).all()
 
     # Build a dictionary of device_id -> specs_dict
     specs_dict = {}
@@ -255,24 +255,54 @@ def featured_devices():
 
     return render_template('devices/featured.html', devices=devices, specs_dict=specs_dict)
 
+# RESTORE FEATURED DEVICE
+@bp.route('/devices/<int:device_id>/restore', methods=['POST'])
+@login_required
+@admin_required
+def restore_featured_device(device_id):
+    device = Device.query.get_or_404(device_id)
+    device.deleted = False
+    db.session.commit()
+    flash(f"Device '{device.brand} {device.model}' has been restored.", "success")
+    return redirect(url_for('devices.deleted_featured_devices'))
+
+
+# PERMANENTLY DELETE FEATURED DEVICE
+@bp.route('/devices/<int:device_id>/permanent-delete', methods=['POST'])
+@login_required
+@admin_required
+def permanent_delete_featured(device_id):
+    device = Device.query.get_or_404(device_id)
+    db.session.delete(device)
+    db.session.commit()
+    flash(f"Device '{device.brand} {device.model}' has been permanently deleted.", "warning")
+    return redirect(url_for('devices.deleted_featured_devices'))
+
+
 # DELETE FEATURED DEVICES
 @bp.route('/devices/<int:device_id>/delete', methods=['POST'])
 @login_required
 def delete_featured(device_id):
-    if not current_user.is_admin():  # Ensure only admins can delete
-        flash("Unauthorized", "danger")
+    if not current_user.is_admin():
+        flash('You are not authorized to delete this device.', 'danger')
         return redirect(url_for('public.home'))
 
     device = Device.query.get_or_404(device_id)
 
-    # Optional: delete associated image files from static if needed
+    try:
+        device.deleted = True
+        db.session.commit()
+        flash(f"Device '{device.brand} {device.model}' has been deleted.", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while deleting the device.', 'danger')
 
-    db.session.delete(device)
-    db.session.commit()
-    flash(f"Device '{device.brand} {device.model}' has been deleted.", "success")
     return redirect(url_for('devices.featured_devices'))
 
-# DELETED FEATURED DEVICES
+
+
+
+# VIEW DELETED FEATURED DEVICES
 @bp.route('/devices/featured/deleted')
 @login_required
 @admin_required
