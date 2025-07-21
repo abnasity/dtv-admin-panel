@@ -157,13 +157,6 @@ def add_device():
     return render_template('devices/add.html', form=form, specs_form=specs_form)
 
 
-# VIEW DEVICE
-@bp.route('/device/<imei>')
-@login_required
-def view_device(imei):
-    """View device details"""
-    device = Device.query.filter_by(imei=imei).first_or_404()
-    return render_template('devices/view.html', device=device)
 
 # EDIT DEVICE
 @bp.route('/device/<imei>/edit', methods=['GET', 'POST'])
