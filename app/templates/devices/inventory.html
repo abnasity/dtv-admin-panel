@@ -134,8 +134,10 @@
 {% block extra_js %}
 <script>
 function viewDevice(imei) {
-    window.location.href = "{{ url_for('devices.view_device', imei='') }}" + imei;
+    const url = "{{ url_for('devices.view_device_by_imei', imei='__IMEI__') }}".replace('__IMEI__', imei);
+    window.location.href = url;
 }
+
 
 function createSale(imei) {
     window.location.href = "{{ url_for('sales.new_sale') }}?imei=" + imei;
