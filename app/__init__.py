@@ -1,10 +1,16 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
 from flask import Flask, request, jsonify, current_app, redirect, url_for
 from config import Config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf, mail
 from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
 from app.models import CartItem, User, Customer, CustomerOrder, Notification
-import os
+
+from app.utils.cloudinary_utils import init_cloudinary
+
+
 
 
 @login_manager.unauthorized_handler
@@ -41,6 +47,7 @@ def create_app(config_class=Config):
     bcrypt.init_app(app)
     csrf.init_app(app)
     mail.init_app(app)
+    init_cloudinary()
     
 
 
