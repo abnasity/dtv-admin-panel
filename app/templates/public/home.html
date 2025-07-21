@@ -261,8 +261,9 @@
           <span class="badge bg-danger position-absolute top-0 start-0 m-2">HOT</span>
         {% endif %}
 <div class="image-wrapper">
-   <img src="{{ url_for('static', filename='images/devices/' ~ device.brand|lower ~ '/' ~ device.main_image) }}"
+   <img src="{{ device.image_url }}"
      class="card-img-top product-image" loading="lazy" alt="{{ device.model }}">
+
 
 </div>
    
