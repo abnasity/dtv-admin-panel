@@ -408,5 +408,11 @@ def scan_page():
 # VIEW DEVICE AFTER SCANNING
 @bp.route('/device/<imei>')
 def view_device_by_imei(imei):
-    device = Device.query.filter_by(imei=imei).first_or_404()
-    return render_template('devices/device_detail.html', device=device)
+    imei = imei.strip()
+    device = Device.query.filter(db.func.trim(Device.imei) == imei).first()
+
+    if not device:
+        flash("Device not found or IMEI mismatch", "warning")
+
+    return render_template('devices/device_output.html', device=device)
+
