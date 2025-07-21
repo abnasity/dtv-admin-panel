@@ -268,6 +268,28 @@ def restore_device(device_id):
     flash(f"Device '{device.brand} {device.model}' has been restored.", "success")
     return redirect(url_for('devices.deleted_inventory'))
 
+# DELETE INVENTORY PERMANENTLY
+# PERMANENT DELETE DEVICE
+@bp.route('/devices/<int:device_id>/permanent-delete', methods=['POST'])
+@login_required
+@admin_required
+def permanently_delete_device(device_id):
+    device = Device.query.get_or_404(device_id)
+
+    if not device.deleted:
+        flash("Device must be soft-deleted first before permanent deletion.", "warning")
+        return redirect(url_for('devices.inventory'))
+
+    # Delete associated records first if applicable (e.g., specs, order items, etc.)
+    if device.specs:
+        db.session.delete(device.specs)
+
+    db.session.delete(device)
+    db.session.commit()
+
+    flash(f"Device '{device.brand} {device.model}' has been permanently deleted.", "danger")
+    return redirect(url_for('devices.deleted_inventory'))
+
 
 # FEATURED DEVICES
 @bp.route('/devices/featured')
