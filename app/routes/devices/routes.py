@@ -6,6 +6,8 @@ from app.forms import DeviceForm, DeviceSpecsForm
 from app.routes.devices import bp
 from app import db
 from slugify import slugify
+from cloudinary.uploader import upload
+from app.utils.cloudinary_utils import init_cloudinary
 
 @bp.route('/inventory')
 @login_required
@@ -94,7 +96,6 @@ def add_device():
             slug = f"{base_slug}-{counter}"
             counter += 1
 
-        # Get optional IMEI (skip if featured device)
         imei = form.imei.data.strip() if form.imei.data else None
 
         device = Device(
@@ -109,23 +110,37 @@ def add_device():
             price_credit=form.price_credit.data or 0,
             featured=form.featured.data,
             description=form.description.data or specs_form.details.data,
-            notes=form.notes.data
+            notes=form.notes.data,
+            status='featured' if form.featured.data else 'available'
         )
 
-        device.status = 'featured' if form.featured.data else 'available'
-
-        # Handle image upload
+        # 🔐 Secure Cloudinary Upload
         if form.image.data:
             try:
-                filename = device.add_image(form.image.data)
-                device.main_image = filename
+                from app.utils.cloudinary_utils import generate_signature
+                import time
+                import os
+
+                timestamp = int(time.time())
+                params = {
+                    'folder': 'devices',
+                    'overwrite': True,
+                    'timestamp': timestamp
+                }
+                signature = generate_signature(params)
+
+                result = upload(
+                    form.image.data,
+                    folder="devices",
+                    overwrite=True,
+                    timestamp=timestamp,
+                    api_key=os.getenv("CLOUDINARY_API_KEY"),
+                    signature=signature
+                )
+
+                device.main_image = result.get('secure_url')
             except Exception as e:
                 flash(f"Image upload failed: {str(e)}", 'warning')
-
-        # Ensure specs are provided
-        if not specs_form.details.data.strip():
-            flash("Please provide full specifications.", "warning")
-            return render_template('devices/add.html', form=form, specs_form=specs_form)
 
         # Attach specs
         device.specs = DeviceSpecs(details=specs_form.details.data.strip())
@@ -140,7 +155,6 @@ def add_device():
             flash(f'Error adding device: {str(e)}', 'danger')
 
     return render_template('devices/add.html', form=form, specs_form=specs_form)
-
 
 
 # VIEW DEVICE
@@ -162,6 +176,7 @@ def edit_device(imei):
 
     if request.method == 'POST':
         form.imei.data = device.imei  # Prevent IMEI change
+
         if form.validate_on_submit() and specs_form.validate_on_submit():
             device.brand = form.brand.data
             device.model = form.model.data
@@ -173,15 +188,35 @@ def edit_device(imei):
             device.notes = form.notes.data
             device.featured = form.featured.data
 
-            # Handle image upload
+            # 🔐 Cloudinary Image Upload
             if form.image.data:
                 try:
-                    filename = device.add_image(form.image.data)
-                    device.main_image = filename
+                    from app.utils.cloudinary_utils import generate_signature
+                    import time
+                    import os
+
+                    timestamp = int(time.time())
+                    params = {
+                        'folder': 'devices',
+                        'overwrite': True,
+                        'timestamp': timestamp
+                    }
+                    signature = generate_signature(params)
+
+                    result = upload(
+                        form.image.data,
+                        folder="devices",
+                        overwrite=True,
+                        timestamp=timestamp,
+                        api_key=os.getenv("CLOUDINARY_API_KEY"),
+                        signature=signature
+                    )
+
+                    device.main_image = result.get('secure_url')
                 except Exception as e:
                     flash(f"Image upload failed: {str(e)}", 'warning')
 
-            # Update or set specs
+            # Update specs
             if device.specs:
                 device.specs.details = specs_form.details.data
             else:
@@ -196,6 +231,7 @@ def edit_device(imei):
                 flash(f'Error updating device: {str(e)}', 'danger')
 
     return render_template('devices/edit.html', form=form, specs_form=specs_form, device=device)
+
 
 # DELETE DEVICE
 @bp.route('/devices/<int:device_id>/delete', methods=['POST'])
@@ -298,8 +334,6 @@ def delete_featured(device_id):
         flash('An error occurred while deleting the device.', 'danger')
 
     return redirect(url_for('devices.featured_devices'))
-
-
 
 
 # VIEW DELETED FEATURED DEVICES
