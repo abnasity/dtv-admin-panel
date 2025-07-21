@@ -129,9 +129,7 @@ def create_app(config_class=Config):
     from app.api.reports import bp as reports_api_bp
     from app.api.users import bp as users_api_bp
     from app.api.customers import bp as customers_api_bp
-    from app.api.orders import bp as orders_api_bp
-    
-    
+    from app.api.orders import bp as orders_api_bp   
     
 
     

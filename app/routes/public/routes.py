@@ -32,3 +32,8 @@ def logged_out():
     featured_devices = Device.get_featured()
 
     return render_template('public/home.html', public_view=True, featured_devices=featured_devices)
+
+
+@bp.route('/device/<imei>')
+def public_device_redirect(imei):
+    return redirect(url_for('devices.view_device_by_imei', imei=imei))
