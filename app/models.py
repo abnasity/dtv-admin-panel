@@ -348,7 +348,7 @@ class Device(db.Model):
     @property
     def image_url(self):
         if self.main_image:
-            url, _ = cloudinary_url(self.main_image, secure=True)
+            url, _ = cloudinary_url(self.main_image, format="jpg", secure=True)
             return url
         return url_for('static', filename='images/default-device.jpg')
 
