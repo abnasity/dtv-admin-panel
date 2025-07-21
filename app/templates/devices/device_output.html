@@ -1,0 +1,27 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Device Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow border-0">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">📱 Device Details</h4>
+    </div>
+    <div class="card-body">
+      {% if device %}
+      <ul class="list-group">
+        <li class="list-group-item"><strong>IMEI:</strong> {{ device.imei }}</li>
+        <li class="list-group-item"><strong>Brand:</strong> {{ device.brand }}</li>
+        <li class="list-group-item"><strong>Model:</strong> {{ device.model }}</li>
+        <li class="list-group-item"><strong>Status:</strong> {{ device.status }}</li>
+        <li class="list-group-item"><strong>Cash Price:</strong> KES {{ device.price_cash }}</li>
+        <li class="list-group-item"><strong>Description:</strong> {{ device.description or "No description available" }}</li>
+      </ul>
+      {% else %}
+      <div class="alert alert-warning mt-3">No device found for the scanned IMEI.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
