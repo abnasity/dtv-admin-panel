@@ -39,7 +39,7 @@
         });
 
         Quagga.onDetected(function (data) {
-            const code = data.codeResult.code;
+            const code = data.codeResult.code.trim();
             Quagga.stop();
             document.getElementById('scanned-result').textContent = `Scanned IMEI: ${code}`;
 

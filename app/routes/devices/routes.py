@@ -390,7 +390,7 @@ def learn_more_device(device_slug):
 @bp.route('/scan/device')
 @login_required
 def scan_device():
-    imei = request.args.get('imei')
+    imei = request.args.get('imei', '').strip()
     device = Device.query.filter_by(imei=imei).first()
 
     if not device:
@@ -412,3 +412,8 @@ def scan_page():
     return render_template('devices/barcode_scanner.html')
 
 
+# VIEW DEVICE AFTER SCANNING
+@bp.route('/device/<imei>')
+def view_device_by_imei(imei):
+    device = Device.query.filter_by(imei=imei).first_or_404()
+    return render_template('devices/device_detail.html', device=device)
