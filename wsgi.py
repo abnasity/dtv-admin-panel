@@ -1,29 +1,16 @@
-# # wsgi.py
-# from app import create_app
-# from app.extensions import db
-
-# app = create_app()
-
-# with app.app_context():
-#     db.create_all()
-
-
 import os
 from app import create_app
 from app.extensions import db
-from dotenv import load_dotenv
 
-# Load environment variables from .env
-load_dotenv()
+# ✅ Only load .env locally (not in production)
+if os.environ.get("FLASK_ENV") != "production":
+    from dotenv import load_dotenv
+    load_dotenv()
 
-# Create app with environment-based config
+# Create app
 app = create_app()
 
-
-
 if __name__ == "__main__":
-    # Use port and debug mode from env if set, otherwise defaults
     debug = os.environ.get("FLASK_DEBUG", "1") == "1"
     port = int(os.environ.get("PORT", 5000))
-
     app.run(debug=debug, port=port)
