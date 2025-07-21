@@ -1,6 +1,9 @@
 import os
 from datetime import timedelta
 from warnings import warn
+from dotenv import load_dotenv
+load_dotenv()
+
 
 class Config:
     # Flask configuration
