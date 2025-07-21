@@ -1,12 +1,14 @@
-<!-- templates/devices/scan.html -->
 {% extends 'layouts/base.html' %}
 
 {% block content %}
 <div class="container mt-4 text-center">
     <h3><i class="fas fa-barcode me-2"></i>Scan Device IMEI</h3>
     <div id="scanner" style="width: 100%; max-width: 600px; margin: auto;"></div>
-    <p class="mt-3" id="scanned-result" class="fw-bold"></p>
+    <p class="mt-3 fw-bold" id="scanned-result"></p>
 </div>
+
+<!-- Load QuaggaJS -->
+<script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -25,11 +27,11 @@
                 }
             },
             decoder: {
-                readers: ["code_128_reader", "ean_reader", "ean_8_reader"]  // EAN is most common for IMEIs
+                readers: ["code_128_reader", "ean_reader", "ean_8_reader"]
             }
         }, function (err) {
             if (err) {
-                console.error(err);
+                console.error("Init error:", err);
                 document.getElementById('scanned-result').textContent = "Error initializing scanner.";
                 return;
             }
@@ -38,10 +40,10 @@
 
         Quagga.onDetected(function (data) {
             const code = data.codeResult.code;
-            Quagga.stop(); // stop after first detection
+            Quagga.stop();
             document.getElementById('scanned-result').textContent = `Scanned IMEI: ${code}`;
 
-            // Optionally redirect or auto-fetch details
+            // Optional: Redirect to device details
             window.location.href = `/device/${code}`;
         });
     });
