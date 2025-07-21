@@ -8,6 +8,9 @@ from sqlalchemy import text, Numeric
 from itsdangerous import URLSafeTimedSerializer
 import os
 from app.utils.image_utils import save_device_image
+from cloudinary.utils import cloudinary_url  
+
+
 
 
 # USERS MODEL
@@ -298,7 +301,7 @@ class Device(db.Model):
     notes = db.Column(db.Text)
     color = db.Column(db.String(50), nullable=True)
     image_variants = db.Column(db.JSON, default=dict, nullable=True)
-    main_image = db.Column(db.String(255), nullable=True)  # Stores the primary image filename
+    main_image = db.Column(db.String(255), nullable=True) 
     image_folder = db.Column(db.String(255), nullable=True)
     specs_id = db.Column(db.Integer, db.ForeignKey('device_specs.id'), nullable=True)
     slug = db.Column(db.String(100), unique=True, index=True)
@@ -325,8 +328,6 @@ class Device(db.Model):
     def get_featured(cls):
         return cls.query.filter(cls.featured == True, cls.deleted == False).all()
 
-
-
     @staticmethod
     def get_available():
         return Device.query.filter_by(deleted=False, is_available=True).all()
@@ -346,75 +347,17 @@ class Device(db.Model):
     # Image Handling
     @property
     def image_url(self):
-        """Get image URL using stored folder or fallback options"""
-        try:
-            folder = self.image_folder or f"devices/{self.brand.lower().replace(' ', '-')}"
-            if self.main_image:
-                path = os.path.join('static', 'images', folder, self.main_image)
-                if os.path.exists(os.path.join(current_app.root_path, path)):
-                    return url_for('static', filename=f'images/{folder}/{self.main_image}')
-                else:
-                    current_app.logger.warning(f"Main image '{self.main_image}' not found in folder '{folder}' for device ID {self.id}")
-            # Final fallback
-            return url_for('static', filename='images/default-device.jpg')
-        
-        except Exception as e:
-            current_app.logger.error(f"Error generating image URL: {str(e)}")
-            return url_for('static', filename='images/default-device.jpg')
+        if self.main_image:
+            url, _ = cloudinary_url(self.main_image, secure=True)
+            return url
+        return url_for('static', filename='images/default-device.jpg')
 
     @property
     def thumbnail_url(self):
-        """Get optimized thumbnail URL with cache busting"""
-        if not self.image_url:
-            return None
-            
-        try:
-            base_url = self.image_url.rsplit('.', 1)[0]
-            thumbnail_path = os.path.join('static', base_url.lstrip('/') + '_200x200.jpg')
-            
-            if os.path.exists(os.path.join(current_app.root_path, thumbnail_path)):
-                return f"{base_url}_200x200.jpg?v={int(self.modified_at.timestamp())}"
-            
-            return f"{self.image_url}?v={int(self.modified_at.timestamp())}"
-        except Exception as e:
-            current_app.logger.error(f"Error generating thumbnail URL: {str(e)}")
-            return self.image_url
-
-    def add_image(self, image_file, subdir=None, filename=None, variant_key=None):    
-        subdir = subdir or f"devices/{self.brand.lower().replace(' ', '-')}"
-        filename = filename or f"{self.model.lower().replace(' ', '-')}.jpg"
-        saved_filename = save_device_image(
-                file=image_file,
-                subdir=subdir,
-                filename=filename
-)
-
-        
-        if variant_key:
-            self.image_variants = self.image_variants or {}
-            self.image_variants[variant_key] = saved_filename
-
-        self.main_image = saved_filename
-        self.image_folder = subdir
-        db.session.commit()
-        return saved_filename
-    
-    def get_image_variants(self):
-        """Return full URLs for all image variants if available"""
-        if not self.image_variants:
-            return {}
-
-        folder = self.image_folder or f"devices/{self.brand.lower().replace(' ', '-')}"
-        variants = {}
-
-        for key, filename in self.image_variants.items():
-            path = os.path.join('static', 'images', folder, filename)
-            if os.path.exists(os.path.join(current_app.root_path, path)):
-                variants[key] = url_for('static', filename=f'images/{folder}/{filename}')
-            else:
-                current_app.logger.warning(f"Variant image '{filename}' for key '{key}' not found in folder '{folder}'")
-
-        return variants
+        if self.main_image:
+            url, _ = cloudinary_url(self.main_image, width=300, height=300, crop="fill", gravity="auto", secure=True)
+            return url
+        return url_for('static', filename='images/default-device.jpg')
 
 
     # Serialization
