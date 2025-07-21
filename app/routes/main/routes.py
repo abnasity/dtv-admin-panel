@@ -15,6 +15,6 @@ def profile():
     return render_template('main/profile.html')
 
 
-@main_bp.route('/device/<imei>')
+@bp.route('/device/<imei>')
 def redirect_to_device(imei):
     return redirect(url_for('devices.view_device_by_imei', imei=imei))
