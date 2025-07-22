@@ -1,79 +1,88 @@
 {% macro scanner_modal() %}
 <!-- Scanner Modal -->
 <div class="modal fade" id="scannerModal" tabindex="-1" aria-labelledby="scannerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="scannerModalLabel">Scan IMEI Barcode</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="stopScanner()"></button>
-            </div>
-            <div class="modal-body">
-                <div id="interactive" class="viewport border border-secondary rounded" style="width: 100%; height: 400px;"></div>
-                <div class="alert alert-info mt-3">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Allow camera access and point your device at the barcode.
-                </div>
-                <div id="cameraError" class="alert alert-danger d-none">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    Failed to access camera. Check browser permissions or use HTTPS.
-                </div>
-            </div>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="scannerModalLabel">Scan IMEI Barcode</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <div id="interactive" class="viewport border rounded" style="width: 100%; height: 400px;"></div>
+        <div class="alert alert-info mt-3">
+          <i class="fas fa-info-circle me-2"></i>
+          Allow camera access and point at the IMEI barcode.
         </div>
+        <div id="scannerError" class="alert alert-danger d-none mt-2">
+          <i class="fas fa-exclamation-circle me-2"></i>
+          Failed to access the camera. Please allow permissions or try another browser.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="stopScanner()">Stop</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
     </div>
+  </div>
 </div>
 {% endmacro %}
 
 {% macro imei_input(form_field, placeholder="Enter or scan IMEI") %}
 <div class="input-group">
-    {{ form_field(class="form-control", placeholder=placeholder) }}
-    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#scannerModal" onclick="startScanner('{{ form_field.id }}')">
-        <i class="fas fa-barcode me-1"></i>Scan
-    </button>
+  {{ form_field(class="form-control", placeholder=placeholder) }}
+  <button type="button" class="btn btn-secondary" onclick="startScanner('{{ form_field.id }}')">
+    <i class="fas fa-barcode me-1"></i> Scan
+  </button>
 </div>
 {% endmacro %}
+
 <!-- QuaggaJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <script>
-let activeInputId = null;
+let currentInputId = null;
+let scanner = null;
 
 function startScanner(inputId) {
-    activeInputId = inputId;
-    const errorDiv = document.getElementById("cameraError");
-    errorDiv.classList.add("d-none");
+    currentInputId = inputId;
 
-    Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector("#interactive"),
-            constraints: {
-                facingMode: "environment" // Use back camera if available
-            }
-        },
-        decoder: {
-            readers: ["ean_reader", "code_128_reader", "code_39_reader"] // Try different barcode types
-        }
-    }, function(err) {
-        if (err) {
-            errorDiv.classList.remove("d-none");
-            console.error(err);
-            return;
-        }
-        Quagga.start();
+    const modal = new bootstrap.Modal(document.getElementById('scannerModal'));
+    modal.show();
+
+    const scannerError = document.getElementById('scannerError');
+    scannerError.classList.add('d-none');
+
+    if (scanner) {
+        scanner.stop();  // In case it's already running
+    }
+
+    scanner = new Instascan.Scanner({ video: document.getElementById('interactive') });
+    scanner.addListener('scan', function (content) {
+        document.getElementById(currentInputId).value = content;
+        modal.hide();
+        scanner.stop();
     });
 
-    Quagga.onDetected(function(result) {
-        const code = result.codeResult.code;
-        if (/^\d{15}$/.test(code)) {
-            document.getElementById(activeInputId).value = code;
-            Quagga.stop();
-            const scannerModal = bootstrap.Modal.getInstance(document.getElementById('scannerModal'));
-            scannerModal.hide();
+    Instascan.Camera.getCameras().then(function (cameras) {
+        if (cameras.length > 0) {
+            scanner.start(cameras[0]);
+        } else {
+            showScannerError("No cameras found.");
         }
+    }).catch(function (e) {
+        showScannerError("Camera permission denied or not available.");
     });
 }
 
 function stopScanner() {
-    Quagga.stop();
+    if (scanner) {
+        scanner.stop();
+    }
 }
+
+function showScannerError(message) {
+    const errorDiv = document.getElementById('scannerError');
+    errorDiv.textContent = message;
+    errorDiv.classList.remove('d-none');
+}
+
 </script>
