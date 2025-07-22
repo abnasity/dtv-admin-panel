@@ -286,6 +286,9 @@ function startScanner(inputId) {
       document.getElementById('scanner-status').innerText = `✅ IMEI Detected: ${code}`;
       Quagga.stop();
       document.getElementById('stopButton').disabled = true;
+
+      // Auto-submit the form
+      document.getElementById('deviceForm').submit();
     }
   });
 }
@@ -297,4 +300,5 @@ document.getElementById('stopButton').addEventListener('click', () => {
   document.getElementById('scanner-status').innerText = "🛑 Scanner stopped.";
 });
 </script>
+
 {% endblock %}
