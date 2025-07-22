@@ -22,11 +22,12 @@
 </div>
 {% endmacro %}
 
-{% macro imei_input(form_field, placeholder="Enter or scan IMEI") %}
+{% macro imei_input(form_field, placeholder="Enter or scan IMEI", id="") %}
 <div class="input-group">
-    {{ form_field(class="form-control", placeholder=placeholder) }}
-    <button type="button" class="btn btn-secondary" onclick="startScanner('{{ form_field.id }}')">
+    {{ form_field(class="form-control", placeholder=placeholder, id=id) }}
+    <button type="button" class="btn btn-secondary" onclick="startScanner('{{ id or form_field.id }}')">
         <i class="fas fa-barcode me-1"></i>Scan
     </button>
 </div>
 {% endmacro %}
+
