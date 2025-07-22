@@ -4,26 +4,16 @@
 
 {% block extra_css %}
 <style>
-#interactive.viewport {
-    position: relative;
-    width: 100%;
-    height: 300px;
-}
-#interactive.viewport > canvas, #interactive.viewport > video {
-    max-width: 100%;
-    width: 100%;
-}
-canvas.drawing, canvas.drawingBuffer {
-    position: absolute;
-    left: 0;
-    top: 0;
+#scanner {
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 8px;
 }
 </style>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 {% endblock %}
 
 {% block content %}
@@ -41,10 +31,12 @@ canvas.drawing, canvas.drawingBuffer {
                     <form id="deviceForm" method="POST" enctype="multipart/form-data">
                         {{ form.csrf_token }}
                         {{ specs_form.csrf_token }}
-                        
+
+                        <!-- IMEI Field with Scanner -->
                         <div class="mb-3">
                             {{ form.imei.label(class="form-label") }}
-                            {{ imei_input(form.imei, "Enter 15-digit IMEI") }}
+                            {{ imei_input(form.imei, "Enter 15-digit IMEI", id="imei-field") }}
+
                             {% if form.imei.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.imei.errors %}
@@ -53,59 +45,32 @@ canvas.drawing, canvas.drawingBuffer {
                             </div>
                             {% endif %}
 
-                            <!-- Scan Button & Scanner Container -->
                             <div class="mt-2">
                                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="startScanner()">📷 Scan IMEI</button>
                             </div>
+
                             <div id="scanner" style="display: none; width: 100%; max-width: 400px;" class="mt-3"></div>
                         </div>
 
+                        <!-- Other Device Fields -->
                         <div class="mb-3">
                             {{ form.brand.label(class="form-label") }}
                             {{ form.brand(class="form-control", required=true) }}
-                            {% if form.brand.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.brand.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
                         </div>
 
                         <div class="mb-3">
                             {{ form.model.label(class="form-label") }}
                             {{ form.model(class="form-control", required=true) }}
-                            {% if form.model.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.model.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
                         </div>
 
                         <div class="mb-3">
                             {{ form.ram.label(class="form-label") }}
                             {{ form.ram(class="form-control", required=true) }}
-                            {% if form.ram.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.ram.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
                         </div>
 
                         <div class="mb-3">
                             {{ form.rom.label(class="form-label") }}
                             {{ form.rom(class="form-control", required=true) }}
-                            {% if form.rom.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.rom.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
                         </div>
 
                         <div class="mb-3">
@@ -114,13 +79,6 @@ canvas.drawing, canvas.drawingBuffer {
                                 <span class="input-group-text">Ksh</span>
                                 {{ form.purchase_price(class="form-control", required=true) }}
                             </div>
-                            {% if form.purchase_price.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.purchase_price.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
                         </div>
 
                         <div class="mb-3">
@@ -129,13 +87,6 @@ canvas.drawing, canvas.drawingBuffer {
                                 <span class="input-group-text">Ksh</span>
                                 {{ form.price_cash(class="form-control", required=true) }}
                             </div>
-                            {% if form.price_cash.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.price_cash.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
                         </div>
 
                         <div class="mb-3">
@@ -144,25 +95,11 @@ canvas.drawing, canvas.drawingBuffer {
                                 <span class="input-group-text">Ksh</span>
                                 {{ form.price_credit(class="form-control", required=true) }}
                             </div>
-                            {% if form.price_credit.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.price_credit.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
                         </div>
 
                         <div class="mb-3">
                             {{ form.notes.label(class="form-label") }}
                             {{ form.notes(class="form-control", rows=3) }}
-                            {% if form.notes.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.notes.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
                         </div>
 
                         <hr class="my-4">
@@ -195,13 +132,6 @@ canvas.drawing, canvas.drawingBuffer {
                         <div class="mb-3">
                             {{ form.image.label(class="form-label") }}
                             {{ form.image(class="form-control") }}
-                            {% if form.image.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.image.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
                         </div>
 
                         <div class="text-end">
@@ -214,12 +144,12 @@ canvas.drawing, canvas.drawingBuffer {
     </div>
 </div>
 
-<!-- JS for Scanner & Form Logic -->
+<!-- Scanner and Form Logic -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('deviceForm');
+    const imeiInput = document.getElementById('imei-field');
     const featuredCheckbox = document.querySelector('input[name="featured"]');
-    const imeiInput = document.getElementById('imei-field'); // needs to exist!
 
     function toggleIMEI() {
         if (featuredCheckbox.checked) {
@@ -242,9 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Barcode/QR Scanner
 let html5QrCode;
-
 function startScanner() {
     const scanner = document.getElementById('scanner');
     const imeiInput = document.getElementById('imei-field');
@@ -265,7 +193,7 @@ function startScanner() {
             });
         },
         (errorMessage) => {
-            // Optional: console.log(errorMessage);
+            // Handle error if needed
         }
     ).catch((err) => {
         alert("Camera error: " + err);
