@@ -22,6 +22,7 @@ canvas.drawing, canvas.drawingBuffer {
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/html5-qrcode"></script>
 <script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
 {% endblock %}
 
@@ -41,7 +42,7 @@ canvas.drawing, canvas.drawingBuffer {
                         {{ form.csrf_token }}
                         {{ specs_form.csrf_token }}
                         
-                         <div class="mb-3">
+                        <div class="mb-3">
                             {{ form.imei.label(class="form-label") }}
                             {{ imei_input(form.imei, "Enter 15-digit IMEI") }}
                             {% if form.imei.errors %}
@@ -51,8 +52,14 @@ canvas.drawing, canvas.drawingBuffer {
                                 {% endfor %}
                             </div>
                             {% endif %}
+
+                            <!-- Scan Button & Scanner Container -->
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="startScanner()">📷 Scan IMEI</button>
+                            </div>
+                            <div id="scanner" style="display: none; width: 100%; max-width: 400px;" class="mt-3"></div>
                         </div>
-                        
+
                         <div class="mb-3">
                             {{ form.brand.label(class="form-label") }}
                             {{ form.brand(class="form-control", required=true) }}
@@ -64,7 +71,7 @@ canvas.drawing, canvas.drawingBuffer {
                             </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="mb-3">
                             {{ form.model.label(class="form-label") }}
                             {{ form.model(class="form-control", required=true) }}
@@ -100,7 +107,7 @@ canvas.drawing, canvas.drawingBuffer {
                             </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="mb-3">
                             {{ form.purchase_price.label(class="form-label") }}
                             <div class="input-group">
@@ -115,9 +122,8 @@ canvas.drawing, canvas.drawingBuffer {
                             </div>
                             {% endif %}
                         </div>
-                        
 
-                     <div class="mb-3">
+                        <div class="mb-3">
                             {{ form.price_cash.label(class="form-label") }}
                             <div class="input-group">
                                 <span class="input-group-text">Ksh</span>
@@ -129,8 +135,8 @@ canvas.drawing, canvas.drawingBuffer {
                                     {{ error }}
                                 {% endfor %}
                             </div>
-                            {% endif %}                        
-                         </div>
+                            {% endif %}
+                        </div>
 
                         <div class="mb-3">
                             {{ form.price_credit.label(class="form-label") }}
@@ -147,7 +153,6 @@ canvas.drawing, canvas.drawingBuffer {
                             {% endif %}
                         </div>
 
-
                         <div class="mb-3">
                             {{ form.notes.label(class="form-label") }}
                             {{ form.notes(class="form-control", rows=3) }}
@@ -158,15 +163,14 @@ canvas.drawing, canvas.drawingBuffer {
                                 {% endfor %}
                             </div>
                             {% endif %}
-                        </div> 
-                        
+                        </div>
 
-<hr class="my-4">
-<h4 class="mb-3">Device Specifications</h4>
+                        <hr class="my-4">
+                        <h4 class="mb-3">Device Specifications</h4>
 
-<div class="mb-3">
-    {{ specs_form.details.label(class="form-label") }}
-    {{ specs_form.details(class="form-control", rows=10,required=true, placeholder="""
+                        <div class="mb-3">
+                            {{ specs_form.details.label(class="form-label") }}
+                            {{ specs_form.details(class="form-control", rows=10, required=true, placeholder="""
 • RAM:
 • Storage:
 • Battery:
@@ -181,29 +185,24 @@ canvas.drawing, canvas.drawingBuffer {
 • Ports:
 • Extras:
 """) }}
-</div>
+                        </div>
 
+                        <div class="form-check mb-3">
+                            {{ form.featured(class="form-check-input") }}
+                            {{ form.featured.label(class="form-check-label") }}
+                        </div>
 
-
-<div class="form-check mb-3">
-    {{ form.featured(class="form-check-input") }}
-    {{ form.featured.label(class="form-check-label") }}
-</div>
-
-
-<div class="mb-3">
-    {{ form.image.label(class="form-label") }}
-    {{ form.image(class="form-control") }}
-    {% if form.image.errors %}
-    <div class="invalid-feedback d-block">
-        {% for error in form.image.errors %}
-            {{ error }}
-        {% endfor %}
-    </div>
-    {% endif %}
-</div>
-
-
+                        <div class="mb-3">
+                            {{ form.image.label(class="form-label") }}
+                            {{ form.image(class="form-control") }}
+                            {% if form.image.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.image.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
 
                         <div class="text-end">
                             {{ form.submit(class="btn btn-primary") }}
@@ -215,11 +214,12 @@ canvas.drawing, canvas.drawingBuffer {
     </div>
 </div>
 
+<!-- JS for Scanner & Form Logic -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('deviceForm');
     const featuredCheckbox = document.querySelector('input[name="featured"]');
-    const imeiInput = document.querySelector('input[name="imei"]');
+    const imeiInput = document.getElementById('imei-field'); // needs to exist!
 
     function toggleIMEI() {
         if (featuredCheckbox.checked) {
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     featuredCheckbox.addEventListener('change', toggleIMEI);
-    toggleIMEI();  // Initialize on load
+    toggleIMEI();
 
     form.addEventListener('submit', function (e) {
         if (!featuredCheckbox.checked && imeiInput.value.trim() === '') {
@@ -241,7 +241,35 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+// Barcode/QR Scanner
+let html5QrCode;
+
+function startScanner() {
+    const scanner = document.getElementById('scanner');
+    const imeiInput = document.getElementById('imei-field');
+
+    scanner.style.display = 'block';
+
+    if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("scanner");
+    }
+
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+            imeiInput.value = decodedText;
+            html5QrCode.stop().then(() => {
+                scanner.style.display = 'none';
+            });
+        },
+        (errorMessage) => {
+            // Optional: console.log(errorMessage);
+        }
+    ).catch((err) => {
+        alert("Camera error: " + err);
+    });
+}
 </script>
-
-
 {% endblock %}
