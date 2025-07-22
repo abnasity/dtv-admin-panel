@@ -4,16 +4,25 @@
 
 {% block extra_css %}
 <style>
-#scanner {
-    border: 1px solid #ccc;
-    padding: 8px;
-    border-radius: 8px;
+#interactive.viewport {
+    position: relative;
+    width: 100%;
+    height: 300px;
+}
+#interactive.viewport > canvas, #interactive.viewport > video {
+    max-width: 100%;
+    width: 100%;
+}
+canvas.drawing, canvas.drawingBuffer {
+    position: absolute;
+    left: 0;
+    top: 0;
 }
 </style>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -31,12 +40,10 @@
                     <form id="deviceForm" method="POST" enctype="multipart/form-data">
                         {{ form.csrf_token }}
                         {{ specs_form.csrf_token }}
-
-                        <!-- IMEI Field with Scanner -->
-                        <div class="mb-3">
+                        
+                         <div class="mb-3">
                             {{ form.imei.label(class="form-label") }}
-                            {{ imei_input(form.imei, "Enter 15-digit IMEI", id="imei-field") }}
-
+                            {{ imei_input(form.imei, "Enter 15-digit IMEI") }}
                             {% if form.imei.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.imei.errors %}
@@ -44,50 +51,86 @@
                                 {% endfor %}
                             </div>
                             {% endif %}
-
-                            <div class="mt-2">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="startScanner()">📷 Scan IMEI</button>
-                            </div>
-
-                            <div id="scanner" style="display: none; width: 100%; max-width: 400px;" class="mt-3"></div>
                         </div>
-
-                        <!-- Other Device Fields -->
+                        
                         <div class="mb-3">
                             {{ form.brand.label(class="form-label") }}
                             {{ form.brand(class="form-control", required=true) }}
+                            {% if form.brand.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.brand.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
-
+                        
                         <div class="mb-3">
                             {{ form.model.label(class="form-label") }}
                             {{ form.model(class="form-control", required=true) }}
+                            {% if form.model.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.model.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
 
                         <div class="mb-3">
                             {{ form.ram.label(class="form-label") }}
                             {{ form.ram(class="form-control", required=true) }}
+                            {% if form.ram.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.ram.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
 
                         <div class="mb-3">
                             {{ form.rom.label(class="form-label") }}
                             {{ form.rom(class="form-control", required=true) }}
+                            {% if form.rom.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.rom.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
-
+                        
                         <div class="mb-3">
                             {{ form.purchase_price.label(class="form-label") }}
                             <div class="input-group">
                                 <span class="input-group-text">Ksh</span>
                                 {{ form.purchase_price(class="form-control", required=true) }}
                             </div>
+                            {% if form.purchase_price.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.purchase_price.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
+                        
 
-                        <div class="mb-3">
+                     <div class="mb-3">
                             {{ form.price_cash.label(class="form-label") }}
                             <div class="input-group">
                                 <span class="input-group-text">Ksh</span>
                                 {{ form.price_cash(class="form-control", required=true) }}
                             </div>
-                        </div>
+                            {% if form.price_cash.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.price_cash.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}                        
+                         </div>
 
                         <div class="mb-3">
                             {{ form.price_credit.label(class="form-label") }}
@@ -95,19 +138,35 @@
                                 <span class="input-group-text">Ksh</span>
                                 {{ form.price_credit(class="form-control", required=true) }}
                             </div>
+                            {% if form.price_credit.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.price_credit.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
+
 
                         <div class="mb-3">
                             {{ form.notes.label(class="form-label") }}
                             {{ form.notes(class="form-control", rows=3) }}
-                        </div>
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.notes.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div> 
+                        
 
-                        <hr class="my-4">
-                        <h4 class="mb-3">Device Specifications</h4>
+<hr class="my-4">
+<h4 class="mb-3">Device Specifications</h4>
 
-                        <div class="mb-3">
-                            {{ specs_form.details.label(class="form-label") }}
-                            {{ specs_form.details(class="form-control", rows=10, required=true, placeholder="""
+<div class="mb-3">
+    {{ specs_form.details.label(class="form-label") }}
+    {{ specs_form.details(class="form-control", rows=10,required=true, placeholder="""
 • RAM:
 • Storage:
 • Battery:
@@ -122,17 +181,29 @@
 • Ports:
 • Extras:
 """) }}
-                        </div>
+</div>
 
-                        <div class="form-check mb-3">
-                            {{ form.featured(class="form-check-input") }}
-                            {{ form.featured.label(class="form-check-label") }}
-                        </div>
 
-                        <div class="mb-3">
-                            {{ form.image.label(class="form-label") }}
-                            {{ form.image(class="form-control") }}
-                        </div>
+
+<div class="form-check mb-3">
+    {{ form.featured(class="form-check-input") }}
+    {{ form.featured.label(class="form-check-label") }}
+</div>
+
+
+<div class="mb-3">
+    {{ form.image.label(class="form-label") }}
+    {{ form.image(class="form-control") }}
+    {% if form.image.errors %}
+    <div class="invalid-feedback d-block">
+        {% for error in form.image.errors %}
+            {{ error }}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+
 
                         <div class="text-end">
                             {{ form.submit(class="btn btn-primary") }}
@@ -144,50 +215,33 @@
     </div>
 </div>
 
-<!-- Scanner and Form Logic -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <script>
-let scannerStarted = false;
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('deviceForm');
+    const featuredCheckbox = document.querySelector('input[name="featured"]');
+    const imeiInput = document.querySelector('input[name="imei"]');
 
-function startScanner(inputId) {
-    const inputField = document.getElementById(inputId);
-    const modal = new bootstrap.Modal(document.getElementById('scannerModal'));
-    modal.show();
-
-    if (scannerStarted) {
-        return;
+    function toggleIMEI() {
+        if (featuredCheckbox.checked) {
+            imeiInput.disabled = true;
+            imeiInput.value = '';
+        } else {
+            imeiInput.disabled = false;
+        }
     }
 
-    Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector('#interactive'),
-            constraints: {
-                facingMode: "environment"
-            }
-        },
-        decoder: {
-            readers: ["code_128_reader", "ean_reader", "ean_8_reader"]
-        }
-    }, function(err) {
-        if (err) {
-            console.error("Quagga init error:", err);
-            alert("Failed to start scanner. Please check browser camera permissions and try again.");
-            return;
-        }
-        Quagga.start();
-        scannerStarted = true;
-    });
+    featuredCheckbox.addEventListener('change', toggleIMEI);
+    toggleIMEI();  // Initialize on load
 
-    Quagga.onDetected(function(result) {
-        const code = result.codeResult.code;
-        inputField.value = code;
-        Quagga.stop();
-        scannerStarted = false;
-        modal.hide();
+    form.addEventListener('submit', function (e) {
+        if (!featuredCheckbox.checked && imeiInput.value.trim() === '') {
+            e.preventDefault();
+            alert('IMEI is required for non-featured devices.');
+            imeiInput.focus();
+        }
     });
-}
+});
 </script>
+
 
 {% endblock %}
