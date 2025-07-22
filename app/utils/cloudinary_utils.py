@@ -21,6 +21,7 @@ def init_cloudinary():
         api_secret=api_secret,
         secure=True
     )
+    
 
 def generate_signature(params: dict) -> str:
     """
