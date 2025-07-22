@@ -145,59 +145,49 @@
 </div>
 
 <!-- Scanner and Form Logic -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('deviceForm');
-    const imeiInput = document.getElementById('imei-field');
-    const featuredCheckbox = document.querySelector('input[name="featured"]');
+let scannerStarted = false;
 
-    function toggleIMEI() {
-        if (featuredCheckbox.checked) {
-            imeiInput.disabled = true;
-            imeiInput.value = '';
-        } else {
-            imeiInput.disabled = false;
-        }
+function startScanner(inputId) {
+    const inputField = document.getElementById(inputId);
+    const modal = new bootstrap.Modal(document.getElementById('scannerModal'));
+    modal.show();
+
+    if (scannerStarted) {
+        return;
     }
 
-    featuredCheckbox.addEventListener('change', toggleIMEI);
-    toggleIMEI();
-
-    form.addEventListener('submit', function (e) {
-        if (!featuredCheckbox.checked && imeiInput.value.trim() === '') {
-            e.preventDefault();
-            alert('IMEI is required for non-featured devices.');
-            imeiInput.focus();
-        }
-    });
-});
-
-let html5QrCode;
-function startScanner() {
-    const scanner = document.getElementById('scanner');
-    const imeiInput = document.getElementById('imei-field');
-
-    scanner.style.display = 'block';
-
-    if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("scanner");
-    }
-
-    html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-            imeiInput.value = decodedText;
-            html5QrCode.stop().then(() => {
-                scanner.style.display = 'none';
-            });
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#interactive'),
+            constraints: {
+                facingMode: "environment"
+            }
         },
-        (errorMessage) => {
-            // Handle error if needed
+        decoder: {
+            readers: ["code_128_reader", "ean_reader", "ean_8_reader"]
         }
-    ).catch((err) => {
-        alert("Camera error: " + err);
+    }, function(err) {
+        if (err) {
+            console.error("Quagga init error:", err);
+            alert("Failed to start scanner. Please check browser camera permissions and try again.");
+            return;
+        }
+        Quagga.start();
+        scannerStarted = true;
+    });
+
+    Quagga.onDetected(function(result) {
+        const code = result.codeResult.code;
+        inputField.value = code;
+        Quagga.stop();
+        scannerStarted = false;
+        modal.hide();
     });
 }
 </script>
+
 {% endblock %}
