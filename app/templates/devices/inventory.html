@@ -113,11 +113,21 @@
                                     <i class="fas fa-shopping-cart"></i>
                                 </button>
                                 {% endif %}
-                                {% if device.imei and device.is_available and current_user.is_admin() %}
-                                    <a href="{{ url_for('devices.edit_device', imei=device.imei) }}" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-edit "></i>
-                                    </a>
-                                {% endif %}
+                          {% if device.imei and device.is_available and current_user.is_admin() %}
+                        <!-- Edit Button -->
+                        <a href="{{ url_for('devices.edit_device', imei=device.imei) }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+
+                        <!-- Delete Button -->
+                        <form method="POST" action="{{ url_for('devices.delete_inventory', device_id=device.id) }}" class="d-inline" onsubmit="return confirm('Delete this device?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    {% endif %}
+
 
                                  </div>                       
                         </td>
