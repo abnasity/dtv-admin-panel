@@ -217,7 +217,7 @@ def download_receipt_pdf(receipt_id):
         'number': order.id,
         'date': order.created_at.strftime('%Y-%m-%d'),
         'time': order.created_at.strftime('%H:%M'),
-        'user': f"User {order.assigned_staff.username}" if order.assigned_staff else 'N/A',
+        'user': f"{order.assigned_staff.username}" if order.assigned_staff else 'N/A',
         'customer_name': order.customer.full_name,
         'customer_phone': order.customer.phone_number,
         'id_number': order.customer.id_number,
