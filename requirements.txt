@@ -34,3 +34,4 @@ pillow
 python-slugify
 pdfkit
 cloudinary
+WeasyPrint

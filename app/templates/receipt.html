@@ -1,117 +1,99 @@
-<!-- templates/receipt.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Sale Receipt</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f8f9fa;
-      padding: 2rem;
-      text-align: center;
-    }
-
-    .receipt-box {
-      background: white;
-      max-width: 480px;
-      margin: auto;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    .logo {
-      width: 120px;
-      margin-bottom: 10px;
-    }
-
-    h2 {
-      margin: 0;
-      font-size: 18px;
-    }
-
-    table {
-      width: 100%;
-      margin-top: 10px;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-
-    th, td {
-      text-align: left;
-      padding: 5px;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .bold {
-      font-weight: bold;
-    }
-
-    .footer {
-      font-size: 13px;
-      margin-top: 15px;
-      font-style: italic;
-      color: #777;
-    }
-
-    .download-btn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: #28a745;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    .download-btn:hover {
-      background: #218838;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Receipt #{{ receipt.number }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            color: #333;
+        }
+        .header, .footer {
+            text-align: center;
+        }
+        .details {
+            margin-bottom: 20px;
+        }
+        .details div {
+            margin-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .total {
+            text-align: right;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-  <div class="receipt-box">
-    <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo" alt="Company Logo">
-    <h2>HILINE GLOBAL SOLUTIONS LIMITED</h2>
-    <p>Address: P.O Box 56196-00200, Nairobi<br>Tel: -------------</p>
 
-    <hr>
+    <div class="header">
+        <h2>Diamond Tree Ventures</h2>
+        <p><strong>Receipt</strong></p>
+    </div>
+
+    <div class="details">
+        <div><strong>Receipt No:</strong> {{ receipt.number }}</div>
+        <div><strong>Date:</strong> {{ receipt.date }} <strong>Time:</strong> {{ receipt.time }}</div>
+        <div><strong>Served By:</strong> {{ receipt.user }}</div>
+        <div><strong>Customer Name:</strong> {{ receipt.customer_name }}</div>
+        <div><strong>Phone No:</strong> {{ receipt.customer_phone }}</div>
+        <div><strong>ID No:</strong> {{ receipt.id_number }}</div>
+    </div>
+
     <table>
-      <tr><td>Rcpt_No.</td><td>#{{ receipt.number }}</td></tr>
-      <tr><td>Date</td><td>{{ receipt.date }}</td></tr>
-      <tr><td>Time</td><td>{{ receipt.time }}</td></tr>
-      <tr><td>User</td><td>{{ receipt.user }}</td></tr>
+        <thead>
+            <tr>
+                <th>Device</th>
+                <th>IMEI</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+          <tbody>
+              {% for item in receipt["items"] %}
+              <tr>
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.imei }}</td>
+                  <td>{{ item.qty }}</td>
+                  <td>KES {{ '{:,.2f}'.format(item.price) }}</td>
+                  <td>KES {{ '{:,.2f}'.format(item.total) }}</td>
+              </tr>
+              {% endfor %}
+          </tbody>
+
     </table>
 
-    <hr>
-    <p class="bold">Name: {{ receipt.customer_name }}</p>
-    <p class="bold">Phone_No: {{ receipt.customer_phone }}</p>
-    <p class="bold">ID_No: {{ receipt.customer_id }}</p>
+    <div class="total">
+        Total Amount: KES {{ '{:,.2f}'.format(receipt.total) }}
+    </div>
 
-    <hr>
-    <table>
-      <thead>
-        <tr><th>Items</th><th>Qty</th><th>Price</th><th>Total</th></tr>
-      </thead>
-      <tbody>
-        {% for item in receipt.items %}
-          <tr>
-            <td><b>{{ item.name }}</b><br>{{ item.imei }}</td>
-            <td>{{ item.qty }}</td>
-            <td>{{ item.price }}</td>
-            <td>{{ item.total }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="footer">
+        <p>Thank you for your purchase!</p>
+    </div>
 
-    <p class="bold" style="margin-top: 1rem;">Gross_Total: {{ receipt.total }}</p>
-    <p class="footer">Goods Once Sold Cannot Be Re-Accepted!</p>
-  </div>
+      {% if not pdf_mode %}
+      <div class="text-end" style="margin-bottom: 20px;">
+          <a href="{{ url_for('sales.download_receipt_pdf', receipt_id=receipt.number) }}" 
+            class="btn btn-primary">
+              Download PDF
+          </a>
+      </div>
+      {% endif %}
 
-  <a href="{{ url_for('download_receipt_pdf', receipt_id=receipt.number) }}" class="download-btn">Download</a>
+
 </body>
 </html>

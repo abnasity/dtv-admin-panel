@@ -1,6 +1,6 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify, make_response
+from flask import render_template, redirect, url_for, flash, request, jsonify, make_response, send_file, abort
 from flask_login import login_required, current_user
-from app.models import Device, Sale
+from app.models import Device, Sale, CustomerOrder
 from app.forms import SaleForm
 from app.routes.sales import bp
 from app.utils.decorators import staff_required
@@ -8,6 +8,8 @@ from app import db
 from decimal import Decimal
 from datetime import datetime
 import pdfkit
+from weasyprint import HTML
+from io import BytesIO
 
 @bp.route('/')
 @login_required
@@ -166,45 +168,80 @@ def update_payment(sale_id):
 
 # RECEIPT/INVOICE DOWNLOAD
 
-@bp.route('/receipt/<int:receipt_id>/download')
-def download_receipt_pdf(receipt_id):
-    sale = Sale.query.get_or_404(receipt_id)
-    customer = sale.customer  # Ensure sale.customer exists
-    # 1️⃣  Fetch the receipt record from your database
-      # Assemble receipt dictionary with id_number included
+@bp.route('/receipt/<int:order_id>')
+def view_receipt(order_id):
+    order = CustomerOrder.query.get_or_404(order_id)
+
+    # Ensure payment_option exists and is lowercase
+    payment_option = (order.payment_option or '').lower()
+    is_cash = payment_option == 'cash'
+
+    # Build receipt data
     receipt = {
-        "number": sale.id,
-        "date": sale.date.strftime("%d-%b-%Y"),
-        "time": sale.date.strftime("%I:%M %p"),
-        "user": sale.user.username,
-        "customer_name": customer.full_name,
-        "customer_phone": customer.phone_number,
-        "customer_id": customer.id_number,  # ✅ this is key!
-        "items": [
+        'number': order.id,
+        'date': order.created_at.strftime('%Y-%m-%d'),
+        'time': order.created_at.strftime('%H:%M'),
+        'user':  f"{order.assigned_staff.username}" if order.assigned_staff else 'N/A',
+        'customer_name': order.customer.full_name,
+        'customer_phone': order.customer.phone_number,
+        'id_number': order.customer.id_number,
+        'items': [
             {
-                "name": item.device.model,
-                "imei": item.device.imei,
-                "qty": 1,
-                "price": item.price,
-                "total": item.price
+                'name': f"{item.device.brand} - {item.device.model}",
+                'imei': item.device.imei,
+                'qty': 1,
+                'price': item.device.price_cash if is_cash else item.device.price_credit,
+                'total': item.device.price_cash if is_cash else item.device.price_credit
             }
-            for item in sale.items
+            for item in order.items
         ],
-        "total": sale.total
+        'total': sum(
+            item.device.price_cash if is_cash else item.device.price_credit
+            for item in order.items
+        )
     }
 
-    # 2️⃣  Render the same HTML template you show in the browser
-    html = render_template("receipt.html", receipt=receipt)
+    return render_template('receipt.html', receipt=receipt)
 
-    # 3️⃣  Generate PDF (use explicit config if wkhtmltopdf isn't on PATH)
-    # config = pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')
-    # pdf = pdfkit.from_string(html, False, configuration=config)
-    pdf = pdfkit.from_string(html, False)
 
-    # 4️⃣  Send it back as a download
-    response = make_response(pdf)
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = (
-        f'attachment; filename=receipt_{receipt.id}.pdf'
-    )
-    return response
+
+# Download receipt as PDF
+@bp.route('/download-receipt/<int:receipt_id>')
+def download_receipt_pdf(receipt_id):
+    order = CustomerOrder.query.get_or_404(receipt_id)
+
+    payment_option = (order.payment_option or '').lower()
+    is_cash = payment_option == 'cash'
+
+    receipt = {
+        'number': order.id,
+        'date': order.created_at.strftime('%Y-%m-%d'),
+        'time': order.created_at.strftime('%H:%M'),
+        'user': f"User {order.assigned_staff.username}" if order.assigned_staff else 'N/A',
+        'customer_name': order.customer.full_name,
+        'customer_phone': order.customer.phone_number,
+        'id_number': order.customer.id_number,
+        'items': [
+            {
+                'name': f"{item.device.brand} - {item.device.model}",
+                'imei': item.device.imei,
+                'qty': 1,
+                'price': item.device.price_cash if is_cash else item.device.price_credit,
+                'total': item.device.price_cash if is_cash else item.device.price_credit
+            } for item in order.items
+        ],
+        'total': sum(
+            item.device.price_cash if is_cash else item.device.price_credit
+            for item in order.items
+        )
+    }
+
+    html = render_template('receipt.html', receipt=receipt, pdf_mode=True)
+    pdf = HTML(string=html, base_url=request.base_url).write_pdf()
+
+    return send_file(BytesIO(pdf),
+                     download_name=f"receipt_{receipt_id}.pdf",
+                     as_attachment=True,
+                     mimetype='application/pdf')
+
+

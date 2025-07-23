@@ -64,8 +64,7 @@ def mark_task_failed(order_id):
     return redirect(url_for('staff.dashboard'))
 
 
-
-# MARK TASK AS SUCCESSFUL
+# MARK TASK SUCCESS
 @bp.route('/orders/<int:order_id>/task_success', methods=['POST'])
 @login_required
 @staff_required
@@ -76,18 +75,17 @@ def mark_task_success(order_id):
         flash('Only approved orders can be marked as successful.', 'warning')
         return redirect(url_for('staff.dashboard'))
 
-    # Mark each device in the order as sold
+    # Mark devices as sold
     for item in order.items:
         if item.device and item.device.status != 'sold':
-            item.device.mark_as_sold()  # uses your model's mark_as_sold()
+            item.device.mark_as_sold()
 
-    # Optionally, update the order status if needed
+    # Update order status
     order.status = 'completed'
     order.completed_at = datetime.utcnow()
-    print(f"COMPLETED AT being set: {order.completed_at}")
     db.session.commit()
-    print(f"After commit: {order.completed_at}")
-    # Notify all admins
+
+    # Send notifications (admins + customer)
     admin_users = User.query.filter_by(role='admin').all()
     for admin in admin_users:
         db.session.add(Notification(
@@ -96,7 +94,6 @@ def mark_task_success(order_id):
             message=f"Order #{order.id} marked as successful by staff."
         ))
 
-    # Notify the customer
     if order.customer:
         notif_link_customer = url_for('customers.order_detail', order_id=order.id)
         db.session.add(Notification(
@@ -108,10 +105,10 @@ def mark_task_success(order_id):
 
     db.session.commit()
 
-    flash('Order marked as successful. Device(s) sold and notifications sent.', 'success')
-    return redirect(url_for('staff.dashboard'))
+    flash('Order marked as successful. Receipt is now available.', 'success')
 
-
+    # Redirect to receipt view
+    return redirect(url_for('sales.view_receipt', order_id=order.id))
 
 # staff sold items
 @bp.route('/staff/sold-items')
