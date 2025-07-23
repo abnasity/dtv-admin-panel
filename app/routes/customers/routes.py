@@ -6,6 +6,7 @@ from app.forms import CustomerRegistrationForm, CustomerLoginForm, CustomerEditF
 from datetime import datetime
 from app.routes.customers import bp
 from app.utils.helpers import assign_staff_to_order, get_device_debug_info
+from app.utils.mixins import ResetTokenMixin
 from app.utils.email import send_customer_reset_email
 from sqlalchemy import and_, func
 from sqlalchemy.orm import load_only , aliased
@@ -28,7 +29,7 @@ def customer_reset_request():
 
 @bp.route('/reset-password/<token>', methods=['GET', 'POST'])
 def customer_reset_token(token):
-    customer = Customer.verify_reset_token(token)
+    customer = ResetTokenMixin.verify_reset_token(token, model_class=Customer)
     if not customer:
         flash('That is an invalid or expired token.', 'warning')
         return redirect(url_for('customers.customer_reset_request'))

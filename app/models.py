@@ -9,14 +9,14 @@ from itsdangerous import URLSafeTimedSerializer
 import os
 from app.utils.image_utils import save_device_image
 from cloudinary.utils import cloudinary_url  
-
+from app.utils.mixins import ResetTokenMixin
 
 
 
 # USERS MODEL
 # This model represents both admin and staff users in the system.
 # Admins have full access, while staff have limited permissions.
-class User(UserMixin, db.Model): #usermodel for authentication and authorization
+class User(UserMixin, db.Model, ResetTokenMixin): #usermodel for authentication and authorization
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -54,19 +54,7 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
     def get_id(self):
       return f'user-{self.id}'
   
-    def get_reset_token(self, expires_sec=1800):
-        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        return s.dumps({'user_id': self.id})
-
-    @staticmethod
-    def verify_reset_token(token):
-        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        try:
-            user_id = s.loads(token, max_age=1800)['user_id']
-        except Exception:
-            return None
-        return User.query.get(user_id)
-    
+  
     def to_dict(self):
         """Convert user object to dictionary for API responses"""
         return {
@@ -85,7 +73,7 @@ class User(UserMixin, db.Model): #usermodel for authentication and authorization
         
         
 # CUSTOMERS MODEL
-class Customer(UserMixin, db.Model):
+class Customer(UserMixin, db.Model, ResetTokenMixin):
     __tablename__ = 'customers'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -132,21 +120,6 @@ class Customer(UserMixin, db.Model):
     def __repr__(self):
         return f'<Customer {self.email}>'
     
-    def get_reset_token(self, expires_sec=1800):
-        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        return s.dumps({'customer_id': self.id})
-    
-    
-    @staticmethod
-    def verify_reset_token(token, expires_sec=1800):
-        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        try:
-            customer_id = s.loads(token, max_age=expires_sec)['customer_id']
-        except Exception:
-            return None
-        return Customer.query.get(customer_id)
-
-
     def to_dict(self):
         return {
             'id': self.id,
@@ -463,6 +436,31 @@ class Sale(db.Model):
     @property
     def is_fully_paid(self):
       return self.amount_paid >= self.sale_price
+
+# RECEIPT ITEM MODEL
+class ReceiptItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    receipt_id = db.Column(db.Integer, db.ForeignKey('receipts.id'))
+    product_name = db.Column(db.String(100))
+    price = db.Column(db.Float)
+    quantity = db.Column(db.Integer)
+    total = db.Column(db.Float)
+
+# RECEIPT MODEL
+class Receipt(db.Model):
+    __tablename__ = 'receipts'
+    id = db.Column(db.Integer, primary_key=True)
+    number = db.Column(db.String(20), unique=True, nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
+    date = db.Column(db.Date, default=datetime.utcnow)
+    time = db.Column(db.Time, default=datetime.utcnow().time)
+    total = db.Column(db.Float, nullable=False)
+
+    # Relationship
+    items = db.relationship('ReceiptItem', backref='receipt', lazy=True)
+
+
   
 # NOTIFICATION MODEL
 class Notification(db.Model):

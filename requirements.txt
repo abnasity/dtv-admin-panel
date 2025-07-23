@@ -35,3 +35,4 @@ python-slugify
 pdfkit
 cloudinary
 WeasyPrint
+Flask-JWT-Extended

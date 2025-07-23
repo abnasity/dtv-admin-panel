@@ -6,6 +6,7 @@ from app.forms import LoginForm, ProfileForm, RegisterForm, ResetPasswordForm, R
 from app.decorators  import admin_required
 from app.utils.decorators import staff_required
 from app.utils.helpers import assign_staff_to_order
+from app.utils.mixins import ResetTokenMixin 
 from app.routes.auth import bp
 from datetime import datetime
 from sqlalchemy import or_
@@ -47,7 +48,8 @@ def reset_token(token):
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
 
-    user = User.verify_reset_token(token)
+    user = ResetTokenMixin.verify_reset_token(token, model_class=User)
+
     if user is None:
         flash('That is an invalid or expired token', 'warning')
         return redirect(url_for('auth.reset_request'))
