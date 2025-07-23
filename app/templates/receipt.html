@@ -80,16 +80,21 @@
             </tr>
         </thead>
           <tbody>
-              {% for item in receipt["items"] %}
-              <tr>
-                  <td>{{ item.name }}</td>
-                  <td>{{ item.imei }}</td>
-                  <td>{{ item.qty }}</td>
-                  <td>KES {{ '{:,.2f}'.format(item.price) }}</td>
-                  <td>KES {{ '{:,.2f}'.format(item.total) }}</td>
-              </tr>
-              {% endfor %}
+            {% for item in receipt["items"] %}
+            <tr>
+              <td>{{ item.name }}</td>
+              <td>
+                {% for imei in item.imei %}
+                  <div>{{ imei }}</div>
+                {% endfor %}
+              </td>
+              <td>{{ item.qty }}</td>
+              <td>KES {{ '{:,.2f}'.format(item.price) }}</td>
+              <td>KES {{ '{:,.2f}'.format(item.total) }}</td>
+            </tr>
+            {% endfor %}
           </tbody>
+
 
     </table>
 

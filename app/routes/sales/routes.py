@@ -10,6 +10,7 @@ from datetime import datetime
 import pdfkit
 from weasyprint import HTML
 from io import BytesIO
+from collections import defaultdict
 
 @bp.route('/')
 @login_required
@@ -167,51 +168,31 @@ def update_payment(sale_id):
 
 
 # RECEIPT/INVOICE DOWNLOAD
-
 @bp.route('/receipt/<int:order_id>')
 def view_receipt(order_id):
     order = CustomerOrder.query.get_or_404(order_id)
-
-    # Ensure payment_option exists and is lowercase
     payment_option = (order.payment_option or '').lower()
     is_cash = payment_option == 'cash'
 
-    # Build receipt data
-    receipt = {
-        'number': order.id,
-        'date': order.created_at.strftime('%Y-%m-%d'),
-        'time': order.created_at.strftime('%H:%M'),
-        'user':  f"{order.assigned_staff.username}" if order.assigned_staff else 'N/A',
-        'customer_name': order.customer.full_name,
-        'customer_phone': order.customer.phone_number,
-        'id_number': order.customer.id_number,
-        'items': [
-            {
-                'name': f"{item.device.brand} - {item.device.model}",
-                'imei': item.device.imei,
+    # Group items by brand and model
+    grouped = {}
+    for item in order.items:
+        device = item.device
+        key = f"{device.brand} - {device.model}"
+        price = device.price_cash if is_cash else device.price_credit
+
+        if key not in grouped:
+            grouped[key] = {
+                'name': key,
+                'imei': [device.imei],
                 'qty': 1,
-                'price': item.device.price_cash if is_cash else item.device.price_credit,
-                'total': item.device.price_cash if is_cash else item.device.price_credit
+                'price': price,
+                'total': price
             }
-            for item in order.items
-        ],
-        'total': sum(
-            item.device.price_cash if is_cash else item.device.price_credit
-            for item in order.items
-        )
-    }
-
-    return render_template('receipt.html', receipt=receipt)
-
-
-
-# Download receipt as PDF
-@bp.route('/download-receipt/<int:receipt_id>')
-def download_receipt_pdf(receipt_id):
-    order = CustomerOrder.query.get_or_404(receipt_id)
-
-    payment_option = (order.payment_option or '').lower()
-    is_cash = payment_option == 'cash'
+        else:
+            grouped[key]['imei'].append(device.imei)
+            grouped[key]['qty'] += 1
+            grouped[key]['total'] += price
 
     receipt = {
         'number': order.id,
@@ -221,19 +202,52 @@ def download_receipt_pdf(receipt_id):
         'customer_name': order.customer.full_name,
         'customer_phone': order.customer.phone_number,
         'id_number': order.customer.id_number,
-        'items': [
-            {
-                'name': f"{item.device.brand} - {item.device.model}",
-                'imei': item.device.imei,
+        'items': list(grouped.values()),
+        'total': sum(item['total'] for item in grouped.values())
+    }
+
+    return render_template('receipt.html', receipt=receipt)
+
+
+
+
+# Download receipt as PDF
+@bp.route('/download-receipt/<int:receipt_id>')
+def download_receipt_pdf(receipt_id):
+    order = CustomerOrder.query.get_or_404(receipt_id)
+    payment_option = (order.payment_option or '').lower()
+    is_cash = payment_option == 'cash'
+
+    # Group items by brand and model
+    grouped = {}
+    for item in order.items:
+        device = item.device
+        key = f"{device.brand} - {device.model}"
+        price = device.price_cash if is_cash else device.price_credit
+
+        if key not in grouped:
+            grouped[key] = {
+                'name': key,
+                'imei': [device.imei],
                 'qty': 1,
-                'price': item.device.price_cash if is_cash else item.device.price_credit,
-                'total': item.device.price_cash if is_cash else item.device.price_credit
-            } for item in order.items
-        ],
-        'total': sum(
-            item.device.price_cash if is_cash else item.device.price_credit
-            for item in order.items
-        )
+                'price': price,
+                'total': price
+            }
+        else:
+            grouped[key]['imei'].append(device.imei)
+            grouped[key]['qty'] += 1
+            grouped[key]['total'] += price
+
+    receipt = {
+        'number': order.id,
+        'date': order.created_at.strftime('%Y-%m-%d'),
+        'time': order.created_at.strftime('%H:%M'),
+        'user': f"{order.assigned_staff.username}" if order.assigned_staff else 'N/A',
+        'customer_name': order.customer.full_name,
+        'customer_phone': order.customer.phone_number,
+        'id_number': order.customer.id_number,
+        'items': list(grouped.values()),
+        'total': sum(item['total'] for item in grouped.values())
     }
 
     html = render_template('receipt.html', receipt=receipt, pdf_mode=True)
@@ -243,5 +257,3 @@ def download_receipt_pdf(receipt_id):
                      download_name=f"receipt_{receipt_id}.pdf",
                      as_attachment=True,
                      mimetype='application/pdf')
-
-
