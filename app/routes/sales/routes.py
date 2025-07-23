@@ -178,19 +178,20 @@ def view_receipt(order_id):
     grouped = {}
     for item in order.items:
         device = item.device
-        key = f"{device.brand} - {device.model}"
         price = device.price_cash if is_cash else device.price_credit
-
+        key = f"{device.brand} - {device.model}" 
         if key not in grouped:
             grouped[key] = {
                 'name': key,
                 'imei': [device.imei],
                 'qty': 1,
                 'price': price,
+                'prices': [price],
                 'total': price
             }
         else:
             grouped[key]['imei'].append(device.imei)
+            grouped[key]['prices'].append(price)
             grouped[key]['qty'] += 1
             grouped[key]['total'] += price
 
@@ -222,19 +223,21 @@ def download_receipt_pdf(receipt_id):
     grouped = {}
     for item in order.items:
         device = item.device
-        key = f"{device.brand} - {device.model}"
         price = device.price_cash if is_cash else device.price_credit
+        key = f"{device.brand} - {device.model}"
 
         if key not in grouped:
             grouped[key] = {
-                'name': key,
+                'name': f"{device.brand} - {device.model}",
                 'imei': [device.imei],
                 'qty': 1,
                 'price': price,
+                'prices': [price],
                 'total': price
             }
         else:
             grouped[key]['imei'].append(device.imei)
+            grouped[key]['prices'].append(price)
             grouped[key]['qty'] += 1
             grouped[key]['total'] += price
 
