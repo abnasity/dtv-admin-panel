@@ -10,7 +10,7 @@
                 <h5 class="mb-0">Set a New Password</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('customers.reset_token', token=token) }}">
+                <form method="POST" action="{{ url_for('customers.customer_reset_token', token=token) }}">
                     {{ form.csrf_token }}
 
                     <div class="mb-3">
