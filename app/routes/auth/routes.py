@@ -310,17 +310,26 @@ def users():
 @admin_required
 def create_user():
     form = RegisterForm()
-     # Dynamically populate address choices
+
+    # Dynamically populate address choices
     customers = Customer.query.all()
-    form.address.choices = [(customer.delivery_address, f"{customer.full_name} - {customer.delivery_address}") for customer in customers]
+    form.address.choices = [
+        (customer.delivery_address, f"{customer.full_name} - {customer.delivery_address}")
+        for customer in customers
+    ]
     form.address.choices.append(('__new__', 'Other (Add new address)'))
-    
+
     if form.validate_on_submit():
-        
+        # Check for duplicate email before creating user
+        existing_user = User.query.filter_by(email=form.email.data).first()
+        if existing_user:
+            flash('A user with this email already exists.', 'warning')
+            return redirect(url_for('auth.users'))
+
         address = form.address.data
         if address == '__new__':
             address = form.new_address.data
-            
+
         user = User(
             username=form.username.data,
             email=form.email.data,
@@ -329,15 +338,21 @@ def create_user():
         )
         user.set_password(form.password.data)
         db.session.add(user)
-    
-    try:
-        db.session.commit()
-        flash(f'User {user.username} has been created successfully', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash('Error creating user', 'danger')
-    
+
+        try:
+            db.session.commit()
+            flash(f'User {user.username} has been created successfully', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('Error creating user: possible duplicate or database issue', 'danger')
+            print(f"[ERROR] User creation failed: {e}")
+        
+        return redirect(url_for('auth.users'))  
+
+    flash('Form validation failed. Please check your inputs.', 'warning')
     return redirect(url_for('auth.users'))
+
+
 
 # TOGGLE USER STATUS
 @bp.route('/users/<int:user_id>/toggle_status', methods=['POST'])
