@@ -60,7 +60,7 @@ def reset_token(token):
         db.session.commit()
         flash('Your password has been updated!', 'success')
         return redirect(url_for('auth.login'))
-    return render_template('auth/reset_token.html', form=form)
+    return render_template('auth/reset_token.html', form=form, token=token)
 
 
 # LOGIN
