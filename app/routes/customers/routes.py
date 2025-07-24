@@ -8,6 +8,7 @@ from app.routes.customers import bp
 from app.utils.helpers import assign_staff_to_order, get_device_debug_info
 from app.utils.mixins import ResetTokenMixin
 from app.utils.email import send_customer_reset_email
+from flask_mail import Message
 from sqlalchemy import and_, func
 from sqlalchemy.orm import load_only , aliased
 import os
