@@ -13,6 +13,20 @@ from sqlalchemy.orm import load_only , aliased
 import os
 
 
+def send_customer_reset_email(customer):
+    token = customer.get_reset_token()
+    reset_url = url_for('customers.customer_reset_token', token=token, _external=True)
+    msg = Message('Password Reset Request',
+                  recipients=[customer.email])
+    msg.body = f'''To reset your password, visit the following link:
+{reset_url}
+
+If you did not request this, simply ignore this email.
+'''
+    mail.send(msg)
+
+
+
 @bp.route('/forgot-password', methods=['GET', 'POST'])
 def customer_reset_request():
     form = CustomerRequestResetForm()
@@ -29,7 +43,7 @@ def customer_reset_request():
 
 @bp.route('/reset-password/<token>', methods=['GET', 'POST'])
 def customer_reset_token(token):
-    customer = ResetTokenMixin.verify_reset_token(token, model_class=Customer)
+    customer = ResetTokenMixin.verify_reset_token(token, Customer)
     if not customer:
         flash('That is an invalid or expired token.', 'warning')
         return redirect(url_for('customers.customer_reset_request'))

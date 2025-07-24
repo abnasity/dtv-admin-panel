@@ -48,7 +48,7 @@ def reset_token(token):
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
 
-    user = ResetTokenMixin.verify_reset_token(token, model_class=User)
+    user = ResetTokenMixin.verify_reset_token(token, User)
 
     if user is None:
         flash('That is an invalid or expired token', 'warning')
