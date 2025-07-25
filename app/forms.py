@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, NumberRange, EqualTo, Optional
-from app.models import User, Customer
+from app.models import User
 from flask_wtf.file import FileField, FileAllowed
 
 # USER LOGIN FORM
@@ -56,41 +56,9 @@ class RegisterForm(FlaskForm):
         if user:
             raise ValidationError('Email already registered. Please use a different one.')
 
-# CUSTOMER REGISTRATION FORM
-class CustomerRegistrationForm(FlaskForm):
-    full_name = StringField('Full Name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    phone_number = StringField('Phone Number')
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
-    confirm = PasswordField('Confirm Password', validators=[EqualTo('password')])
-    submit = SubmitField('Register')
 
-# CUSTOMER LOGIN FORM
-class CustomerLoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('Login')
-    
-# CUSTOMER PROFILE FORM
-class CustomerProfileForm(FlaskForm):
-    full_name = StringField('Full Name', validators=[DataRequired(), Length(min=2, max=100)])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
-    
-    current_password = PasswordField('Current Password')
-    new_password = PasswordField('New Password', validators=[Length(min=6)])
-    confirm_password = PasswordField('Confirm New Password', validators=[EqualTo('new_password', message='Passwords must match.')])
-    
-    submit = SubmitField('Update Profile')
 
-    def __init__(self, original_email, *args, **kwargs):
-        super(CustomerProfileForm, self).__init__(*args, **kwargs)
-        self.original_email = original_email
-
-    def validate_email(self, email):
-        if email.data != self.original_email:
-            existing = Customer.query.filter_by(email=email.data).first()
-            if existing:
-                raise ValidationError('Email is already registered. Please use a different one.')
+    
 
 # DEVICE FORM
 class DeviceForm(FlaskForm):
@@ -173,29 +141,6 @@ class SaleForm(FlaskForm):
             raise ValidationError('For cash payments, the amount paid must equal the sale price.')
         
 
-# EDIT CUSTOMER FORM
-class CustomerEditForm(FlaskForm):
-     full_name = StringField('Full Name', validators=[
-        DataRequired(), Length(min=2, max=100)
-    ])
-    
-     email = StringField('Email', validators=[
-        DataRequired(), Email()
-    ])
-    
-     phone_number = StringField('Phone Number', validators=[
-        Optional(), Length(min=10, max=20)
-    ])
-    
-     address = StringField('Address', validators=[
-        Optional(), Length(max=255)
-    ])
-     
-     current_password = PasswordField('Current Password')
-     new_password = PasswordField('New Password')
-     confirm_password = PasswordField('Confirm New Password', validators=[EqualTo('new_password')])
-    
-     submit = SubmitField('Update Profile')
 
         
     #   EDIT USER FORM
@@ -224,21 +169,7 @@ class EditUserForm(FlaskForm):
                 raise ValidationError('Email already registered. Please use a different one.')
 
 
-# CHECKOUT FORM
-class CheckoutForm(FlaskForm):
-    payment_type = SelectField(
-        'Payment Method',
-        choices=[('cash', 'Cash'), ('credit', 'Credit')],
-        validators=[DataRequired()]
-    )
- 
-    delivery_address = SelectField(  
-        'Delivery Address',
-        choices=[], 
-        validators=[DataRequired()]
-    )
-    id_number = StringField('National ID Number', validators=[Optional(), Length(max=30)])
-    submit = SubmitField('Confirm Order')
+
     
     
 # RESET PASSWORD FORMS
@@ -253,13 +184,3 @@ class ResetPasswordForm(FlaskForm):
     submit = SubmitField('Reset Password')
 
 
-#CUSTOMER RESET PASSWORD FORMS
-class CustomerRequestResetForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    submit = SubmitField('Request Password Reset')
-
-class CustomerResetPasswordForm(FlaskForm):
-    password = PasswordField('New Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[
-        DataRequired(), EqualTo('password')])
-    submit = SubmitField('Reset Password')
