@@ -2,7 +2,7 @@ from app.routes.staff import bp
 from app.utils.decorators import staff_required
 from flask_login import login_required, current_user
 from flask import render_template, flash, redirect, url_for, request, abort
-from app.models import CustomerOrder, User, Notification
+from app.models import User, Notification
 from app.extensions import db
 from datetime import datetime
 

@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, abort, after_this_request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.extensions import db
-from app.models import User, CustomerOrder, Customer, Notification, Device
+from app.models import User, Notification, Device
 from app.forms import LoginForm, ProfileForm, RegisterForm, ResetPasswordForm, RequestResetForm
 from app.decorators  import admin_required
 from app.utils.decorators import staff_required
