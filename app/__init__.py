@@ -71,7 +71,7 @@ def create_app(config_class=Config):
     from app.routes.sales import bp as sales_bp
     from app.routes.reports import bp as reports_bp
     from app.routes.staff import bp as staff_bp
-    from app.routes.public import bp as public_bp
+    
 
     app.register_blueprint(main_bp, url_prefix='/main')
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -79,7 +79,7 @@ def create_app(config_class=Config):
     app.register_blueprint(sales_bp, url_prefix='/sales', name='sales')
     app.register_blueprint(reports_bp, url_prefix='/reports', name='reports')
     app.register_blueprint(staff_bp, url_prefix='/staff', name='staff')
-    app.register_blueprint(public_bp)
+    
 
     # Register API blueprints (admin/staff only)
     from app.api.auth import bp as auth_api_bp
