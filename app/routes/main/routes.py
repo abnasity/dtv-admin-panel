@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, abort
 from flask_login import login_required
-from app.models import CustomerOrder, Customer, Device
+from app.models import Device
 from app.routes.main import bp
 
 
