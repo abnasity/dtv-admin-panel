@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, make_response, send_file, abort
 from flask_login import login_required, current_user
-from app.models import Device, Sale, CustomerOrder
+from app.models import Device, Sale
 from app.forms import SaleForm
 from app.routes.sales import bp
 from app.utils.decorators import staff_required
