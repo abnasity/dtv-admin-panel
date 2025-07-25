@@ -240,15 +240,11 @@ def dashboard():
     Device.featured == False
 ).count()
 
-    pending_orders = CustomerOrder.query.filter_by(status='pending').count()
-
-    recent_orders = CustomerOrder.query.order_by(CustomerOrder.created_at.desc()).limit(5).all()
-
+  
     return render_template('admin/dashboard.html',
                            total_users=total_users,
                            total_devices=total_devices,
-                           pending_orders=pending_orders,
-                           recent_orders=recent_orders)
+                           )
 
 
 # USER MANAGEMENT
@@ -289,17 +285,13 @@ def users():
     )
     
     form = RegisterForm()  # Form for the add user modal
-    customers = Customer.query.order_by(Customer.full_name).all()
-    form.address.choices = [(c.delivery_address, f"{c.full_name} - {c.delivery_address}") for c in customers]
-    form.address.choices.append(('__new__', 'Other (Add new address)'))
     return render_template('auth/users.html',
                          users=pagination.items,
                          pagination=pagination,
                          search=search,
                          role_filter=role_filter,
                          status_filter=status_filter,
-                         form=form,
-                         customers=customers
+                         form=form
                          )
     
 
@@ -806,12 +798,7 @@ def completed_orders():
 @login_required
 @admin_required
 def view_assignments():
-    orders = CustomerOrder.query.filter(
-    CustomerOrder.assigned_staff_id != None,
-    CustomerOrder.is_deleted == False
-).order_by(CustomerOrder.created_at.desc()).all()
-
-    return render_template('admin/view_assignments.html', orders=orders)
+    return render_template('admin/view_assignments.html')
 
 # DELETE CUSTOMER
 @bp.route('/<int:id>', methods=['DELETE'])
