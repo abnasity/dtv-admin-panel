@@ -121,45 +121,6 @@
 </li>
 
 
-                        <div class="dropdown">
- <a class="nav-link dropdown-toggle hover-effect" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    <i class="fas fa-briefcase me-1"></i> Customer Orders
-  </a>
-  <ul class="dropdown-menu p-2 shadow-sm border rounded-3" style="min-width: 220px;">
-    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.pending_orders') }}">
-      <i class="fas fa-clock text-primary me-2 small"></i> Pending Orders</a></li>
-
-    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.awaiting_approval_orders') }}">
-      <i class="fas fa-hourglass-half text-warning me-2 small"></i> Orders Awaiting Approval</a></li>
-
-    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.approved_orders') }}">
-      <i class="fas fa-check-circle text-success me-2 small"></i> Approved Orders</a></li>
-    
-    <li>
-      <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.completed_orders') }}" class="dropdown-item">
-        <i class="fas fa-clipboard-check text-success me-2 small"></i> Completed Orders
-      </a>
-    </li>
-
-
-    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.view_orders') }}">
-      <i class="fas fa-list text-info me-2 small"></i> All Orders</a></li>
-
-    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.rejected_orders') }}">
-      <i class="fas fa-times-circle text-danger me-2 small"></i> Rejected Orders</a></li>
-
-    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.cancelled_orders') }}">
-      <i class="fas fa-ban text-danger me-2 small"></i> Cancelled Orders</a></li>
-
-    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.deleted_orders') }}">
-      <i class="fas fa-trash-alt text-secondary me-2 small"></i> Deleted Orders</a></li>
-
-    <li><a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.failed_orders') }}">
-      <i class="fas fa-times text-dark me-2 small"></i> Failed Orders</a></li>
-  </ul>
-</div>
-
-
 
 <li class="nav-item">
   <a class="nav-link hover-effect d-flex align-items-center small" href="{{ url_for('auth.view_assignments') }}">
