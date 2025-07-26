@@ -1,0 +1,1107 @@
+{% extends "layouts/base.html" %}
+{% block title %}Dashboard - Diamond Tree Ventures{% endblock %}
+
+{% block content %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhoneHub - Mobile Phone Sales Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --admin-bg: #f0f7ff;
+            --staff-bg: #f8f9fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 28px;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-role {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        /* Navigation */
+        nav {
+            background-color: white;
+            padding: 10px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-container {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-item {
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--gray);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-item.active, .nav-item:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        /* Main Content */
+        main {
+            flex: 1;
+            padding: 30px 0;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .page-header {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Dashboard Styles */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .bg-primary-light {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+        }
+        
+        .bg-success-light {
+            background-color: rgba(76, 201, 240, 0.1);
+            color: var(--success);
+        }
+        
+        .bg-warning-light {
+            background-color: rgba(248, 150, 30, 0.1);
+            color: var(--warning);
+        }
+        
+        .bg-danger-light {
+            background-color: rgba(247, 37, 133, 0.1);
+            color: var(--danger);
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .chart-placeholder {
+            height: 300px;
+            background: var(--light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            font-weight: 500;
+        }
+        
+        .staff-performance {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        th {
+            font-weight: 600;
+            color: var(--gray);
+            background-color: var(--light);
+        }
+        
+        tr:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        /* Form Styles */
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--light-gray);
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        .scan-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .scan-input {
+            flex: 1;
+        }
+        
+        .device-preview {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .device-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-label {
+            font-size: 13px;
+            color: var(--gray);
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        .payment-method {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .payment-option {
+            flex: 1;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .payment-option.active {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.05);
+        }
+        
+        .payment-option i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--gray);
+        }
+        
+        .payment-option.active i {
+            color: var(--primary);
+        }
+        
+        .payment-option h4 {
+            margin-bottom: 5px;
+        }
+        
+        /* Inventory Styles */
+        .inventory-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            padding-left: 40px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .status-available {
+            background: rgba(76, 201, 240, 0.15);
+            color: var(--success);
+        }
+        
+        .status-sold {
+            background: rgba(247, 37, 133, 0.15);
+            color: var(--danger);
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 20px 0;
+            margin-top: 50px;
+        }
+        
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .copyright {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .inventory-actions {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <i class="fas fa-mobile-alt"></i>
+                <h1>PhoneHub</h1>
+            </div>
+            <div class="user-info">
+                <div class="user-role">
+                    <i class="fas fa-user-shield"></i> Admin
+                </div>
+                <div class="user-actions">
+                    <button class="btn btn-outline"><i class="fas fa-bell"></i></button>
+                    <button class="btn btn-outline"><i class="fas fa-cog"></i></button>
+                    <button class="btn btn-outline"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Navigation -->
+    <nav>
+        <div class="container nav-container">
+            <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</div>
+            <div class="nav-item" data-page="inventory"><i class="fas fa-boxes"></i> Inventory</div>
+            <div class="nav-item" data-page="sales"><i class="fas fa-cash-register"></i> Sales</div>
+            <div class="nav-item" data-page="reports"><i class="fas fa-file-alt"></i> Reports</div>
+            <div class="nav-item" data-page="staff"><i class="fas fa-users"></i> Staff</div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <div class="page-header">
+                    <h2 class="page-title"><i class="fas fa-chart-line"></i> Dashboard</h2>
+                    <div>
+                        <button class="btn btn-primary"><i class="fas fa-download"></i> Export Report</button>
+                    </div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary-light">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="stat-value">142</div>
+                        <div class="stat-label">Total Devices in Stock</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success-light">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-value">89</div>
+                        <div class="stat-label">Available Devices</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-warning-light">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-value">₦2,380,500</div>
+                        <div class="stat-label">Monthly Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-danger-light">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-value">53</div>
+                        <div class="stat-label">Devices Sold</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Sales Performance (Last 30 Days)</div>
+                        <select>
+                            <option>Last 7 Days</option>
+                            <option selected>Last 30 Days</option>
+                            <option>Last 90 Days</option>
+                        </select>
+                    </div>
+                    <div class="chart-placeholder">
+                        <i class="fas fa-chart-bar" style="font-size: 48px; margin-right: 15px;"></i>
+                        Sales Performance Chart Visualization
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Top Selling Models</div>
+                        <select>
+                            <option>This Month</option>
+                            <option selected>Last Month</option>
+                            <option>All Time</option>
+                        </select>
+                    </div>
+                    <div class="chart-placeholder">
+                        <i class="fas fa-chart-pie" style="font-size: 48px; margin-right: 15px;"></i>
+                        Top Selling Models Visualization
+                    </div>
+                </div>
+                
+                <div class="staff-performance">
+                    <div class="chart-header">
+                        <div class="chart-title">Staff Performance</div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Staff Member</th>
+                                    <th>Sales Count</th>
+                                    <th>Total Revenue</th>
+                                    <th>Avg. Sale Value</th>
+                                    <th>Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><i class="fas fa-user"></i> James Adebayo</td>
+                                    <td>27</td>
+                                    <td>₦1,240,500</td>
+                                    <td>₦45,945</td>
+                                    <td><span style="color: var(--success);">Excellent</span></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-user"></i> Fatima Sani</td>
+                                    <td>19</td>
+                                    <td>₦845,300</td>
+                                    <td>₦44,489</td>
+                                    <td><span style="color: var(--success);">Very Good</span></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-user"></i> Chinedu Okoro</td>
+                                    <td>14</td>
+                                    <td>₦584,200</td>
+                                    <td>₦41,729</td>
+                                    <td><span style="color: var(--warning);">Good</span></td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-user"></i> Amina Yusuf</td>
+                                    <td>8</td>
+                                    <td>₦310,000</td>
+                                    <td>₦38,750</td>
+                                    <td><span style="color: var(--warning);">Average</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Inventory Page -->
+            <div id="inventory" class="page">
+                <div class="page-header">
+                    <h2 class="page-title"><i class="fas fa-boxes"></i> Inventory Management</h2>
+                    <button class="btn btn-primary"><i class="fas fa-plus"></i> Add New Device</button>
+                </div>
+                
+                <div class="inventory-actions">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search by IMEI, brand, model...">
+                    </div>
+                    <div>
+                        <select>
+                            <option>All Status</option>
+                            <option>Available</option>
+                            <option>Sold</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>IMEI</th>
+                                <th>Device</th>
+                                <th>Brand</th>
+                                <th>Purchase Price</th>
+                                <th>Added Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>357812065481920</td>
+                                <td>iPhone 13 Pro Max</td>
+                                <td>Apple</td>
+                                <td>₦380,000</td>
+                                <td>2023-08-15</td>
+                                <td><span class="status-badge status-available">Available</span></td>
+                                <td>
+                                    <button class="btn btn-outline" style="border-color: var(--gray); color: var(--gray); padding: 5px 10px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>863915720458316</td>
+                                <td>Galaxy S22 Ultra</td>
+                                <td>Samsung</td>
+                                <td>₦350,000</td>
+                                <td>2023-08-20</td>
+                                <td><span class="status-badge status-sold">Sold</span></td>
+                                <td>
+                                    <button class="btn btn-outline" style="border-color: var(--gray); color: var(--gray); padding: 5px 10px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>490273618205937</td>
+                                <td>Redmi Note 11 Pro</td>
+                                <td>Xiaomi</td>
+                                <td>₦120,000</td>
+                                <td>2023-09-02</td>
+                                <td><span class="status-badge status-available">Available</span></td>
+                                <td>
+                                    <button class="btn btn-outline" style="border-color: var(--gray); color: var(--gray); padding: 5px 10px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>726491058374619</td>
+                                <td>Pixel 7 Pro</td>
+                                <td>Google</td>
+                                <td>₦280,000</td>
+                                <td>2023-09-05</td>
+                                <td><span class="status-badge status-available">Available</span></td>
+                                <td>
+                                    <button class="btn btn-outline" style="border-color: var(--gray); color: var(--gray); padding: 5px 10px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>153984726098153</td>
+                                <td>Mate 50 Pro</td>
+                                <td>Huawei</td>
+                                <td>₦310,000</td>
+                                <td>2023-08-28</td>
+                                <td><span class="status-badge status-sold">Sold</span></td>
+                                <td>
+                                    <button class="btn btn-outline" style="border-color: var(--gray); color: var(--gray); padding: 5px 10px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Sales Page -->
+            <div id="sales" class="page">
+                <div class="page-header">
+                    <h2 class="page-title"><i class="fas fa-cash-register"></i> New Sale</h2>
+                </div>
+                
+                <div class="form-container">
+                    <h3 style="margin-bottom: 20px;">Scan Device IMEI</h3>
+                    <div class="form-group">
+                        <div class="scan-container">
+                            <input type="text" class="scan-input" placeholder="Enter or scan IMEI number">
+                            <button class="btn btn-primary"><i class="fas fa-camera"></i> Scan</button>
+                        </div>
+                    </div>
+                    
+                    <div class="device-preview">
+                        <h3 style="margin-bottom: 15px;">Samsung Galaxy S23 Ultra</h3>
+                        <div class="device-details">
+                            <div class="detail-item">
+                                <span class="detail-label">IMEI</span>
+                                <span class="detail-value">863915720458316</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Brand</span>
+                                <span class="detail-value">Samsung</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Model</span>
+                                <span class="detail-value">Galaxy S23 Ultra</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Color</span>
+                                <span class="detail-value">Phantom Black</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Storage</span>
+                                <span class="detail-value">256GB</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Purchase Price</span>
+                                <span class="detail-value">₦410,000</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Added Date</span>
+                                <span class="detail-value">2023-08-20</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Status</span>
+                                <span class="detail-value" style="color: var(--success);">Available</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-bottom: 20px;">Sale Information</h3>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="sale-price">Sale Price (₦)</label>
+                                <input type="number" id="sale-price" value="485000">
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="staff">Selling Staff</label>
+                                <select id="staff">
+                                    <option>James Adebayo</option>
+                                    <option>Fatima Sani</option>
+                                    <option selected>Chinedu Okoro</option>
+                                    <option>Amina Yusuf</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-bottom: 15px;">Payment Method</h3>
+                    <div class="payment-method">
+                        <div class="payment-option active" data-payment="cash">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <h4>Cash Payment</h4>
+                            <p>Full amount paid immediately</p>
+                        </div>
+                        <div class="payment-option" data-payment="credit">
+                            <i class="fas fa-credit-card"></i>
+                            <h4>Credit Payment</h4>
+                            <p>Partial payment with installment plan</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount-paid">Amount Paid (₦)</label>
+                        <input type="number" id="amount-paid" value="485000">
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 30px;">
+                        <button class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 18px;">
+                            <i class="fas fa-check-circle"></i> Complete Sale
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reports Page -->
+            <div id="reports" class="page">
+                <div class="page-header">
+                    <h2 class="page-title"><i class="fas fa-file-alt"></i> Reports</h2>
+                    <button class="btn btn-primary"><i class="fas fa-download"></i> Export All</button>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Sales Report</div>
+                        <div>
+                            <select style="margin-right: 10px;">
+                                <option>Today</option>
+                                <option>This Week</option>
+                                <option selected>This Month</option>
+                                <option>This Quarter</option>
+                                <option>This Year</option>
+                            </select>
+                            <button class="btn btn-primary"><i class="fas fa-download"></i> Export</button>
+                        </div>
+                    </div>
+                    <div class="chart-placeholder">
+                        <i class="fas fa-chart-line" style="font-size: 48px; margin-right: 15px;"></i>
+                        Sales Report Visualization
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Inventory Report</div>
+                        <button class="btn btn-primary"><i class="fas fa-download"></i> Export</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Brand</th>
+                                    <th>Model</th>
+                                    <th>Available</th>
+                                    <th>Sold</th>
+                                    <th>Avg. Sale Price</th>
+                                    <th>Profit Margin</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Apple</td>
+                                    <td>iPhone 14 Pro Max</td>
+                                    <td>12</td>
+                                    <td>18</td>
+                                    <td>₦520,000</td>
+                                    <td>28%</td>
+                                </tr>
+                                <tr>
+                                    <td>Samsung</td>
+                                    <td>Galaxy S23 Ultra</td>
+                                    <td>8</td>
+                                    <td>15</td>
+                                    <td>₦485,000</td>
+                                    <td>25%</td>
+                                </tr>
+                                <tr>
+                                    <td>Xiaomi</td>
+                                    <td>Redmi Note 12 Pro</td>
+                                    <td>22</td>
+                                    <td>10</td>
+                                    <td>₦135,000</td>
+                                    <td>20%</td>
+                                </tr>
+                                <tr>
+                                    <td>Google</td>
+                                    <td>Pixel 7 Pro</td>
+                                    <td>5</td>
+                                    <td>7</td>
+                                    <td>₦320,000</td>
+                                    <td>22%</td>
+                                </tr>
+                                <tr>
+                                    <td>Huawei</td>
+                                    <td>Mate 50 Pro</td>
+                                    <td>3</td>
+                                    <td>3</td>
+                                    <td>₦365,000</td>
+                                    <td>24%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Staff Page -->
+            <div id="staff" class="page">
+                <div class="page-header">
+                    <h2 class="page-title"><i class="fas fa-users"></i> Staff Management</h2>
+                    <button class="btn btn-primary"><i class="fas fa-plus"></i> Add Staff</button>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Last Login</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-user"></i> James Adebayo</td>
+                                <td>Senior Sales</td>
+                                <td>james@phonehub.com</td>
+                                <td>+2348034567890</td>
+                                <td>Today, 09:24 AM</td>
+                                <td><span style="color: var(--success);">Active</span></td>
+                                <td>
+                                    <button class="btn btn-outline" style="border-color: var(--gray); color: var(--gray); padding: 5px 10px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-user"></i> Fatima Sani</td>
+                                <td>Sales Associate</td>
+                                <td>fatima@phonehub.com</td>
+                                <td>+2348023456789</td>
+                                <td>Today, 08:45 AM</td>
+                                <td><span style="color: var(--success);">Active</span></td>
+                                <td>
+                                    <button class="btn btn-outline" style="border-color: var(--gray); color: var(--gray); padding: 5px 10px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-user"></i> Chinedu Okoro</td>
+                                <td>Sales Associate</td>
+                                <td>chinedu@phonehub.com</td>
+                                <td>+2348098765432</td>
+                                <td>Yesterday, 05:30 PM</td>
+                                <td><span style="color: var(--success);">Active</span></td>
+                                <td>
+                                    <button class="btn btn-outline" style="border-color: var(--gray); color: var(--gray); padding: 5px 10px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-user"></i> Amina Yusuf</td>
+                                <td>Junior Sales</td>
+                                <td>amina@phonehub.com</td>
+                                <td>+2348076543210</td>
+                                <td>Yesterday, 04:15 PM</td>
+                                <td><span style="color: var(--success);">Active</span></td>
+                                <td>
+                                    <button class="btn btn-outline" style="border-color: var(--gray); color: var(--gray); padding: 5px 10px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-container">
+            <div class="logo">
+                <i class="fas fa-mobile-alt"></i>
+                <h1>PhoneHub</h1>
+            </div>
+            <div class="copyright">
+                &copy; 2023 PhoneHub - Mobile Phone Sales Management System. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Navigation functionality
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove active class from all nav items
+                document.querySelectorAll('.nav-item').forEach(nav => {
+                    nav.classList.remove('active');
+                });
+                
+                // Add active class to clicked nav item
+                this.classList.add('active');
+                
+                // Hide all pages
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                
+                // Show selected page
+                const pageId = this.getAttribute('data-page');
+                document.getElementById(pageId).classList.add('active');
+            });
+        });
+        
+        // Payment method selection
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.payment-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Update amount paid field based on selection
+                const paymentType = this.getAttribute('data-payment');
+                const amountPaid = document.getElementById('amount-paid');
+                
+                if (paymentType === 'credit') {
+                    amountPaid.value = '242500'; // 50% of sale price
+                    amountPaid.placeholder = 'Enter deposit amount';
+                } else {
+                    amountPaid.value = '485000'; // Full sale price
+                }
+            });
+        });
+        
+        // Simulate device scan for demo purposes
+        document.querySelector('.scan-input').addEventListener('focus', function() {
+            this.value = '863915720458316';
+        });
+    </script>
+{% endblock %}
