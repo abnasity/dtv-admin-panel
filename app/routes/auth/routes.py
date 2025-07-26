@@ -847,6 +847,11 @@ def view_sold_devices():
 @login_required
 @admin_required
 def failed_orders():
-    orders = CustomerOrder.query.filter_by(status='failed').all()
-    return render_template('admin/failed_orders.html', orders=orders)
+    return render_template('admin/failed_orders.html')
 
+
+@bp.route('/ui')
+@login_required
+@admin_required
+def ui():
+    return render_template('UI.html')
