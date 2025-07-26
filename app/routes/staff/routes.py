@@ -115,11 +115,7 @@ def mark_task_success(order_id):
 @login_required
 @staff_required
 def view_sold_items():
-    sold_items = CustomerOrder.query.filter_by(
-        assigned_staff_id=current_user.id,
-        status='completed'
-    ).filter(CustomerOrder.completed_at.isnot(None)) .order_by(CustomerOrder.completed_at.desc()).all() 
-    return render_template('staff/sold_items.html', sold_items=sold_items)
+ return render_template('staff/sold_items.html')
 
 
 
