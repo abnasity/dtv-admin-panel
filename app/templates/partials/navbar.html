@@ -17,13 +17,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">   
             <!-- DASHBOARDS -->
-             {% if current_user.is_authenticated and current_user.role in ['customer'] %}
-                <li>
-                <a href="{{ url_for('customers.dash') }}" class="btn btn-outline-success">
-                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                </a>
-                </li>
-                 {% endif %}
+
 
             <!--STAFF DASHBOARD  -->
                 {% if current_user.is_authenticated and current_user.role in ['staff'] %}
@@ -73,14 +67,7 @@
       <li><a class="dropdown-item" href="{{ url_for('devices.deleted_inventory') }}">
         <i class="fas fa-trash-restore-alt me-2"></i> Deleted Inventory
       </a></li>
-      <li> <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('devices.featured_devices') }}">
-        <i class="fas fa-star"></i> Featured Devices
-    </a></li>
-    <li>
-       <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('devices.deleted_featured_devices') }}">
-        <i class="fas fa-trash-alt text-secondary me-2 small"></i> Deleted Featured Devices
-      </a>
-    </li>
+      
    
     {% else %}
       <li>
@@ -88,11 +75,7 @@
           <i class="fas fa-mobile-alt text-success me-2 small"></i> My Sold Items
         </a>
       </li>
-      <li>
-        <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('staff.view_failed_orders') }}">
-          <i class="fas fa-times-circle text-danger me-2 small"></i> Failed Orders
-        </a>
-      </li>
+
     {% endif %}
   </ul>
 </li>
@@ -149,77 +132,12 @@
                         
                     {% endif %}
                 {% endif %}              
-                {% elif not request.endpoint == 'auth.login' %}                               
-               <!-- PUBLIC USER ACCOUNT CREATION -->
-                                    <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle hover-effect" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user me-1"></i>
-                        {% if current_user.is_authenticated and current_user.get_id().startswith('customer-') %}
-                            {{ current_user.full_name.split(' ')[0] }}
-                        {% else %}
-                            Account
-                        {% endif %}
-                    </a>
-
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        {% if current_user.is_authenticated and current_user.get_id().startswith('customer-') %}
-                            <li><a class="dropdown-item" href="{{ url_for('customers.profile') }}"><i class="fas fa-id-card me-1"></i> Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('customers.logout') }}"><i class="fas fa-sign-out-alt me-1"></i> Logout</a></li>
-                        {% else %}
-                            <li><a class="dropdown-item" href="{{ url_for('customers.login') }}"><i class="fas fa-sign-in-alt me-1"></i> Login</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('customers.register') }}"><i class="fas fa-user-plus me-1"></i> Register</a></li>
-                        {% endif %}
-                    </ul>
-                </li>
-
-
-<!-- END PUBLIC USER ACCOUNT CREATION -->
-
-                    <li class="nav-item position-relative">
-                        {% if current_user.is_authenticated and current_user.is_customer() %}
-                            <a class="nav-link hover-effect d-flex align-items-center position-relative" href="{{ url_for('customers.view_cart') }}">
-                            <i class="fas fa-shopping-cart me-1 position-relative">
-                                {% if cart_count > 0 %}
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    {{ '99+' if cart_count > 99 else cart_count }}
-                                </span>
-                                {% endif %}
-                            </i>
-                            <span class="ms-1">Cart</span>
-                            </a>
-                        {% else %}
-                            <a class="nav-link hover-effect" href="{{ url_for('customers.login', next=url_for('customers.view_cart'), reason='access_devices') }}">
-                            <i class="fas fa-shopping-cart me-1"></i> Cart
-                            </a>
-                        {% endif %}
-                    </li>
-
-
-                      {% if current_user.is_authenticated and current_user.is_customer() %}
-                            <li class="nav-item position-relative">
-                                <a class="nav-link hover-effect d-flex align-items-center position-relative" href="{{ url_for('customers.my_orders') }}">
-                                    <i class="fas fa-check-circle me-1 position-relative text-success">
-                                        {% if confirmed_orders_count > 0 %}
-                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
-                                            {{ '99+' if confirmed_orders_count > 99 else confirmed_orders_count }}
-                                        </span>
-                                        {% endif %}
-                                    </i>
-                                    <span class="ms-1">Orders</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('customers.my_devices') }}">
-                                    <i class="fas fa-mobile-alt me-1"></i> My Purchases
-                                </a>
-                            </li>
-
+                             
+      
 
                     {% endif %}   
                           
-                {% endif %}
-    
+
 
             </ul>
         </div>
