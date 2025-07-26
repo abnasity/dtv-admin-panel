@@ -221,11 +221,11 @@ def view_order_staff(order_id):
 @login_required
 @staff_required
 def assigned_orders():
-    orders = CustomerOrder.query.options(joinedload(CustomerOrder.customer)).filter_by(
-    assigned_staff_id=current_user.id
-).order_by(CustomerOrder.created_at.desc()).all()
 
-    return render_template('staff/assigned_orders.html', orders=orders)
+    assigned_staff_id=current_user.id
+
+
+    return render_template('staff/assigned_orders.html')
 
 
 
@@ -302,14 +302,6 @@ def users():
 @admin_required
 def create_user():
     form = RegisterForm()
-
-    # Dynamically populate address choices
-    customers = Customer.query.all()
-    form.address.choices = [
-        (customer.delivery_address, f"{customer.full_name} - {customer.delivery_address}")
-        for customer in customers
-    ]
-    form.address.choices.append(('__new__', 'Other (Add new address)'))
 
     if form.validate_on_submit():
         # Check for duplicate email before creating user
