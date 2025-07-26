@@ -66,7 +66,7 @@ def reset_token(token):
 # LOGIN
 from sqlalchemy import or_
 
-@bp.route('/login', methods=['GET', 'POST'])
+@bp.route('/', methods=['GET', 'POST'])
 def login():         
     form = LoginForm()
     if form.validate_on_submit():
