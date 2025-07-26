@@ -74,7 +74,7 @@ def create_app(config_class=Config):
     
 
     app.register_blueprint(main_bp, url_prefix='/main')
-    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(auth_bp)
     app.register_blueprint(devices_bp, url_prefix='/devices', name='devices')
     app.register_blueprint(sales_bp, url_prefix='/sales', name='sales')
     app.register_blueprint(reports_bp, url_prefix='/reports', name='reports')
