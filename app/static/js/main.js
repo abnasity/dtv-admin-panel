@@ -1,19 +1,65 @@
 // Format currency values
 function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-NG', {
         style: 'currency',
-        currency: 'USD'
+        currency: 'NGN'
     }).format(amount);
 }
 
 // Format dates
 function formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-NG', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
     });
 }
+
+// Mobile Navigation Toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const navToggle = document.getElementById('nav-toggle');
+    const navItems = document.querySelector('.nav-items');
+    
+    if (navToggle && navItems) {
+        navToggle.addEventListener('click', function() {
+            navItems.classList.toggle('show');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!navToggle.contains(event.target) && !navItems.contains(event.target)) {
+                navItems.classList.remove('show');
+            }
+        });
+    }
+
+    // Payment method selection
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    if (paymentOptions.length > 0) {
+        paymentOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.payment-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Update amount paid field based on selection
+                const paymentType = this.getAttribute('data-payment');
+                const amountPaid = document.getElementById('amount-paid');
+                const salePrice = document.getElementById('sale-price');
+                
+                if (amountPaid && salePrice) {
+                    if (paymentType === 'credit') {
+                        amountPaid.value = (parseFloat(salePrice.value) / 2).toFixed(2); // 50% of sale price
+                        amountPaid.placeholder = 'Enter deposit amount';
+                    } else {
+                        amountPaid.value = salePrice.value; // Full sale price
+                    }
+                }
+            });
+        });
+    }
+});
 
 // Show/hide loading spinner
 function showLoading() {
