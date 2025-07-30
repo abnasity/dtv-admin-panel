@@ -533,3 +533,24 @@ html, body {
     color: #fff;
 }
 
+
+.inventory-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.search-box {
+    background-color: #f1f1f1;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+}
+.search-box input {
+    border: none;
+    background: transparent;
+    outline: none;
+    flex-grow: 1;
+}
