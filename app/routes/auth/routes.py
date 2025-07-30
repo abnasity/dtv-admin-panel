@@ -62,7 +62,6 @@ def reset_token(token):
         return redirect(url_for('auth.login'))
     return render_template('auth/reset_token.html', form=form, token=token)
 
-
 # LOGIN
 from sqlalchemy import or_
 @bp.route('/', methods=['GET', 'POST'])
@@ -145,6 +144,7 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.login'))
+ 
  
 
 # STAFF DASHBOARD
