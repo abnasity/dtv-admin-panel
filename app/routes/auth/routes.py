@@ -65,7 +65,6 @@ def reset_token(token):
 
 # LOGIN
 from sqlalchemy import or_
-
 @bp.route('/', methods=['GET', 'POST'])
 def login():         
     form = LoginForm()
@@ -157,63 +156,6 @@ def notifications():
     notes = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
     return render_template('staff/notifications.html', notifications=notes)
 
-# MARK AWAITING APPROVAL
-@bp.route('/orders/<int:order_id>/awaiting-approval', methods=['POST'])
-@login_required
-@staff_required
-def mark_awaiting_approval(order_id):
-    order = CustomerOrder.query.get_or_404(order_id)
-    
-    if order.status == 'awaiting_approval':
-        flash(f"Order #{order.id} is already marked as awaiting approval.", "warning")
-        return redirect(url_for('auth.view_order_staff', order_id=order.id))
-    
-    order.status = 'awaiting_approval'
-    db.session.commit()
-
-    # notify admin again that it's ready for approval
-    admin_users = User.query.filter_by(role='admin').all()
-    for admin in admin_users:
-        note = Notification(
-            user_id=admin.id,
-            message=f"Order #{order.id} by {order.customer.full_name} is ready for approval",
-            recipient_type='admin',
-            link=url_for('auth.view_order', order_id=order.id)
-        )
-        db.session.add(note)
-    db.session.commit()
-
-    flash("Order marked as awaiting approval.", "info")
-    return redirect(url_for('auth.notifications'))
-
-
-# VIEW ORDER FOR STAFF
-@bp.route('/orders/<int:order_id>')
-@login_required
-@staff_required
-def view_order_staff(order_id):
-
-    order = CustomerOrder.query.options(joinedload(CustomerOrder.customer)).get_or_404(order_id)
-
-
-    # Ensure staff is only seeing orders assigned to them
-    if order.assigned_staff_id != current_user.id:
-        flash("You are not assigned to this order.", "danger")
-        return redirect(url_for('auth.notifications'))
-
-    # Mark related notification as read (if exists)
-    notif_link = url_for('auth.view_order_staff', order_id=order.id)
-    notification = Notification.query.filter_by(
-        user_id=current_user.id,
-        link=notif_link,
-        is_read=False
-    ).first()
-
-    if notification:
-        notification.is_read = True
-        db.session.commit()
-
-    return render_template('staff/order_detail.html', order=order)
 
 
 # ASSIGNED ORDERS
