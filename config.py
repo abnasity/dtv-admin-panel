@@ -17,6 +17,12 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
     'sqlite:///' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'diamond.db')
 
+    SQLALCHEMY_ENGINE_OPTIONS = {
+    "pool_pre_ping": True,
+    "pool_recycle": 280,  # Reset connections regularly
+}
+
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # JWT configuration
