@@ -70,10 +70,7 @@ class User(UserMixin, db.Model, ResetTokenMixin): #usermodel for authentication 
         
 
 
-def static_image_path(filename):
-    if has_request_context():
-        return url_for('static', filename=filename)
-    return f"/static/{filename}"       
+    
 #  DEVICE MODEL
 class Device(db.Model):
     """Enhanced Device model with advanced image management"""
@@ -111,9 +108,7 @@ class Device(db.Model):
     transactions = db.relationship('InventoryTransaction', back_populates='device')
     alerts = db.relationship('Alert', back_populates='device')
     
-    @classmethod
-    def get_featured(cls):
-        return cls.query.filter(cls.featured == True, cls.deleted == False).all()
+    
     @staticmethod
     def get_available():
         return Device.query.filter(Device.deleted == False, Device.status == 'available').all()
@@ -129,17 +124,7 @@ class Device(db.Model):
         self.modified_at = datetime.utcnow()
         db.session.commit()
 
-    # Status Management
-    # Image Handling
-
-    @property
-    def image_url(self):
-      return cloudinary_or_default(self.main_image)
-   
-    @property
-    def thumbnail_url(self):
-        return cloudinary_or_default(self.main_image, thumbnail=True)
-
+  
 
 
     # Serialization
@@ -163,8 +148,6 @@ class Device(db.Model):
             'modified_at': self.modified_at.isoformat()
         }
         
-        if include_variants:
-            data['image_variants'] = self.get_image_variants()
             
         return data
 

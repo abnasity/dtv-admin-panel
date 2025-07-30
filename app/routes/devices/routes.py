@@ -1,5 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
+from flask_wtf import FlaskForm
 from app.models import Device, DeviceSpecs
 from app.decorators import admin_required
 from app.forms import DeviceForm, DeviceSpecsForm
@@ -67,34 +68,7 @@ def get_or_create_specs(spec_data):
 @admin_required
 def add_device():
     form = DeviceForm()
-    specs_form = DeviceSpecsForm()
-
-    # Prefill only on GET request
-    if request.method == 'GET':
-        specs_form.details.data = """\
-• RAM:
-• Storage:
-• Battery:
-• Processor:
-• Rear Camera:
-• Front Camera:
-• Display:
-• Network:
-• OS:
-• Charging:
-• Fingerprint:
-• Ports:
-• Extras:
-"""
-
-    if form.validate_on_submit() and specs_form.validate_on_submit():
-        # Generate unique slug
-        base_slug = slugify(f"{form.brand.data} {form.model.data}")
-        slug = base_slug
-        counter = 1
-        while Device.query.filter(Device.slug.ilike(slug)).first():
-            slug = f"{base_slug}-{counter}"
-            counter += 1
+    if form.validate_on_submit():
 
         imei = form.imei.data.strip() if form.imei.data else None
 
@@ -102,48 +76,14 @@ def add_device():
             imei=imei if not form.featured.data else None,
             brand=form.brand.data,
             model=form.model.data,
-            slug=slug,
             ram=form.ram.data,
             rom=form.rom.data,
             purchase_price=form.purchase_price.data,
             price_cash=form.price_cash.data or 0,
             price_credit=form.price_credit.data or 0,
-            featured=form.featured.data,
-            description=form.description.data or specs_form.details.data,
             notes=form.notes.data,
-            status='featured' if form.featured.data else 'available'
+         
         )
-
-        # 🔐 Secure Cloudinary Upload
-        if form.image.data:
-            try:
-                from app.utils.cloudinary_utils import generate_signature
-                import time
-                import os
-
-                timestamp = int(time.time())
-                params = {
-                    'folder': 'devices',
-                    'overwrite': True,
-                    'timestamp': timestamp
-                }
-                signature = generate_signature(params)
-
-                result = upload(
-                    form.image.data,
-                    folder="devices",
-                    overwrite=True,
-                    timestamp=timestamp,
-                    api_key=os.getenv("CLOUDINARY_API_KEY"),
-                    signature=signature
-                )
-
-                device.main_image = result.get('secure_url')
-            except Exception as e:
-                flash(f"Image upload failed: {str(e)}", 'warning')
-
-        # Attach specs
-        device.specs = DeviceSpecs(details=specs_form.details.data.strip())
 
         db.session.add(device)
         try:
@@ -154,7 +94,7 @@ def add_device():
             db.session.rollback()
             flash(f'Error adding device: {str(e)}', 'danger')
 
-    return render_template('devices/add.html', form=form, specs_form=specs_form)
+    return render_template('devices/add.html', form=form)
 
 
 
