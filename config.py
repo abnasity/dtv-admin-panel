@@ -12,7 +12,6 @@ class Config:
         warn('Using default SECRET_KEY. Please set SECRET_KEY in production!', RuntimeWarning)
         SECRET_KEY = 'dev-key-please-change-in-production'
     
-    # Database configuration
    # Database configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
     'sqlite:///' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'diamond.db')
