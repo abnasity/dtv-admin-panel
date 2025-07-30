@@ -179,45 +179,7 @@ canvas.drawing, canvas.drawingBuffer {
                             </div>
                             {% endif %}
                         </div> 
-                        
-                        <hr class="my-4">
-                        <h4 class="mb-3">Device Specifications</h4>
-
-                        <div class="mb-3">
-                            {{ specs_form.details.label(class="form-label") }}
-                            {{ specs_form.details(class="form-control", rows=10,required=true, placeholder="
-• RAM:
-• Storage:
-• Battery:
-• Processor:
-• Rear Camera:
-• Front Camera:
-• Display:
-• Network:
-• OS:
-• Charging:
-• Fingerprint:
-• Ports:
-• Extras:
-") }}
-                        </div>
-
-                        <div class="form-check mb-3">
-                            {{ form.featured(class="form-check-input") }}
-                            {{ form.featured.label(class="form-check-label") }}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.image.label(class="form-label") }}
-                            {{ form.image(class="form-control") }}
-                            {% if form.image.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.image.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
+        
 
                         <div class="text-end">
                             {{ form.submit(class="btn btn-primary") }}
