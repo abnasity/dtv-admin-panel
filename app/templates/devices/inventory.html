@@ -3,6 +3,65 @@
 {% block title %}Inventory - Diamond Tree Ventures{% endblock %}
 
 {% block content %}
+{% block extra_css %}
+<style>
+.inventory-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.search-box {
+    background-color: #f1f1f1;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+}
+.search-box input {
+    border: none;
+    background: transparent;
+    outline: none;
+    flex-grow: 1;
+}
+.btn-gradient {
+        background: linear-gradient(135deg, #4e73df, #224abe);
+        border: none;
+        color: white;
+    }
+
+.btn-gradient:hover {
+        background: linear-gradient(135deg, #3e5edc, #1a3b99);
+    }
+
+.btn-primary:hover {
+        background-color: #0056b3;
+        transition: background-color 0.3s ease;
+    }
+.input-group-text {
+    border-color: #ced4da;
+}
+
+.form-select, .form-control {
+    border-radius: 8px;
+}
+
+.btn-gradient {
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    border: none;
+    color: white;
+    transition: background 0.3s ease;
+}
+
+.btn-gradient:hover {
+    background: linear-gradient(135deg, #3e5edc, #1a3b99);
+    color: white;
+}
+
+</style>
+{% endblock %}
+
 <div class="row mb-4 align-items-center">
     <div class="col-md-6">
         <h2><i class="fas fa-warehouse me-2"></i>Device Inventory</h2>
@@ -23,45 +82,60 @@
 
 
 <!-- Filters -->
-<div class="card mb-4">
+<div class="card mb-4 shadow-sm border-0">
     <div class="card-body">
-        <form method="GET" class="row g-3">
-            <div class="col-md-3">
+        <form method="GET" class="row gy-3 gx-3 align-items-end">
+
+            <!-- Search -->
+            <div class="col-lg-5">
+                <label class="form-label">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="imei" class="form-control border-start-0"
+                           placeholder="Search by IMEI, brand, model..."
+                           value="{{ request.args.get('imei', '') }}">
+                </div>
+            </div>
+
+            <!-- Brand -->
+            <div class="col-lg-3">
                 <label class="form-label">Brand</label>
-                <select name="brand" class="form-select">
+                 <select name="brand" class="form-select" onchange="this.form.submit()">
                     <option value="">All Brands</option>
                     {% for brand in brands %}
-                    <option value="{{ brand }}" {% if request.args.get('brand') == brand %}selected{% endif %}>
-                        {{ brand }}
-                    </option>
+                        <option value="{{ brand }}" {% if request.args.get('brand') == brand %}selected{% endif %}>
+                            {{ brand }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-3">
+
+            <!-- Status -->
+            <div class="col-lg-2">
                 <label class="form-label">Status</label>
-                <select name="status" class="form-select">
+                 <select name="brand" class="form-select" onchange="this.form.submit()">
                     <option value="">All Status</option>
-                    <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>
-                        Available
-                    </option>
-                    <option value="sold" {% if request.args.get('status') == 'sold' %}selected{% endif %}>
-                        Sold
-                    </option>
+                    <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>Available</option>
+                    <option value="sold" {% if request.args.get('status') == 'sold' %}selected{% endif %}>Sold</option>
                 </select>
             </div>
-            <div class="col-md-4">
-                <label class="form-label">IMEI Search</label>
-                <input type="text" name="imei" class="form-control" placeholder="Search by IMEI..."
-                       value="{{ request.args.get('imei', '') }}">
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-success w-100">
-                    <i class="fas fa-search me-1"></i>Filter
+
+            <!-- Submit Button -->
+            <div class="col-lg-2 text-end">
+                <label class="form-label d-none d-lg-block">&nbsp;</label>
+                <button type="submit" class="btn btn-gradient w-100 shadow-sm">
+                    <i class="fas fa-filter me-1"></i> Filter
+                   
                 </button>
             </div>
+
         </form>
     </div>
 </div>
+
+
 
 <!-- Devices Table -->
 <div class="card">
