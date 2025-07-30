@@ -1,7 +1,6 @@
 from datetime import datetime
 from flask_login import UserMixin
 from flask import current_app, url_for, has_request_context
-from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db 
 from app import bcrypt, login_manager
 from sqlalchemy import text, Numeric, func
