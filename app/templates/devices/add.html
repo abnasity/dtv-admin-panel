@@ -161,6 +161,60 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<!-- Load QuaggaJS -->
+<script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!navigator.mediaDevices || typeof Quagga === 'undefined') {
+            document.getElementById('scanned-result').textContent = "Camera or scanning not supported on this browser.";
+            return;
+        }
+
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#scanner'),
+                constraints: {
+                    facingMode: "environment"
+                }
+            },
+            decoder: {
+     readers: [
+    "code_128_reader",
+    "ean_reader",
+    "ean_8_reader",
+    "upc_reader",
+    "upc_e_reader",
+    "code_39_reader",
+    "i2of5_reader"
+  ]
+
+            }
+        }, function (err) {
+            if (err) {
+                console.error("Init error:", err);
+                document.getElementById('scanned-result').textContent = "Error initializing scanner.";
+                return;
+            }
+            Quagga.start();
+        });
+
+        Quagga.onDetected(function (data) {
+        let code = data.codeResult.code.trim();
+
+            if (code.length !== 15 || !/^\d+$/.test(code)) {
+                document.getElementById('scanned-result').textContent = `Invalid IMEI scanned: ${code}`;
+                return;
+            }
+
+            Quagga.stop();
+            document.getElementById('scanned-result').textContent = `Scanned IMEI: ${code}`;
+            window.location.href = `/device/${code}`;
+    });
+
+    });
+</script>
 
 {% endblock %}
