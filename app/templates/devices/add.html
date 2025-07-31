@@ -25,7 +25,6 @@
                             <input type="text" name="imei" id="imeiInputField" class="form-control" placeholder="Scan or enter 15-digit IMEI" required>
                             </div>
   
-                            {% include devices/scanner.html %}
                             <div class="text-center mb-3">
                             <button type="button" class="btn btn-success me-2" id="startButton">
                                 <i class="fas fa-camera"></i> Start Scanner
@@ -37,7 +36,8 @@
 
                             <div id="scanner-status" class="text-danger"></div>
 
-                            <div id="interactive" class="mt-3"></div>
+                           <div id="scanner" class="border border-2 rounded shadow-sm w-100 mt-3" style="height: 180px;"></div>
+
                         </div>
                         
                         <!-- Rest of your form fields -->
