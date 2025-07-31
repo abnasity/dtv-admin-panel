@@ -230,14 +230,15 @@ inputStream: {
     height: 480,
     facingMode: "environment"
   },
-  area: { // only scan horizontal strip in the middle
-    top: "40%",
-    right: "10%",
+  area: {
+    top: "45%",    // small vertical slice
+    bottom: "55%",
     left: "10%",
-    bottom: "40%"
+    right: "10%"
   },
   target: document.querySelector('#interactive')
 },
+
 
     decoder: {
      readers: [
