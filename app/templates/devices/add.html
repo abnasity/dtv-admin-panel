@@ -2,63 +2,6 @@
 
 {% block title %}Add Device - Phone Sales Management{% endblock %}
 
-{% block extra_css %}
-<style>
-@media (max-width: 576px) {
-  #interactive.viewport {
-    max-width: 260px;
-    height: 80px;
-  }
-}
-
-#interactive.viewport {
-    position: relative;
-    width: 100%;
-    max-width: 260px;
-    height: 70px;
-    margin: auto;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 0.25rem;
-    overflow: hidden;
-    margin-bottom: 10px;
-}
-#interactive::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 10%;
-    width: 80%;
-    height: 2px;
-    background: rgba(0, 255, 0, 0.6);
-    transform: translateY(-50%);
-    pointer-events: none;
-}
-
-#interactive.viewport > canvas, #interactive.viewport > video {
-    max-width: 100%;
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover;
-}
-canvas.drawing, canvas.drawingBuffer {
-    position: absolute;
-    left: 0;
-    top: 0;
-}
-.scanner-controls {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-#scanner-status {
-    margin-top: 10px;
-    font-size: 0.8rem;
-    color: #6c757d;
-}
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="container mt-4">
     <div class="row">
