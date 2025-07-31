@@ -7,13 +7,27 @@
 #interactive.viewport {
     position: relative;
     width: 100%;
-    height: 300px;
+    max-width: 400px;
+    height: 150px;
+    margin: auto;
     background: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 0.25rem;
     overflow: hidden;
     margin-bottom: 10px;
 }
+#interactive::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    width: 80%;
+    height: 2px;
+    background: rgba(0, 255, 0, 0.6);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
 #interactive.viewport > canvas, #interactive.viewport > video {
     max-width: 100%;
     width: 100%;
@@ -209,15 +223,22 @@ function startScanner(inputId) {
   document.getElementById('scanner-status').innerText = "Initializing camera...";
 
   Quagga.init({
-    inputStream: {
-      type: "LiveStream",
-      constraints: {
-        width: 640,
-        height: 480,
-        facingMode: "environment"
-      },
-      target: document.querySelector('#interactive')
-    },
+inputStream: {
+  type: "LiveStream",
+  constraints: {
+    width: 640,
+    height: 480,
+    facingMode: "environment"
+  },
+  area: { // only scan horizontal strip in the middle
+    top: "40%",
+    right: "10%",
+    left: "10%",
+    bottom: "40%"
+  },
+  target: document.querySelector('#interactive')
+},
+
     decoder: {
      readers: [
   "code_128_reader", 
