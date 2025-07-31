@@ -12,141 +12,33 @@
                    <a href="{{ url_for('devices.inventory') }}" class="btn btn-success shadow-sm">
                         <i class="fas fa-arrow-left me-1"></i> Back to Inventory
                     </a>
-
                 </div>
                 <div class="card-body">
                     <form id="deviceForm" method="POST" enctype="multipart/form-data">
                         {{ form.csrf_token }}
                     
-                        
                         <!-- Scanner Section -->
-                                    <div class="mb-3">
+                        <div class="mb-3">
                             <label for="imeiInputField" class="form-label">IMEI (15-digit)</label>
                             <input type="text" name="imei" id="imeiInputField" class="form-control" placeholder="Scan or enter 15-digit IMEI" required>
-                            </div>
+                            <div id="scanned-result" class="form-text"></div>
+                        </div>
   
-                            <div class="text-center mb-3">
+                        <div class="text-center mb-3">
                             <button type="button" class="btn btn-success me-2" id="startButton">
                                 <i class="fas fa-camera"></i> Start Scanner
                             </button>
                             <button type="button" class="btn btn-secondary" id="stopButton" disabled>
                                 <i class="fas fa-stop"></i> Stop Scanner
                             </button>
-                            </div>
-
-                            <div id="scanner-status" class="text-danger"></div>
-
-                           <div id="scanner" class="border border-2 rounded shadow-sm w-100 mt-3" style="height: 180px;"></div>
-
                         </div>
+
+                        <div id="scanner-status" class="text-danger mb-2"></div>
+                        <div id="scanner" class="border border-2 rounded shadow-sm w-100 mt-3" style="height: 180px; display: none;"></div>
                         
                         <!-- Rest of your form fields -->
-                        <div class="mb-3">
-                            {{ form.brand.label(class="form-label") }}
-                            {{ form.brand(class="form-control", required=true) }}
-                            {% if form.brand.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.brand.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
+                        <!-- ... (keep your existing form fields) ... -->
                         
-                        <div class="mb-3">
-                            {{ form.model.label(class="form-label") }}
-                            {{ form.model(class="form-control", required=true) }}
-                            {% if form.model.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.model.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.ram.label(class="form-label") }}
-                            {{ form.ram(class="form-control", required=true) }}
-                            {% if form.ram.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.ram.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.rom.label(class="form-label") }}
-                            {{ form.rom(class="form-control", required=true) }}
-                            {% if form.rom.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.rom.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.purchase_price.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text">Ksh</span>
-                                {{ form.purchase_price(class="form-control", required=true) }}
-                            </div>
-                            {% if form.purchase_price.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.purchase_price.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.price_cash.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text">Ksh</span>
-                                {{ form.price_cash(class="form-control", required=true) }}
-                            </div>
-                            {% if form.price_cash.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.price_cash.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}                        
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.price_credit.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text">Ksh</span>
-                                {{ form.price_credit(class="form-control", required=true) }}
-                            </div>
-                            {% if form.price_credit.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.price_credit.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.notes.label(class="form-label") }}
-                            {{ form.notes(class="form-control", rows=3) }}
-                            {% if form.notes.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.notes.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div> 
-        
-
                         <div class="text-end">
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
@@ -157,64 +49,100 @@
     </div>
 </div>
 {% endblock %}
-<!-- Scripts -->
+
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-<!-- Load QuaggaJS -->
 <script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const scannerStatus = document.getElementById('scanner-status');
+        const scannerElement = document.getElementById('scanner');
+        const imeiInput = document.getElementById('imeiInputField');
+        const scannedResult = document.getElementById('scanned-result');
+        
+        let scannerActive = false;
+
+        // Check for camera support
         if (!navigator.mediaDevices || typeof Quagga === 'undefined') {
-            document.getElementById('scanned-result').textContent = "Camera or scanning not supported on this browser.";
+            scannerStatus.textContent = "Camera or barcode scanning is not supported in your browser.";
+            startButton.disabled = true;
             return;
         }
 
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: document.querySelector('#scanner'),
-                constraints: {
-                    facingMode: "environment"
+        function startScanner() {
+            scannerStatus.textContent = "Initializing scanner...";
+            startButton.disabled = true;
+            
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: scannerElement,
+                    constraints: {
+                        facingMode: "environment",
+                        focusMode: "continuous"
+                    }
+                },
+                decoder: {
+                    readers: ["code_128_reader", "ean_reader", "code_39_reader"],
+                    multiple: false
+                },
+                locate: true
+            }, function(err) {
+                if (err) {
+                    console.error("Scanner init error:", err);
+                    scannerStatus.textContent = "Error initializing scanner: " + err.message;
+                    startButton.disabled = false;
+                    return;
                 }
-            },
-            decoder: {
-     readers: [
-    "code_128_reader",
-    "ean_reader",
-    "ean_8_reader",
-    "upc_reader",
-    "upc_e_reader",
-    "code_39_reader",
-    "i2of5_reader"
-  ]
+                
+                scannerElement.style.display = 'block';
+                Quagga.start();
+                scannerActive = true;
+                stopButton.disabled = false;
+                scannerStatus.textContent = "Scanner ready - point at a barcode";
+            });
+        }
 
+        function stopScanner() {
+            if (scannerActive) {
+                Quagga.stop();
+                scannerActive = false;
+                scannerElement.style.display = 'none';
+                startButton.disabled = false;
+                stopButton.disabled = true;
+                scannerStatus.textContent = "Scanner stopped";
             }
-        }, function (err) {
-            if (err) {
-                console.error("Init error:", err);
-                document.getElementById('scanned-result').textContent = "Error initializing scanner.";
-                return;
+        }
+
+        Quagga.onDetected(function(result) {
+            const code = result.codeResult.code.trim();
+            
+            // Validate IMEI (15 digits)
+            if (/^\d{15}$/.test(code)) {
+                imeiInput.value = code;
+                scannedResult.textContent = "Scanned IMEI: " + code;
+                scannedResult.className = "form-text text-success";
+                stopScanner();
+            } else {
+                scannedResult.textContent = "Invalid IMEI (needs 15 digits): " + code;
+                scannedResult.className = "form-text text-danger";
             }
-            Quagga.start();
         });
 
-        Quagga.onDetected(function (data) {
-        let code = data.codeResult.code.trim();
+        // Button event listeners
+        startButton.addEventListener('click', startScanner);
+        stopButton.addEventListener('click', stopScanner);
 
-            if (code.length !== 15 || !/^\d+$/.test(code)) {
-                document.getElementById('scanned-result').textContent = `Invalid IMEI scanned: ${code}`;
-                return;
+        // Clean up when leaving page
+        window.addEventListener('beforeunload', function() {
+            if (scannerActive) {
+                Quagga.stop();
             }
-
-            Quagga.stop();
-            document.getElementById('scanned-result').textContent = `Scanned IMEI: ${code}`;
-            window.location.href = `/device/${code}`;
-    });
-
+        });
     });
 </script>
-
 {% endblock %}
