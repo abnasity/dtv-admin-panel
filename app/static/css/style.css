@@ -398,10 +398,23 @@ footer {
     }
 }
 
+/* SCANNER */
 
-
-
-
+    #scanner::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 10%;
+        width: 80%;
+        height: 2px;
+        background: rgba(0, 255, 0, 0.5);
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+    #scanner {
+        position: relative;
+        overflow: hidden;
+    }
 
 /* Card styles */
 .card {
