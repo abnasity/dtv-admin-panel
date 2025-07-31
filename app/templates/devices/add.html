@@ -216,84 +216,79 @@ canvas.drawing, canvas.drawingBuffer {
 <!-- Scripts -->
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
+<script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
+
 <script>
-let activeFieldId = 'imeiInputField';
-let alreadyScanned = false;
+document.addEventListener('DOMContentLoaded', function () {
+    let alreadyScanned = false;
+    let inputField = document.getElementById('imeiInputField');
 
-function startScanner(inputId) {
-  activeFieldId = inputId || 'imeiInputField';
-  alreadyScanned = false;
+    document.getElementById('startButton').addEventListener('click', function () {
+        alreadyScanned = false;
+        document.getElementById('scanner-status').innerText = "Initializing scanner...";
 
-  document.getElementById('scanner-status').innerText = "Initializing camera...";
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#interactive'),
+                constraints: {
+                    facingMode: "environment",
+                    width: { ideal: 240 },
+                    height: { ideal: 160 }
+                }
+            },
+            decoder: {
+                readers: [
+                    "code_128_reader",
+                    "ean_reader",
+                    "ean_8_reader",
+                    "upc_reader",
+                    "upc_e_reader",
+                    "code_39_reader",
+                    "i2of5_reader"
+                ]
+            }
+        }, function (err) {
+            if (err) {
+                console.error("Init error:", err);
+                document.getElementById('scanner-status').textContent = "⚠️ Error initializing scanner.";
+                return;
+            }
+            Quagga.start();
+            document.getElementById('stopButton').disabled = false;
+            document.getElementById('scanner-status').innerText = "📸 Scanner active. Aim at barcode.";
+        });
 
- Quagga.init({
-  inputStream: {
-    type: "LiveStream",
-    constraints: {
-      width: { ideal: 240 },
-      height: { ideal: 160 },
-      facingMode: "environment"
-    },
-    area: {
-      top: "47%",
-      bottom: "53%",
-      left: "20%",
-      right: "20%"
-    },
-    target: document.querySelector('#interactive')
-  },
+        Quagga.onDetected(function (data) {
+            if (alreadyScanned) return;
 
+            const code = data.codeResult.code.trim();
+            if (!/^\d{15}$/.test(code)) {
+                document.getElementById('scanner-status').textContent = `Invalid IMEI scanned: ${code}`;
+                return;
+            }
 
-    decoder: {
-     readers: [
-  "code_128_reader", 
-  "ean_reader", 
-  "ean_8_reader",
-  "code_39_reader", 
-  "code_39_vin_reader", 
-  "upc_reader",
-  "upc_e_reader"
-]
+            alreadyScanned = true;
+            Quagga.stop();
+            inputField.value = code;
+            document.getElementById('scanner-status').innerText = `✅ IMEI Detected: ${code}`;
+            document.getElementById('stopButton').disabled = true;
 
-    },
-    locate: true
-  }, function(err) {
-    if (err) {
-      console.error(err);
-      document.getElementById('scanner-status').innerText = "⚠️ Camera access failed. Allow permissions.";
-      return;
-    }
-    Quagga.start();
-    document.getElementById('stopButton').disabled = false;
-    document.getElementById('scanner-status').innerText = "📸 Scanner active. Aim at IMEI 1 (top barcode).";
-  });
+            // Optional auto-submit:
+            // document.getElementById('deviceForm').submit();
+        });
+    });
 
-  Quagga.onDetected(function(result) {
-    if (alreadyScanned) return;
-
-    const code = result.codeResult.code;
-    if (/^\d{15}$/.test(code)) {
-      alreadyScanned = true;
-      document.getElementById(activeFieldId).value = code;
-      document.getElementById('scanner-status').innerText = `✅ IMEI Detected: ${code}`;
-      Quagga.stop();
-      document.getElementById('stopButton').disabled = true;
-
-      // Auto-submit the form
-      document.getElementById('deviceForm').submit();
-    }
-  });
-}
-
-document.getElementById('startButton').addEventListener('click', () => startScanner());
-document.getElementById('stopButton').addEventListener('click', () => {
-  Quagga.stop();
-  document.getElementById('stopButton').disabled = true;
-  document.getElementById('scanner-status').innerText = "🛑 Scanner stopped.";
+    document.getElementById('stopButton').addEventListener('click', () => {
+        Quagga.stop();
+        document.getElementById('stopButton').disabled = true;
+        document.getElementById('scanner-status').innerText = "🛑 Scanner stopped.";
+    });
 });
 </script>
+
 
 {% endblock %}
