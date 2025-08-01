@@ -138,16 +138,18 @@ document.addEventListener('DOMContentLoaded', function () {
             scannerStatus.textContent = "Scanning... Hold barcode steady";
             Quagga.start();
         });
-
         Quagga.onDetected(function (result) {
-            const code = result.codeResult?.code?.trim();
+            const rawCode = result.codeResult?.code?.trim();
+            if (!rawCode || rawCode === lastScanned) return;
 
-            if (!code || code === lastScanned) return;
+            // Extract first 15-digit number (assumed IMEI 1)
+            const match = rawCode.match(/\d{15}/);
+            if (match) {
+                const imei1 = match[0];
+                lastScanned = imei1;
 
-            if (/^\d{15}$/.test(code)) {
-                lastScanned = code;
-                imeiInput.value = code;
-                scannerStatus.textContent = "✓ IMEI successfully scanned!";
+                imeiInput.value = imei1;
+                scannerStatus.textContent = "✓ IMEI 1 successfully scanned!";
                 scannerStatus.className = 'alert alert-success';
                 imeiFeedback.textContent = "✓ Valid IMEI";
                 imeiFeedback.className = 'form-text text-success';
@@ -158,6 +160,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 3000);
             }
         });
+
     }
 
     function stopScanner() {
