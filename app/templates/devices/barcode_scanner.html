@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-4 text-center">
     <h3><i class="fas fa-barcode me-2"></i>Scan Device IMEI</h3>
-    <div id="scanner" class="border border-2 rounded shadow-sm" style="width: 100%; max-width: 400px; height: 180px; margin: auto;"></div>
+    <div id="scanner" style="width: 100%; max-width: 600px; margin: auto;"></div>
     <p class="mt-3 fw-bold" id="scanned-result"></p>
 </div>
 
@@ -27,16 +27,7 @@
                 }
             },
             decoder: {
-     readers: [
-    "code_128_reader",
-    "ean_reader",
-    "ean_8_reader",
-    "upc_reader",
-    "upc_e_reader",
-    "code_39_reader",
-    "i2of5_reader"
-  ]
-
+                readers: ["code_128_reader", "ean_reader", "ean_8_reader", "upc_reader",  "upc_e_reader", "code_39_reader", "i2of5_reader"]
             }
         }, function (err) {
             if (err) {
