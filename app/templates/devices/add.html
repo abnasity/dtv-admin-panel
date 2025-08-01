@@ -65,8 +65,7 @@
 {% block extra_js %}
 <script src="https://unpkg.com/@ericblade/quagga2@1.7.7/dist/quagga.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // DOM elements
+document.addEventListener('DOMContentLoaded', function () {
     const imeiInput = document.getElementById('imeiInputField');
     const startButton = document.getElementById('startButton');
     const stopButton = document.getElementById('stopButton');
@@ -74,30 +73,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const scannerContainer = document.getElementById('scanner-container');
     const imeiFeedback = document.getElementById('imeiFeedback');
     const manualValidateBtn = document.getElementById('manualValidateBtn');
-    
-    // Scanner state
+
     let scannerActive = false;
-    
-    // Check for scanner support
+    let lastScanned = null;
     const hasScannerSupport = !!navigator.mediaDevices && typeof Quagga !== 'undefined';
-    
+
     if (!hasScannerSupport) {
         startButton.disabled = true;
         scannerStatus.textContent = "Barcode scanning not supported in your browser. Please enter IMEI manually.";
         scannerStatus.style.display = 'block';
         scannerStatus.className = 'alert alert-warning';
     }
-    
-    // Manual validation
-    manualValidateBtn.addEventListener('click', function() {
-        validateImei(imeiInput.value);
-    });
-    
-    // Scanner control
+
+    manualValidateBtn.addEventListener('click', () => validateImei(imeiInput.value));
     startButton.addEventListener('click', startScanner);
     stopButton.addEventListener('click', stopScanner);
-    
-    // IMEI validation function
+
     function validateImei(imei) {
         if (/^\d{15}$/.test(imei)) {
             imeiFeedback.textContent = "✓ Valid IMEI";
@@ -109,62 +100,66 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
     }
-    
-    // Start scanner
+
     function startScanner() {
         scannerStatus.textContent = "Initializing camera...";
         scannerStatus.style.display = 'block';
         scannerStatus.className = 'alert alert-info';
         startButton.disabled = true;
-        
+
         Quagga.init({
             inputStream: {
                 name: "Live",
                 type: "LiveStream",
                 target: document.querySelector('#scanner'),
                 constraints: {
-                    facingMode: "environment",
-                    focusMode: "continuous"
+                    facingMode: "environment"
                 }
             },
             decoder: {
-                readers: ["code_128_reader", "ean_reader", "code_39_reader"],
+                readers: ["ean_reader"], // EAN is common for IMEI stickers
                 multiple: false
             },
-            locate: true
-        }, function(err) {
+            locate: true,
+            frequency: 5,
+            numOfWorkers: navigator.hardwareConcurrency || 2,
+        }, function (err) {
             if (err) {
                 console.error("Scanner error:", err);
-                scannerStatus.textContent = "Error accessing camera: " + (err.message || "Please check permissions");
+                scannerStatus.textContent = "Error accessing camera: " + (err.message || "Check permissions");
                 scannerStatus.className = 'alert alert-danger';
                 startButton.disabled = false;
                 return;
             }
-            
+
             scannerActive = true;
             scannerContainer.style.display = 'block';
             stopButton.disabled = false;
-            scannerStatus.textContent = "Scanning... Point at barcode";
+            scannerStatus.textContent = "Scanning... Hold barcode steady";
             Quagga.start();
         });
-        
-        Quagga.onDetected(function(result) {
-            const code = result.codeResult.code.trim();
-            if (validateImei(code)) {
+
+        Quagga.onDetected(function (result) {
+            const code = result.codeResult?.code?.trim();
+
+            if (!code || code === lastScanned) return;
+
+            if (/^\d{15}$/.test(code)) {
+                lastScanned = code;
                 imeiInput.value = code;
-                stopScanner();
-                scannerStatus.textContent = "IMEI successfully scanned!";
+                scannerStatus.textContent = "✓ IMEI successfully scanned!";
                 scannerStatus.className = 'alert alert-success';
-                
-                // Hide success message after 3 seconds
+                imeiFeedback.textContent = "✓ Valid IMEI";
+                imeiFeedback.className = 'form-text text-success';
+                stopScanner();
+
                 setTimeout(() => {
                     scannerStatus.style.display = 'none';
                 }, 3000);
             }
         });
     }
-    
-    // Stop scanner
+
     function stopScanner() {
         if (scannerActive) {
             Quagga.stop();
@@ -174,22 +169,19 @@ document.addEventListener('DOMContentLoaded', function() {
             stopButton.disabled = true;
         }
     }
-    
-    // Clean up when leaving page
-    window.addEventListener('beforeunload', function() {
-        if (scannerActive) {
-            Quagga.stop();
-        }
-    });
-    
-    // Validate on input change
-    imeiInput.addEventListener('input', function() {
+
+    imeiInput.addEventListener('input', function () {
         if (this.value.length === 15) {
             validateImei(this.value);
         } else {
             imeiFeedback.textContent = "";
         }
     });
+
+    window.addEventListener('beforeunload', () => {
+        if (scannerActive) Quagga.stop();
+    });
 });
 </script>
+
 {% endblock %}
