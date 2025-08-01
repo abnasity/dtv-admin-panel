@@ -42,9 +42,13 @@
 
                         <div id="scanner-status" class="alert alert-info" style="display: none;"></div>
                         <div id="scanner-container" class="text-center" style="display: none;">
-                            <div id="scanner" class="border border-2 rounded shadow-sm mx-auto" style="width: 100%; height: 200px;"></div>
+                            <div class="scanner-wrapper mx-auto" style="width: 100%; max-width: 500px; position: relative;">
+                                <div id="scanner" class="border border-2 rounded shadow-sm" style="width: 100%; height: 100px;"></div>
+                                <div class="scan-line" style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: red; animation: scan 2s infinite linear;"></div>
+                                <div class="scan-guide" style="position: absolute; top: 10%; bottom: 10%; left: 20%; right: 20%; border: 2px dashed rgba(255,255,255,0.5); pointer-events: none;"></div>
+                            </div>
                             <div class="mt-2">
-                                <small class="text-muted">Point camera at barcode. Scanning will stop automatically.</small>
+                                <small class="text-muted">Align barcode with the red line. Scanning will stop automatically.</small>
                             </div>
                         </div>
 
@@ -113,11 +117,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 type: "LiveStream",
                 target: document.querySelector('#scanner'),
                 constraints: {
-                    facingMode: "environment"
+                    facingMode: "environment",
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    aspectRatio: { ideal: 1.333 }
+                },
+                area: { // Define a smaller scan area (20% from top, 30% height, 20% from sides)
+                    top: "20%",
+                    right: "20%",
+                    left: "20%",
+                    bottom: "50%"
                 }
             },
             decoder: {
-                readers: ["ean_reader"], // EAN is common for IMEI stickers
+                readers: ["ean_reader"],
                 multiple: false
             },
             locate: true,
@@ -135,9 +148,10 @@ document.addEventListener('DOMContentLoaded', function () {
             scannerActive = true;
             scannerContainer.style.display = 'block';
             stopButton.disabled = false;
-            scannerStatus.textContent = "Scanning... Hold barcode steady";
+            scannerStatus.textContent = "Scanning... Align barcode with red line";
             Quagga.start();
         });
+        
         Quagga.onDetected(function (result) {
             const rawCode = result.codeResult?.code?.trim();
             if (!rawCode || rawCode === lastScanned) return;
@@ -160,7 +174,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 3000);
             }
         });
-
     }
 
     function stopScanner() {
@@ -185,6 +198,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (scannerActive) Quagga.stop();
     });
 });
+
+// Add CSS for the scan line animation
+const style = document.createElement('style');
+style.textContent = `
+@keyframes scan {
+    0% { transform: translateY(-50%); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(50%); opacity: 0; }
+}
+`;
+document.head.appendChild(style);
 </script>
 
 {% endblock %}
