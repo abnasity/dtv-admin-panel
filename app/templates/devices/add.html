@@ -195,7 +195,9 @@
 
     startButton.addEventListener('click', async () => {
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" }
+            });
             video.srcObject = stream;
             scannerStatus.textContent = "Scanning... Point your camera at the IMEI.";
             stopButton.disabled = false;
@@ -215,12 +217,13 @@
                     clearInterval(interval);
                     stopScanner();
                 }
-            }, 2000);  // Every 2 seconds
+            }, 2000);
         } catch (err) {
             scannerStatus.textContent = "Camera access failed.";
             console.error(err);
         }
     });
+
 
     stopButton.addEventListener('click', stopScanner);
 
