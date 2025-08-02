@@ -192,38 +192,54 @@
     const stopButton = document.getElementById('stopButton');
 
     let stream;
+    let interval;
+
+    async function getRearCameraStream() {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter(device => device.kind === 'videoinput');
+        const rearCamera = videoInputs.find(device => device.label.toLowerCase().includes('back'));
+
+        const constraints = rearCamera ? {
+            video: { deviceId: { exact: rearCamera.deviceId } }
+        } : {
+            video: { facingMode: { exact: "environment" } } // fallback
+        };
+
+        return navigator.mediaDevices.getUserMedia(constraints);
+    }
 
     startButton.addEventListener('click', async () => {
         try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" }
-            });
+            stream = await getRearCameraStream();
             video.srcObject = stream;
             scannerStatus.textContent = "Scanning... Point your camera at the IMEI.";
             stopButton.disabled = false;
             startButton.disabled = true;
 
-            const interval = setInterval(async () => {
+            interval = setInterval(async () => {
                 const ctx = canvas.getContext('2d');
+                ctx.filter = 'grayscale(100%) contrast(150%) brightness(110%)';
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                const result = await Tesseract.recognize(canvas, 'eng');
+                const result = await Tesseract.recognize(canvas, 'eng', {
+                    logger: m => console.log(m)
+                });
                 const rawText = result.data.text;
-                const match = rawText.match(/\b\d{15}\b/);  // Match 15-digit IMEI
+                const matches = rawText.match(/\b\d{15}\b/g);
 
-                if (match) {
-                    imeiField.value = match[0];
-                    scannerStatus.textContent = "IMEI Detected: " + match[0];
+                if (matches && matches.length > 0) {
+                    imeiField.value = matches[0];
+                    scannerStatus.textContent = "IMEI(s) Detected: " + matches.join(', ');
                     clearInterval(interval);
                     stopScanner();
                 }
             }, 2000);
+
         } catch (err) {
             scannerStatus.textContent = "Camera access failed.";
             console.error(err);
         }
     });
-
 
     stopButton.addEventListener('click', stopScanner);
 
@@ -232,9 +248,11 @@
             stream.getTracks().forEach(track => track.stop());
             video.srcObject = null;
         }
+        clearInterval(interval);
         startButton.disabled = false;
         stopButton.disabled = true;
         scannerStatus.textContent = "";
     }
 </script>
+
 {% endblock %}
