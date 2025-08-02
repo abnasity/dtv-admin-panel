@@ -3,7 +3,14 @@
 {% block title %}Add Device - Phone Sales Management{% endblock %}
 
 {% block extra_css %}
+
+
 <style>
+    #video {
+  transform: rotate(90deg);
+  width: 100%;
+}
+
     #video, #canvas {
       max-width: 100%;
       border: 2px solid #ccc;
@@ -167,7 +174,7 @@
 {% endblock %}
 <!-- Scripts -->
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
 <script>
     const video = document.createElement('video');
@@ -181,6 +188,9 @@
     canvas.setAttribute('width', '400');
     canvas.setAttribute('height', '300');
     canvas.style.display = 'none';
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
 
     const scannerContainer = document.getElementById('interactive');
     scannerContainer.appendChild(video);
@@ -217,23 +227,39 @@
             startButton.disabled = true;
 
             interval = setInterval(async () => {
-                const ctx = canvas.getContext('2d');
-                ctx.filter = 'grayscale(100%) contrast(150%) brightness(110%)';
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const ctx = canvas.getContext('2d');
+            video.onloadedmetadata = () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
 
-                const result = await Tesseract.recognize(canvas, 'eng', {
-                    logger: m => console.log(m)
-                });
-                const rawText = result.data.text;
-                const matches = rawText.match(/\b\d{15}\b/g);
+             };
 
-                if (matches && matches.length > 0) {
-                    imeiField.value = matches[0];
-                    scannerStatus.textContent = "IMEI(s) Detected: " + matches.join(', ');
-                    clearInterval(interval);
-                    stopScanner();
-                }
-            }, 2000);
+            ctx.scale(2, 2);
+            ctx.filter = 'grayscale(100%) contrast(300%) brightness(150%)';
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+
+
+            const result = await Tesseract.recognize(canvas, 'eng', {
+                logger: m => console.log(m)
+            });
+
+            const rawText = result.data.text;
+            const cleanedText = rawText.replace(/[^0-9]/g, '');
+            const imeiMatch = cleanedText.match(/\d{15}/);
+            console.log("OCR result:", rawText);
+
+            if (imeiMatch) {
+                imeiField.value = imeiMatch[0];
+                scannerStatus.textContent = "IMEI Detected: " + imeiMatch[0];
+                clearInterval(interval);
+                stopScanner();
+            } else {
+                scannerStatus.textContent = "No IMEI detected. Trying again...";
+            }
+        }, 2000);
+
 
         } catch (err) {
             scannerStatus.textContent = "Camera access failed.";
