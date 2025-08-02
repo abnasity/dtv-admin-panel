@@ -174,111 +174,68 @@
 {% endblock %}
 <!-- Scripts -->
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script src="https://unpkg.com/@zxing/browser@latest"></script>
 
 <script>
-    const video = document.createElement('video');
-    video.setAttribute('id', 'video');
-    video.setAttribute('width', '400');
-    video.setAttribute('height', '300');
-    video.setAttribute('autoplay', true);
-
-    const canvas = document.createElement('canvas');
-    canvas.setAttribute('id', 'canvas');
-    canvas.setAttribute('width', '400');
-    canvas.setAttribute('height', '300');
-    canvas.style.display = 'none';
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-
-    const scannerContainer = document.getElementById('interactive');
-    scannerContainer.appendChild(video);
-    scannerContainer.appendChild(canvas);
-
-    const scannerStatus = document.getElementById('scanner-status');
+    const codeReader = new ZXing.BrowserBarcodeReader();
     const imeiField = document.getElementById('imeiInputField');
     const startButton = document.getElementById('startButton');
     const stopButton = document.getElementById('stopButton');
+    const scannerStatus = document.getElementById('scanner-status');
+    const scannerContainer = document.getElementById('interactive');
 
-    let stream;
-    let interval;
-
-    async function getRearCameraStream() {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoInputs = devices.filter(device => device.kind === 'videoinput');
-        const rearCamera = videoInputs.find(device => device.label.toLowerCase().includes('back'));
-
-        const constraints = rearCamera ? {
-            video: { deviceId: { exact: rearCamera.deviceId } }
-        } : {
-            video: { facingMode: { exact: "environment" } } // fallback
-        };
-
-        return navigator.mediaDevices.getUserMedia(constraints);
-    }
+    let selectedDeviceId = null;
+    let scanning = false;
 
     startButton.addEventListener('click', async () => {
+        if (scanning) return;
+
         try {
-            stream = await getRearCameraStream();
-            video.srcObject = stream;
-            scannerStatus.textContent = "Scanning... Point your camera at the IMEI.";
+            const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+            const rearCam = devices.find(device => device.label.toLowerCase().includes('back')) || devices[0];
+            selectedDeviceId = rearCam.deviceId;
+
+            scannerContainer.innerHTML = '';
+            const previewElem = document.createElement('video');
+            previewElem.setAttribute('id', 'video');
+            previewElem.setAttribute('autoplay', true);
+            scannerContainer.appendChild(previewElem);
+
+            scannerStatus.textContent = 'Scanning...';
             stopButton.disabled = false;
             startButton.disabled = true;
 
-            interval = setInterval(async () => {
-            const ctx = canvas.getContext('2d');
-            video.onloadedmetadata = () => {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+            scanning = true;
 
-             };
-
-            ctx.scale(2, 2);
-            ctx.filter = 'grayscale(100%) contrast(300%) brightness(150%)';
-
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-
-
-            const result = await Tesseract.recognize(canvas, 'eng', {
-                logger: m => console.log(m)
+            codeReader.decodeFromVideoDevice(selectedDeviceId, previewElem, (result, err) => {
+                if (result) {
+                    const imei = result.getText();
+                    if (/^\d{15}$/.test(imei)) {
+                        imeiField.value = imei;
+                        scannerStatus.textContent = 'IMEI Detected: ' + imei;
+                        codeReader.reset();
+                        scanning = false;
+                        stopButton.disabled = true;
+                        startButton.disabled = false;
+                    } else {
+                        scannerStatus.textContent = 'Non-IMEI format detected.';
+                    }
+                }
             });
-
-            const rawText = result.data.text;
-            const cleanedText = rawText.replace(/[^0-9]/g, '');
-            const imeiMatch = cleanedText.match(/\d{15}/);
-            console.log("OCR result:", rawText);
-
-            if (imeiMatch) {
-                imeiField.value = imeiMatch[0];
-                scannerStatus.textContent = "IMEI Detected: " + imeiMatch[0];
-                clearInterval(interval);
-                stopScanner();
-            } else {
-                scannerStatus.textContent = "No IMEI detected. Trying again...";
-            }
-        }, 2000);
-
-
         } catch (err) {
-            scannerStatus.textContent = "Camera access failed.";
+            scannerStatus.textContent = 'Camera error: ' + err.message;
             console.error(err);
         }
     });
 
-    stopButton.addEventListener('click', stopScanner);
-
-    function stopScanner() {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            video.srcObject = null;
-        }
-        clearInterval(interval);
+    stopButton.addEventListener('click', () => {
+        codeReader.reset();
+        scannerContainer.innerHTML = '';
+        scannerStatus.textContent = 'Scanner stopped.';
         startButton.disabled = false;
         stopButton.disabled = true;
-        scannerStatus.textContent = "";
-    }
+        scanning = false;
+    });
 </script>
 
 {% endblock %}
