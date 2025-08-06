@@ -306,3 +306,67 @@
     </div>
 </div>
 {% endblock content %}
+<script>
+function editUser(userId) {
+    fetch(`/users/${userId}/json`)  // <- Adjust route if needed
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to fetch user data.");
+            }
+            return response.json();
+        })
+        .then(user => {
+            document.getElementById('edit_user_id').value = user.id;
+            document.getElementById('edit_username').value = user.username;
+            document.getElementById('edit_email').value = user.email;
+            document.getElementById('edit_password').value = ''; // clear password
+            document.getElementById('edit_role').value = user.role;
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error("Error fetching user:", error);
+            alert("Unable to load user details.");
+        });
+}
+
+function handleEditSubmit(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    fetch(`/users/${formData.get('user_id')}/update`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => { throw data; });
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Optionally reload or update the row in-place
+        location.reload();
+    })
+    .catch(error => {
+        const errorDiv = document.getElementById('editFormErrors');
+        errorDiv.innerHTML = '';
+        if (error && error.errors) {
+            error.errors.forEach(err => {
+                errorDiv.innerHTML += `<div>${err}</div>`;
+            });
+        } else {
+            errorDiv.innerHTML = 'An error occurred. Please try again.';
+        }
+        errorDiv.style.display = 'block';
+    });
+
+    return false;
+}
+
+</script>
+
