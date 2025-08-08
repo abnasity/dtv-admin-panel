@@ -2,7 +2,21 @@
 
 {% block title %}Add Device - Phone Sales Management{% endblock %}
 
-
+{% block extra_css %}
+<style>
+    #interactive.viewport {
+    position: relative;
+    width: 100%;
+    max-width: 350px;    /* Smaller width */
+    height: 120px;       /* Small height so only IMEI 1 fits */
+    margin: auto;
+    overflow: hidden;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -173,39 +187,34 @@ function startScanner(inputId) {
 
   document.getElementById('scanner-status').innerText = "Initializing camera...";
 
-    Quagga.init({
+        Quagga.init({
     inputStream: {
         type: "LiveStream",
         constraints: {
-        width: 1280, // Higher resolution
-        height: 720,
+        width: 640,
+        height: 480,
         facingMode: "environment"
+        },
+        area: { // Limit scanning area to top portion
+        top: "0%",     // start scanning from top
+        right: "100%", 
+        left: "0%",
+        bottom: "40%"  // only upper 40% of camera view
         },
         target: document.querySelector('#interactive')
     },
     decoder: {
-        readers: [
-        "code_128_reader",
-        "code_39_reader",
-        "code_39_vin_reader",
-        "ean_reader",
-        "ean_8_reader",
-        "upc_reader",
-        "upc_e_reader",
-        "i2of5_reader"
-        ]
+        readers: ["code_128_reader", "ean_reader", "code_39_reader"]
     },
     locate: true
     }, function(err) {
     if (err) {
         console.error(err);
-        document.getElementById('scanner-status').innerText = "⚠️ Camera access failed. Allow permissions.";
         return;
     }
     Quagga.start();
-    document.getElementById('stopButton').disabled = false;
-    document.getElementById('scanner-status').innerText = "📸 Scanner active. Aim at IMEI 1 (top barcode).";
     });
+
 
 
   Quagga.onDetected(function(result) {
