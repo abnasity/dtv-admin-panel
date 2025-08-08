@@ -41,112 +41,40 @@
                         </div>
                         
                         <!-- Rest of your form fields -->
-                        <div class="mb-3">
-                            {{ form.brand.label(class="form-label") }}
-                            {{ form.brand(class="form-control", required=true) }}
-                            {% if form.brand.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.brand.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.model.label(class="form-label") }}
-                            {{ form.model(class="form-control", required=true) }}
-                            {% if form.model.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.model.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
+                        {{ form.brand.label(class="form-label") }}
+                        {{ form.brand(class="form-control", required=true) }}
+
+                        {{ form.model.label(class="form-label mt-3") }}
+                        {{ form.model(class="form-control", required=true) }}
+
+                        {{ form.ram.label(class="form-label mt-3") }}
+                        {{ form.ram(class="form-control", required=true) }}
+
+                        {{ form.rom.label(class="form-label mt-3") }}
+                        {{ form.rom(class="form-control", required=true) }}
+
+                        {{ form.purchase_price.label(class="form-label mt-3") }}
+                        <div class="input-group">
+                            <span class="input-group-text">Ksh</span>
+                            {{ form.purchase_price(class="form-control", required=true) }}
                         </div>
 
-                        <div class="mb-3">
-                            {{ form.ram.label(class="form-label") }}
-                            {{ form.ram(class="form-control", required=true) }}
-                            {% if form.ram.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.ram.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
+                        {{ form.price_cash.label(class="form-label mt-3") }}
+                        <div class="input-group">
+                            <span class="input-group-text">Ksh</span>
+                            {{ form.price_cash(class="form-control", required=true) }}
                         </div>
 
-                        <div class="mb-3">
-                            {{ form.rom.label(class="form-label") }}
-                            {{ form.rom(class="form-control", required=true) }}
-                            {% if form.rom.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.rom.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.purchase_price.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text">Ksh</span>
-                                {{ form.purchase_price(class="form-control", required=true) }}
-                            </div>
-                            {% if form.purchase_price.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.purchase_price.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.price_cash.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text">Ksh</span>
-                                {{ form.price_cash(class="form-control", required=true) }}
-                            </div>
-                            {% if form.price_cash.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.price_cash.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}                        
+                        {{ form.price_credit.label(class="form-label mt-3") }}
+                        <div class="input-group">
+                            <span class="input-group-text">Ksh</span>
+                            {{ form.price_credit(class="form-control", required=true) }}
                         </div>
 
-                        <div class="mb-3">
-                            {{ form.price_credit.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text">Ksh</span>
-                                {{ form.price_credit(class="form-control", required=true) }}
-                            </div>
-                            {% if form.price_credit.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.price_credit.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
+                        {{ form.notes.label(class="form-label mt-3") }}
+                        {{ form.notes(class="form-control", rows=3) }}
 
-                        <div class="mb-3">
-                            {{ form.notes.label(class="form-label") }}
-                            {{ form.notes(class="form-control", rows=3) }}
-                            {% if form.notes.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.notes.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div> 
-                        
-                        <div class="text-end">
+                        <div class="text-end mt-3">
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
@@ -195,6 +123,10 @@
 let activeFieldId = 'imeiInputField';
 let alreadyScanned = false;
 
+// Adjustable scan band settings
+const SCAN_BAND_HEIGHT = 10; // % of frame height
+const SCAN_BAND_CENTER = 50; // % from top (50 = middle)
+
 function startScanner(inputId) {
   activeFieldId = inputId || 'imeiInputField';
   alreadyScanned = false;
@@ -210,11 +142,11 @@ function startScanner(inputId) {
             facingMode: "environment"
         },
         target: document.querySelector('#interactive'),
-        area: { // narrow band in the middle
-            top: "46%",
+        area: {
+            top: (SCAN_BAND_CENTER - SCAN_BAND_HEIGHT / 2) + "%",
             right: "0%",
             left: "0%",
-            bottom: "46%"
+            bottom: (100 - (SCAN_BAND_CENTER + SCAN_BAND_HEIGHT / 2)) + "%"
         }
     },
     decoder: {
@@ -233,14 +165,7 @@ function startScanner(inputId) {
     locator: {
         patchSize: "small",
         halfSample: true
-    },
-    debug: {
-        drawBoundingBox: true,
-        showFrequency: true,
-        drawScanline: true,
-        showPattern: true
     }
-
   }, function(err) {
     if (err) {
         console.error(err);
