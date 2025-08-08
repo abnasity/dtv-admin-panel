@@ -195,10 +195,10 @@ function startScanner(inputId) {
         facingMode: "environment"
       },
       area: { 
-        top: "47%",    // slight vertical adjustment
+        top: "45%",    // slight vertical adjustment
         right: "0%",
         left: "0%",
-        bottom: "53%" // only 4% height
+        bottom: "55%" // only 4% height
       },
       target: document.querySelector('#interactive')
     },
@@ -209,7 +209,12 @@ function startScanner(inputId) {
         "ean_reader"
       ]
     },
-    locate: true
+    
+    locator: {
+  patchSize: "medium",
+  halfSample: true
+}
+
   }, function(err) {
     if (err) {
       console.error(err);
@@ -231,6 +236,8 @@ function startScanner(inputId) {
       Quagga.stop();
       document.getElementById('deviceForm').submit();
     }
+    console.log("Detected code:", result.codeResult.code);
+
   });
 }
 
