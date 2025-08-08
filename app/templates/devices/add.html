@@ -20,27 +20,33 @@
                         <!-- Scanner Section -->
                         <div class="mb-3">
                             <label for="imeiInputField" class="form-label">IMEI (15-digit)</label>
-                            <input type="text" name="imei" id="imeiInputField" class="form-control" placeholder="Scan or enter 15-digit IMEI" required>
+                            <input type="text" name="imei" id="imeiInputField" class="form-control" 
+                                   placeholder="Scan or enter 15-digit IMEI" required
+                                   pattern="\d{15}" title="Must be 15 digits">
+                            <div id="imeiFeedback" class="form-text"></div>
                         </div>
 
                         <div class="text-center mb-3">
                             <button type="button" class="btn btn-success me-2" id="startButton">
                                 <i class="fas fa-camera"></i> Start Scanner
                             </button>
-                            <button type="button" class="btn btn-secondary" id="stopButton" disabled>
+                            <button type="button" class="btn btn-danger" id="stopButton" disabled>
                                 <i class="fas fa-stop"></i> Stop Scanner
                             </button>
                         </div>
 
-                        <div id="scanner-status" class="text-danger"></div>
+                        <div id="scanner-status" class="alert alert-info" style="display: none;"></div>
 
                         <!-- Scanner viewport -->
-                        <div id="scanner-container" class="mt-3">
-                            <div class="scan-line"></div>
-                            <div id="interactive"></div>
+                        <div id="scanner-container" class="text-center" style="display: none;">
+                            <div id="interactive" class="border border-2 rounded shadow-sm mx-auto" 
+                                 style="width: 100%; height: 200px;"></div>
+                            <div class="mt-2">
+                                <small class="text-muted">Point camera at barcode</small>
+                            </div>
                         </div>
                         
-                        <!-- Rest of your form fields -->
+                        <!-- Device Details Section -->
                         <div class="mb-3">
                             {{ form.brand.label(class="form-label") }}
                             {{ form.brand(class="form-control", required=true) }}
@@ -144,9 +150,26 @@
                                 {% endfor %}
                             </div>
                             {% endif %}
-                        </div> 
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.image.label(class="form-label") }}
+                            {{ form.image(class="form-control") }}
+                            {% if form.image.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.image.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-check mb-3">
+                            {{ form.featured(class="form-check-input") }}
+                            {{ form.featured.label(class="form-check-label") }}
+                        </div>
                         
-                        <div class="text-end">
+                        <div class="text-end mt-4">
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
@@ -160,118 +183,149 @@
 {% block extra_js %}
 <style>
 #scanner-container {
+    margin: 20px auto;
+}
+#interactive {
     position: relative;
-    width: 100%;
-    max-width: 400px;
-    height: 80px; /* thin visible strip */
-    margin: 0 auto;
-    border: 3px solid #dc3545;
-    border-radius: 8px;
     overflow: hidden;
-    background: rgba(0,0,0,0.05);
-}
-.scan-line {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: #28a745;
-    animation: moveLine 2s linear infinite;
-    z-index: 10;
-}
-@keyframes moveLine {
-    from { top: 0; }
-    to { top: 100%; }
 }
 #interactive video {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
 }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
 <script>
-let activeFieldId = 'imeiInputField';
-let alreadyScanned = false;
+document.addEventListener('DOMContentLoaded', function() {
+    const imeiInput = document.getElementById('imeiInputField');
+    const startButton = document.getElementById('startButton');
+    const stopButton = document.getElementById('stopButton');
+    const scannerStatus = document.getElementById('scanner-status');
+    const scannerContainer = document.getElementById('scanner-container');
+    const imeiFeedback = document.getElementById('imeiFeedback');
+    
+    let scannerActive = false;
+    let lastScanTime = 0;
+    const scanCooldown = 2000; // 2 seconds between scans
 
-function startScanner(inputId) {
-  activeFieldId = inputId || 'imeiInputField';
-  alreadyScanned = false;
+    function updateStatus(message, isError = false) {
+        scannerStatus.textContent = message;
+        scannerStatus.style.display = 'block';
+        scannerStatus.className = isError ? 'alert alert-danger' : 'alert alert-info';
+    }
 
-  document.getElementById('scanner-status').innerText = "Initializing camera...";
-
-  Quagga.init({
-    inputStream: {
-        type: "LiveStream",
-        constraints: {
-            width: 1280,
-            height: 720,
-            facingMode: "environment"
-        },
-        target: document.querySelector('#interactive'),
-        area: { // narrow band in the middle
-            top: "40%",
-            right: "0%",
-            left: "0%",
-            bottom: "40%"
+    function validateIMEI(imei) {
+        if (/^\d{15}$/.test(imei)) {
+            imeiFeedback.textContent = "✓ Valid IMEI";
+            imeiFeedback.className = 'form-text text-success';
+            return true;
+        } else {
+            imeiFeedback.textContent = "✗ Must be 15 digits";
+            imeiFeedback.className = 'form-text text-danger';
+            return false;
         }
-    },
-    decoder: {
-        readers: [
-            "code_128_reader",
-            "code_39_reader",
-            "code_39_vin_reader",
-            "ean_reader",
-            "ean_8_reader",
-            "upc_reader",
-            "upc_e_reader",
-            "i2of5_reader"
-        ]
-    },
-    locate: true,
-    locator: {
-        patchSize: "small",
-        halfSample: true
-    },
-    debug: {
-        drawBoundingBox: true,
-        showFrequency: true,
-        drawScanline: true,
-        showPattern: true
     }
 
-  }, function(err) {
-    if (err) {
-        console.error(err);
-        document.getElementById('scanner-status').innerText = "⚠️ Camera access failed. Allow permissions.";
-        return;
+    function startScanner() {
+        if (scannerActive) return;
+        
+        updateStatus("Initializing camera...");
+        scannerContainer.style.display = 'block';
+        startButton.disabled = true;
+
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#interactive'),
+                constraints: {
+                    width: 640,
+                    height: 480,
+                    facingMode: "environment",
+                    focusMode: "continuous"
+                },
+            },
+            decoder: {
+                readers: ["code_128_reader", "ean_reader"],
+                multiple: false
+            },
+            locate: true,
+            numOfWorkers: 4
+        }, function(err) {
+            if (err) {
+                console.error("Scanner error:", err);
+                updateStatus("Error: " + (err.message || "Camera access denied"), true);
+                startButton.disabled = false;
+                scannerContainer.style.display = 'none';
+                return;
+            }
+            
+            scannerActive = true;
+            stopButton.disabled = false;
+            updateStatus("Scanner ready - point at barcode");
+            Quagga.start();
+        });
+
+        Quagga.onDetected(function(result) {
+            const now = Date.now();
+            if (now - lastScanTime < scanCooldown) return;
+            lastScanTime = now;
+            
+            const code = result.codeResult.code.replace(/\D/g, ''); // Remove non-digits
+            console.log("Scanned code:", code);
+            
+            if (validateIMEI(code)) {
+                imeiInput.value = code;
+                updateStatus("IMEI successfully scanned!", false);
+                stopScanner();
+                
+                // Optional: Play success sound
+                try {
+                    new Audio('{{ url_for("static", filename="sounds/success.mp3") }}').play();
+                } catch(e) { console.log("Audio error:", e); }
+            } else {
+                updateStatus("Invalid IMEI format. Try again.", true);
+                
+                // Optional: Play error sound
+                try {
+                    new Audio('{{ url_for("static", filename="sounds/error.mp3") }}').play();
+                } catch(e) { console.log("Audio error:", e); }
+            }
+        });
     }
-    Quagga.start();
-    document.getElementById('stopButton').disabled = false;
-    document.getElementById('scanner-status').innerText = "📸 Scanner active. Aim at IMEI 1 (top barcode).";
-  });
 
-  Quagga.onDetected(function(result) {
-    if (alreadyScanned) return;
-
-    const code = result.codeResult.code;
-    if (/^\d{15}$/.test(code)) {
-      alreadyScanned = true;
-      document.getElementById(activeFieldId).value = code;
-      document.getElementById('scanner-status').innerText = `✅ IMEI Detected: ${code}`;
-      Quagga.stop();
-      document.getElementById('stopButton').disabled = true;
-      document.getElementById('deviceForm').submit();
+    function stopScanner() {
+        if (!scannerActive) return;
+        
+        try {
+            Quagga.stop();
+            scannerActive = false;
+            scannerContainer.style.display = 'none';
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            updateStatus("Scanner stopped", false);
+        } catch(e) {
+            console.error("Error stopping scanner:", e);
+        }
     }
-  });
-}
 
-document.getElementById('startButton').addEventListener('click', () => startScanner());
-document.getElementById('stopButton').addEventListener('click', () => {
-  Quagga.stop();
-  document.getElementById('stopButton').disabled = true;
-  document.getElementById('scanner-status').innerText = "🛑 Scanner stopped.";
+    // Event listeners
+    startButton.addEventListener('click', startScanner);
+    stopButton.addEventListener('click', stopScanner);
+
+    // Clean up when leaving page
+    window.addEventListener('beforeunload', stopScanner);
+
+    // Validate IMEI on input
+    imeiInput.addEventListener('input', function() {
+        if (this.value.length === 15) {
+            validateIMEI(this.value);
+        } else {
+            imeiFeedback.textContent = "";
+        }
+    });
 });
 </script>
 {% endblock %}
