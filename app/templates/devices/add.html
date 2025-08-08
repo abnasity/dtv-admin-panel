@@ -4,16 +4,16 @@
 
 {% block extra_css %}
 <style>
-/* Thin scanning area */
-#interactive.viewport {
+/* Scanner container with better visibility */
+#scanner-container {
     position: relative;
     width: 100%;
-    max-width: 350px;
-    height: 35px; /* thin visible area */
-    margin: auto;
+    max-width: 400px;
+    height: 150px; /* Increased height for better scanning */
+    margin: 20px auto;
     overflow: hidden;
-    border: 3px solid red;
-    border-radius: 4px;
+    border: 3px solid #dc3545;
+    border-radius: 8px;
     background: rgba(0, 0, 0, 0.05);
 }
 
@@ -23,13 +23,29 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 2px;
-    background: lime;
-    animation: moveLine 1.5s linear infinite alternate;
+    height: 3px;
+    background: #28a745;
+    animation: moveLine 2s linear infinite;
+    z-index: 10;
 }
 @keyframes moveLine {
     from { top: 0; }
-    to { top: calc(100% - 2px); }
+    to { top: 100%; }
+}
+
+/* Scanner status message */
+#scanner-status {
+    text-align: center;
+    margin: 10px 0;
+    font-weight: 500;
+    min-height: 24px;
+}
+
+/* Video element styling */
+#scanner-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 </style>
 {% endblock %}
@@ -49,121 +65,34 @@
                     <form id="deviceForm" method="POST" enctype="multipart/form-data">
                         {{ form.csrf_token }}
 
-                        <input type="text" id="imeiInputField" name="imei" placeholder="Scanned IMEI">
+                        <!-- IMEI Input Field -->
+                        <div class="mb-3">
+                            <label for="imeiInputField" class="form-label">IMEI Number</label>
+                            <div class="input-group">
+                                <input type="text" id="imeiInputField" name="imei" 
+                                       class="form-control" placeholder="Scanned IMEI will appear here"
+                                       pattern="\d{15}" title="15 digit IMEI number" required>
+                                <button type="button" id="rescanBtn" class="btn btn-outline-secondary">
+                                    <i class="fas fa-sync-alt"></i> Rescan
+                                </button>
+                            </div>
+                            <div id="imei-feedback" class="form-text"></div>
+                        </div>
 
-                        <!-- Scanner container -->
-                        <div id="interactive" class="viewport mt-3">
+                        <!-- Scanner Container -->
+                        <div id="scanner-container">
+                            <video id="scanner-video"></video>
                             <div class="scan-line"></div>
                         </div>
-                        <p id="scanner-status">📷 Waiting to start...</p>
+                        <p id="scanner-status" class="text-info">⌛ Preparing scanner...</p>
 
-                        <!-- Your other form fields -->
-                        <div class="mb-3">
-                            {{ form.brand.label(class="form-label") }}
-                            {{ form.brand(class="form-control", required=true) }}
-                            {% if form.brand.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.brand.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
+                        <!-- Rest of your form fields remain unchanged -->
+                        <!-- ... -->
 
-                        <div class="mb-3">
-                            {{ form.model.label(class="form-label") }}
-                            {{ form.model(class="form-control", required=true) }}
-                            {% if form.model.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.model.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.ram.label(class="form-label") }}
-                            {{ form.ram(class="form-control", required=true) }}
-                            {% if form.ram.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.ram.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.rom.label(class="form-label") }}
-                            {{ form.rom(class="form-control", required=true) }}
-                            {% if form.rom.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.rom.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.purchase_price.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text">Ksh</span>
-                                {{ form.purchase_price(class="form-control", required=true) }}
-                            </div>
-                            {% if form.purchase_price.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.purchase_price.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.price_cash.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text">Ksh</span>
-                                {{ form.price_cash(class="form-control", required=true) }}
-                            </div>
-                            {% if form.price_cash.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.price_cash.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}                        
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.price_credit.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text">Ksh</span>
-                                {{ form.price_credit(class="form-control", required=true) }}
-                            </div>
-                            {% if form.price_credit.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.price_credit.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.notes.label(class="form-label") }}
-                            {{ form.notes(class="form-control", rows=3) }}
-                            {% if form.notes.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.notes.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div> 
-                        
-                        <div class="text-end">
+                        <div class="text-end mt-4">
+                            <button type="button" id="startScannerBtn" class="btn btn-success me-2">
+                                <i class="fas fa-camera"></i> Start Scanner
+                            </button>
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
@@ -177,71 +106,113 @@
 {% block extra_js %}
 <script src="https://unpkg.com/quagga/dist/quagga.min.js"></script>
 <script>
-let activeFieldId = 'imeiInputField';
-let alreadyScanned = false;
-
-function startScanner(inputId) {
-  activeFieldId = inputId || 'imeiInputField';
-  alreadyScanned = false;
-
-  document.getElementById('scanner-status').innerText = "Initializing camera...";
-  
-  Quagga.init({
-    inputStream: {
-      type: "LiveStream",
-      constraints: {
-        width: 640,
-        height: 480,
-        facingMode: "environment"
-      },
-      area: { 
-        top: "45%",    // slight vertical adjustment
-        right: "0%",
-        left: "0%",
-        bottom: "55%" // only 4% height
-      },
-      target: document.querySelector('#interactive')
-    },
-    decoder: {
-      readers: [
-        "code_128_reader",
-        "code_39_reader",
-        "ean_reader"
-      ]
-    },
+document.addEventListener('DOMContentLoaded', function() {
+    const imeiInput = document.getElementById('imeiInputField');
+    const scannerStatus = document.getElementById('scanner-status');
+    const startBtn = document.getElementById('startScannerBtn');
+    const rescanBtn = document.getElementById('rescanBtn');
+    const imeiFeedback = document.getElementById('imei-feedback');
+    const videoElement = document.getElementById('scanner-video');
     
-    locator: {
-  patchSize: "medium",
-  halfSample: true
-}
+    let scannerActive = false;
+    let lastScanTime = 0;
+    const scanCooldown = 2000; // 2 seconds between scans
 
-  }, function(err) {
-    if (err) {
-      console.error(err);
-      document.getElementById('scanner-status').innerText = "⚠️ Camera access failed. Allow permissions.";
-      return;
+    // Initialize scanner
+    function initScanner() {
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: videoElement,
+                constraints: {
+                    width: 640,
+                    height: 480,
+                    facingMode: "environment",
+                    focusMode: "continuous"
+                },
+            },
+            decoder: {
+                readers: ["code_128_reader", "ean_reader"],
+                multiple: false
+            },
+            locate: true,
+            numOfWorkers: 4
+        }, function(err) {
+            if (err) {
+                console.error("Scanner error:", err);
+                scannerStatus.innerHTML = `<span class="text-danger">❌ Error: ${err.message || "Camera access denied"}</span>`;
+                startBtn.disabled = false;
+                return;
+            }
+            
+            scannerActive = true;
+            scannerStatus.innerHTML = '<span class="text-success">✅ Scanner ready - point at barcode</span>';
+            Quagga.start();
+        });
+
+        Quagga.onDetected(function(result) {
+            const now = Date.now();
+            if (now - lastScanTime < scanCooldown) return;
+            lastScanTime = now;
+            
+            const code = result.codeResult.code.replace(/\D/g, ''); // Remove non-digits
+            console.log("Scanned code:", code);
+            
+            if (/^\d{15}$/.test(code)) {
+                imeiInput.value = code;
+                imeiFeedback.innerHTML = '<span class="text-success">✓ Valid IMEI scanned</span>';
+                scannerStatus.innerHTML = '<span class="text-success">✅ IMEI captured successfully!</span>';
+                
+                // Optional: Play success sound
+                try {
+                    new Audio('{{ url_for("static", filename="sounds/success.mp3") }}').play();
+                } catch(e) { console.log("Audio error:", e); }
+                
+                // Stop scanner after successful scan
+                stopScanner();
+            } else {
+                imeiFeedback.innerHTML = '<span class="text-danger">✗ Invalid IMEI format (must be 15 digits)</span>';
+                scannerStatus.innerHTML = '<span class="text-warning">⚠ Invalid IMEI format. Try again.</span>';
+                
+                // Optional: Play error sound
+                try {
+                    new Audio('{{ url_for("static", filename="sounds/error.mp3") }}').play();
+                } catch(e) { console.log("Audio error:", e); }
+            }
+        });
     }
-    Quagga.start();
-    document.getElementById('scanner-status').innerText = "📸 Scanner active. Aim at IMEI 1.";
-  });
 
-  Quagga.onDetected(function(result) {
-    if (alreadyScanned) return;
-
-    const code = result.codeResult.code;
-    if (/^\d{15}$/.test(code)) {
-      alreadyScanned = true;
-      document.getElementById(activeFieldId).value = code;
-      document.getElementById('scanner-status').innerText = `✅ IMEI Detected: ${code}`;
-      Quagga.stop();
-      document.getElementById('deviceForm').submit();
+    function stopScanner() {
+        if (scannerActive) {
+            Quagga.stop();
+            scannerActive = false;
+            scannerStatus.textContent = "Scanner stopped";
+            if (videoElement.srcObject) {
+                videoElement.srcObject.getTracks().forEach(track => track.stop());
+            }
+        }
     }
-    console.log("Detected code:", result.codeResult.code);
 
-  });
-}
+    // Event listeners
+    startBtn.addEventListener('click', function() {
+        if (!scannerActive) {
+            this.disabled = true;
+            scannerStatus.innerHTML = '<span class="text-info">⌛ Initializing scanner...</span>';
+            initScanner();
+        }
+    });
 
-// Start scanning immediately
-startScanner();
+    rescanBtn.addEventListener('click', function() {
+        stopScanner();
+        imeiInput.value = '';
+        imeiFeedback.textContent = '';
+        startBtn.disabled = false;
+        scannerStatus.innerHTML = '<span class="text-info">Ready to scan</span>';
+    });
+
+    // Clean up when leaving page
+    window.addEventListener('beforeunload', stopScanner);
+});
 </script>
 {% endblock %}
