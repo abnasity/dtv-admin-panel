@@ -173,30 +173,40 @@ function startScanner(inputId) {
 
   document.getElementById('scanner-status').innerText = "Initializing camera...";
 
-  Quagga.init({
+    Quagga.init({
     inputStream: {
-      type: "LiveStream",
-      constraints: {
-        width: 640,
-        height: 480,
+        type: "LiveStream",
+        constraints: {
+        width: 1280, // Higher resolution
+        height: 720,
         facingMode: "environment"
-      },
-      target: document.querySelector('#interactive')
+        },
+        target: document.querySelector('#interactive')
     },
     decoder: {
-      readers: ["code_128_reader", "ean_reader", "ean_8_reader"]
+        readers: [
+        "code_128_reader",
+        "code_39_reader",
+        "code_39_vin_reader",
+        "ean_reader",
+        "ean_8_reader",
+        "upc_reader",
+        "upc_e_reader",
+        "i2of5_reader"
+        ]
     },
     locate: true
-  }, function(err) {
+    }, function(err) {
     if (err) {
-      console.error(err);
-      document.getElementById('scanner-status').innerText = "⚠️ Camera access failed. Allow permissions.";
-      return;
+        console.error(err);
+        document.getElementById('scanner-status').innerText = "⚠️ Camera access failed. Allow permissions.";
+        return;
     }
     Quagga.start();
     document.getElementById('stopButton').disabled = false;
     document.getElementById('scanner-status').innerText = "📸 Scanner active. Aim at IMEI 1 (top barcode).";
-  });
+    });
+
 
   Quagga.onDetected(function(result) {
     if (alreadyScanned) return;
