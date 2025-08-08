@@ -4,28 +4,33 @@
 
 {% block extra_css %}
 <style>
+/* Thin scanning area */
 #interactive.viewport {
     position: relative;
     width: 100%;
     max-width: 350px;
-    height: 240px; /* normal camera height */
+    height: 50px; /* thin visible area */
     margin: auto;
     overflow: hidden;
+    border: 3px solid red;
+    border-radius: 4px;
     background: rgba(0, 0, 0, 0.05);
 }
 
+/* Moving scan line */
 .scan-line {
     position: absolute;
-    top: 49.5%;
+    top: 0;
     left: 0;
     width: 100%;
-    height: 1%;
-    background: rgba(255, 0, 0, 0.3);
-    pointer-events: none;
-    z-index: 2;
+    height: 2px;
+    background: lime;
+    animation: moveLine 1.5s linear infinite alternate;
 }
-
-
+@keyframes moveLine {
+    from { top: 0; }
+    to { top: calc(100% - 2px); }
+}
 </style>
 {% endblock %}
 
@@ -43,31 +48,16 @@
                 <div class="card-body">
                     <form id="deviceForm" method="POST" enctype="multipart/form-data">
                         {{ form.csrf_token }}
-                       
-                        
-                        <!-- Scanner Section -->
-                                    <div class="mb-3">
-                            <label for="imeiInputField" class="form-label">IMEI (15-digit)</label>
-                            <input type="text" name="imei" id="imeiInputField" class="form-control" placeholder="Scan or enter 15-digit IMEI" required>
-                            </div>
 
-                            <div class="text-center mb-3">
-                            <button type="button" class="btn btn-success me-2" id="startButton">
-                                <i class="fas fa-camera"></i> Start Scanner
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="stopButton" disabled>
-                                <i class="fas fa-stop"></i> Stop Scanner
-                            </button>
-                            </div>
+                        <input type="text" id="imeiInputField" name="imei" placeholder="Scanned IMEI">
 
-                            <div id="scanner-status" class="text-danger"></div>
-
-                            <div id="interactive" class="viewport mt-3"></div>
+                        <!-- Scanner container -->
+                        <div id="interactive" class="viewport mt-3">
                             <div class="scan-line"></div>
-
                         </div>
-                        
-                        <!-- Rest of your form fields -->
+                        <p id="scanner-status">📷 Waiting to start...</p>
+
+                        <!-- Your other form fields -->
                         <div class="mb-3">
                             {{ form.brand.label(class="form-label") }}
                             {{ form.brand(class="form-control", required=true) }}
@@ -79,7 +69,7 @@
                             </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="mb-3">
                             {{ form.model.label(class="form-label") }}
                             {{ form.model(class="form-control", required=true) }}
@@ -115,7 +105,7 @@
                             </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="mb-3">
                             {{ form.purchase_price.label(class="form-label") }}
                             <div class="input-group">
@@ -130,7 +120,7 @@
                             </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="mb-3">
                             {{ form.price_cash.label(class="form-label") }}
                             <div class="input-group">
@@ -173,7 +163,6 @@
                             {% endif %}
                         </div> 
                         
-                       
                         <div class="text-end">
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
@@ -184,12 +173,9 @@
     </div>
 </div>
 {% endblock %}
-<!-- Scripts -->
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
+{% block extra_js %}
+<script src="https://unpkg.com/quagga/dist/quagga.min.js"></script>
 <script>
 let activeFieldId = 'imeiInputField';
 let alreadyScanned = false;
@@ -199,43 +185,40 @@ function startScanner(inputId) {
   alreadyScanned = false;
 
   document.getElementById('scanner-status').innerText = "Initializing camera...";
-    Quagga.init({
+  
+  Quagga.init({
     inputStream: {
-        type: "LiveStream",
-        constraints: {
+      type: "LiveStream",
+      constraints: {
         width: 640,
         height: 480,
         facingMode: "environment"
-        },
-        area: { 
-        top: "25%",    // adjust this to match where IMEI 1 sits vertically
-        right: "100%",
+      },
+      area: { 
+        top: "48%",    // slight vertical adjustment
+        right: "0%",
         left: "0%",
-        bottom: "35%"  // bottom % should be just slightly below top %
-        },
-        target: document.querySelector('#interactive')
+        bottom: "52%" // only 4% height
+      },
+      target: document.querySelector('#interactive')
     },
     decoder: {
-        readers: [
+      readers: [
         "code_128_reader",
         "code_39_reader",
         "ean_reader"
-        ]
+      ]
     },
     locate: true
-    }, function(err) {
+  }, function(err) {
     if (err) {
-        console.error(err);
-        document.getElementById('scanner-status').innerText = "⚠️ Camera access failed. Allow permissions.";
-        return;
+      console.error(err);
+      document.getElementById('scanner-status').innerText = "⚠️ Camera access failed. Allow permissions.";
+      return;
     }
     Quagga.start();
-    document.getElementById('stopButton').disabled = false;
     document.getElementById('scanner-status').innerText = "📸 Scanner active. Aim at IMEI 1.";
-    });
-
-
-
+  });
 
   Quagga.onDetected(function(result) {
     if (alreadyScanned) return;
@@ -246,20 +229,12 @@ function startScanner(inputId) {
       document.getElementById(activeFieldId).value = code;
       document.getElementById('scanner-status').innerText = `✅ IMEI Detected: ${code}`;
       Quagga.stop();
-      document.getElementById('stopButton').disabled = true;
-
-      // Auto-submit the form
       document.getElementById('deviceForm').submit();
     }
   });
 }
 
-document.getElementById('startButton').addEventListener('click', () => startScanner());
-document.getElementById('stopButton').addEventListener('click', () => {
-  Quagga.stop();
-  document.getElementById('stopButton').disabled = true;
-  document.getElementById('scanner-status').innerText = "🛑 Scanner stopped.";
-});
+// Start scanning immediately
+startScanner();
 </script>
-
 {% endblock %}
