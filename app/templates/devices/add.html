@@ -211,10 +211,10 @@ function startScanner(inputId) {
         },
         target: document.querySelector('#interactive'),
         area: { // narrow band in the middle
-            top: "40%",
+            top: "35%",
             right: "0%",
             left: "0%",
-            bottom: "40%"
+            bottom: "35%"
         }
     },
     decoder: {
@@ -229,7 +229,18 @@ function startScanner(inputId) {
             "i2of5_reader"
         ]
     },
-    locate: true
+    locate: true,
+    locator: {
+        patchSize: "medium",
+        halfSample: true
+    },
+    debug: {
+        drawBoundingBox: true,
+        showFrequency: true,
+        drawScanline: true,
+        showPattern: true
+    }
+
   }, function(err) {
     if (err) {
         console.error(err);
