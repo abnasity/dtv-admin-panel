@@ -172,9 +172,8 @@ def assigned_orders():
 
 
 # ADMIN DASHBOARD
-@bp.route('/admin/dashboard')
+@bp.route('/auth/dashboard')
 @login_required
-@admin_required
 def dashboard():
     total_users = User.query.count()
     total_devices = Device.query.filter(
@@ -183,7 +182,7 @@ def dashboard():
 ).count()
 
   
-    return render_template('admin/dashboard.html',
+    return render_template('auth/dashboard.html',
                            total_users=total_users,
                            total_devices=total_devices,
                            )
