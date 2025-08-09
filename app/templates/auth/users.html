@@ -21,36 +21,52 @@
 <!-- Search and Filter -->
 <div class="card mb-4">
     <div class="card-body">
-        <form method="GET" class="row g-3">
-            <div class="col-md-4">
-                <div class="input-group">
-                    <input type="text" name="search" class="form-control" placeholder="Search users..." 
-                           value="{{ search }}">
-                    <button class="btn btn-outline-primary" type="submit">
-                        <i class="fas fa-search"></i>
+
+        <!-- Toggle button for mobile only -->
+        <button class="btn btn-outline-secondary d-md-none w-100 mb-3" 
+                type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#filterSection" 
+                aria-expanded="false" 
+                aria-controls="filterSection">
+            <i class="fas fa-filter me-1"></i> Filters
+        </button>
+
+        <!-- Collapsible section -->
+        <div class="collapse d-md-block" id="filterSection">
+            <form method="GET" class="row g-3">
+                <div class="col-12 col-sm-6 col-md-4">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Search users..." value="{{ search }}">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-md-3">
+                    <select name="role" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Roles</option>
+                        <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+                        <option value="staff" {% if role_filter == 'staff' %}selected{% endif %}>Staff</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-sm-6 col-md-3">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Status</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-sm-6 col-md-2">
+                    <button type="button" class="btn btn-secondary w-100" id="bulkActionsBtn" disabled>
+                        Bulk Actions <span class="badge bg-light text-dark selected-count">0</span>
                     </button>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <select name="role" class="form-select" onchange="this.form.submit()">
-                    <option value="">All Roles</option>
-                    <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
-                    <option value="staff" {% if role_filter == 'staff' %}selected{% endif %}>Staff</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select name="status" class="form-select" onchange="this.form.submit()">
-                    <option value="">All Status</option>
-                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-secondary w-100" id="bulkActionsBtn" disabled>
-                    Bulk Actions <span class="badge bg-light text-dark selected-count">0</span>
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
