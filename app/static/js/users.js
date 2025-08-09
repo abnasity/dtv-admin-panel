@@ -14,7 +14,7 @@ async function fetchWithCsrf(url, options = {}) {
 // ===== Edit User Logic =====
 async function editUser(userId) {
     try {
-        const response = await fetchWithCsrf(`/auth/users/${userId}/edit`);
+        const response = await fetchWithCsrf(`/users/${userId}/edit`);
         const user = await response.json();
 
         clearFormErrors('edit');
@@ -74,7 +74,7 @@ document.getElementById('editUserForm').addEventListener('submit', async functio
     };
 
     try {
-        const response = await fetchWithCsrf(`/auth/users/${userId}/edit`, {
+        const response = await fetchWithCsrf(`/users/${userId}/edit`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
@@ -99,43 +99,30 @@ document.getElementById('editUserForm').addEventListener('submit', async functio
 // ===== Add User Submit =====
 document.getElementById('addUserForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    clearFormErrors('add');
 
-    const addressSelect = document.getElementById('add_address');
-    const newAddressInput = document.getElementById('add_new_address');
-
-    const address = (addressSelect && addressSelect.value === '__new__')
-        ? (newAddressInput ? newAddressInput.value : '')
-        : (addressSelect ? addressSelect.value : '');
-
-    const formData = {
-        username: document.getElementById('add_username').value,
-        email: document.getElementById('add_email').value,
-        role: document.getElementById('add_role').value,
-        password: document.getElementById('add_password').value,
-        address: address
-    };
+    const formData = new FormData(this);
 
     try {
-        const response = await fetchWithCsrf('/auth/users/add', {
+        const response = await fetch('/users/create', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
+            body: formData
         });
 
-        const result = await response.json();
+        const data = await response.json();
 
-        if (result.success) {
-            bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
-            showAlert('success', result.message || 'User added successfully');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert('danger', result.error || 'Something went wrong');
-            if (result.errors) displayFormErrors(result.errors, 'add');
+        if (!response.ok) {
+            console.error("Add user error:", data);
+            alert(`Error: ${data.message}`);
+            return;
         }
+
+        alert(data.message);
+        // Optionally reload or update the users list
+        window.location.reload();
+
     } catch (error) {
-        console.error('Add user error:', error);
-        showAlert('danger', 'Failed to add user.');
+        console.error("Add user error:", error);
+        alert("Unexpected error. Check console for details.");
     }
 });
 
