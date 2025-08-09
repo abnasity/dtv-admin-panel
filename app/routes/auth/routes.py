@@ -246,11 +246,10 @@ def create_user():
     form = RegisterForm()
 
     if form.validate_on_submit():
-        # Check for duplicate email before creating user
+        # Check for duplicate email
         existing_user = User.query.filter_by(email=form.email.data).first()
         if existing_user:
-            flash('A user with this email already exists.', 'warning')
-            return redirect(url_for('auth.users'))
+            return jsonify({'status': 'error', 'message': 'A user with this email already exists.'}), 400
 
         address = form.address.data
         if address == '__new__':
@@ -267,16 +266,17 @@ def create_user():
 
         try:
             db.session.commit()
-            flash(f'User {user.username} has been created successfully', 'success')
+            return jsonify({'status': 'success', 'message': f'User {user.username} has been created successfully'})
         except Exception as e:
             db.session.rollback()
-            flash('Error creating user: possible duplicate or database issue', 'danger')
             print(f"[ERROR] User creation failed: {e}")
-        
-        return redirect(url_for('auth.users'))  
+            return jsonify({'status': 'error', 'message': 'Database error while creating user.'}), 500
 
-    flash('Form validation failed. Please check your inputs.', 'warning')
-    return redirect(url_for('auth.users'))
+    # If form is invalid, return errors
+    print("[DEBUG] Form errors:", form.errors)
+    return jsonify({'status': 'error', 'message': 'Form validation failed', 'errors': form.errors}), 400
+
+
 
 
 
