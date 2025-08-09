@@ -42,12 +42,11 @@
                     <td>{{ user.email }}</td>
                     <td>{{ user.role }}</td>
                     <td>
-                        <button class="btn btn-warning btn-sm edit-btn"
-                                data-id="{{ user.id }}"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editUserModal">
-                            Edit
-                        </button>
+                    <button class="btn btn-warning btn-sm edit-btn"
+                        data-user-id="{{ user.id }}">
+                        Edit
+                    </button>
+
                     </td>
                 </tr>
                 {% endfor %}
@@ -67,9 +66,10 @@
             <div class="modal-body">
                 <form id="addUserForm" action="{{ url_for('auth.create_user') }}" method="POST">
                     {{ form.csrf_token }}
+                    
                     <div class="mb-3">
-                        {{ form.username.label(class="form-label") }}
-                        {{ form.username(class="form-control") }}
+                        {{ form.username.label(class="form-label", for="add_username") }}
+                        {{ form.username(class="form-control", id="add_username") }}
                         {% if form.username.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.username.errors %}
@@ -78,9 +78,10 @@
                             </div>
                         {% endif %}
                     </div>
+
                     <div class="mb-3">
-                        {{ form.email.label(class="form-label") }}
-                        {{ form.email(class="form-control") }}
+                        {{ form.email.label(class="form-label", for="add_email") }}
+                        {{ form.email(class="form-control", id="add_email") }}
                         {% if form.email.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.email.errors %}
@@ -89,9 +90,10 @@
                             </div>
                         {% endif %}
                     </div>
+
                     <div class="mb-3">
-                        {{ form.password.label(class="form-label") }}
-                        {{ form.password(class="form-control") }}
+                        {{ form.password.label(class="form-label", for="add_password") }}
+                        {{ form.password(class="form-control", id="add_password") }}
                         {% if form.password.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.password.errors %}
@@ -100,9 +102,10 @@
                             </div>
                         {% endif %}
                     </div>
+
                     <div class="mb-3">
-                        {{ form.role.label(class="form-label") }}
-                        {{ form.role(class="form-select") }}
+                        {{ form.role.label(class="form-label", for="add_role") }}
+                        {{ form.role(class="form-select", id="add_role") }}
                         {% if form.role.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.role.errors %}
@@ -111,21 +114,23 @@
                             </div>
                         {% endif %}
                     </div>
-                                        
-                        <div class="mb-3">
-                            {{ form.address.label(class="form-label") }}
-                            {{ form.address(class="form-control") }}
-                            {% if form.address.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.address.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
 
-                
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label", for="add_address") }}
+                        {{ form.address(class="form-control", id="add_address") }}
+                        {% if form.address.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.address.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
+                    <!-- Hidden new address input -->
+                    <div id="newAddressField" style="display: none;">
+                        <input type="text" id="add_new_address" name="new_address" class="form-control" placeholder="Enter new address">
+                    </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -136,6 +141,8 @@
         </div>
     </div>
 </div>
+
+
 
 <!-- Edit User Modal -->
 <div class="modal fade" id="editUserModal" tabindex="-1">
