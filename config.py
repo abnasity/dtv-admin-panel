@@ -1,10 +1,7 @@
 import os
 from datetime import timedelta
-import os
-from datetime import timedelta
 from warnings import warn
 from dotenv import load_dotenv
-from urllib.parse import quote_plus
 
 load_dotenv()
 
@@ -24,20 +21,20 @@ def get_database_uri():
         return db_url
     
     # Fallback to SQLite
-    return 'sqlite:///' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'diamond.db')
+    return 'sqlite:///' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app.db')
 
 class Config:
     # Flask configuration
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-please-change-in-production'
     
-    # Database configuration (now a string, not a property)
-# In your Flask app configuration (usually __init__.py or config.py)
-SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://user:password@dpg-d1o0ihripnbc73btv170-a.oregon-postgres.render.com:5432/database_name?sslmode=require'
-SQLALCHEMY_ENGINE_OPTIONS = {
-    'pool_pre_ping': True,  # Enable connection health checks
-    'pool_recycle': 300,    # Recycle connections after 5 minutes
-    'pool_timeout': 30,     # Connection timeout in seconds
-    'max_overflow': 10,     # Allow additional connections beyond pool size
+    # Database configuration
+    SQLALCHEMY_DATABASE_URI = get_database_uri()
+    
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,  # Enable connection health checks
+        'pool_recycle': 300,    # Recycle connections after 5 minutes
+        'pool_timeout': 30,     # Connection timeout in seconds
+        'max_overflow': 10,     # Allow additional connections beyond pool size
         "connect_args": {
             "connect_timeout": 10,
             "keepalives": 1,
@@ -77,7 +74,6 @@ SQLALCHEMY_ENGINE_OPTIONS = {
             return False
         return True
 
-
 class ProductionConfig(Config):
     # Override with production-specific settings
     DEBUG = False
@@ -99,11 +95,9 @@ class ProductionConfig(Config):
         
         return db_url
 
-
 class DevelopmentConfig(Config):
     DEBUG = True
     WTF_CSRF_ENABLED = False  # Often disabled in development for easier testing
-
 
 class TestingConfig(Config):
     TESTING = True
