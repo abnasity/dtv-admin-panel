@@ -1,169 +1,59 @@
-<!-- Header -->
-<header>
-    <div class="container header-container">
-        <div class="logo">
-            <i class="fas fa-mobile-alt"></i>
-            <h1>Diamond Tree Ventures</h1>
-        </div>
-        <div class="user-info">
-            <div class="user-role">
-                <i class="fas fa-user-shield"></i> {{ current_user.role|title if current_user.is_authenticated else 'Guest' }}
-            </div>
-            <div class="user-actions">
-                <button class="btn btn-outline"><i class="fas fa-bell"></i></button>
-                <button class="btn btn-outline"><i class="fas fa-cog"></i></button>
-                {% if current_user.is_authenticated %}
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i></a>
-                {% else %}
-                <a href="{{ url_for('auth.login') }}" class="btn btn-outline"><i class="fas fa-sign-in-alt"></i></a>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</header>
 
 <!-- Navigation -->
-<nav>
-    <div class="container nav-container">
-        <a href="{{ url_for('auth.dashboard') }}" class="nav-item {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
-            <i class="fas fa-chart-line"></i> Dashboard
-        </a>
-        <a href="{{ url_for('devices.inventory') }}" class="nav-item {% if request.endpoint == 'devices.inventory' %}active{% endif %}">
-            <i class="fas fa-boxes"></i> Inventory
-        </a>
-        <a href="{{ url_for('sales.index') }}" class="nav-item {% if request.endpoint == 'sales.index' %}active{% endif %}">
-            <i class="fas fa-cash-register"></i> Sales
-        </a>
-        <a href="{{ url_for('main.index') }}" class="nav-item {% if request.endpoint == 'reports.index' %}active{% endif %}">
-            <i class="fas fa-file-alt"></i> Reports
-        </a>
-        <a href="{{ url_for('auth.users') }}" class="nav-item {% if request.endpoint == 'staff.index' %}active{% endif %}">
-            <i class="fas fa-users"></i> Staff
-        </a>
-    </div>
-</nav>
-
-
-            <!--STAFF DASHBOARD  -->
-                {% if current_user.is_authenticated and current_user.role in ['staff'] %}
-                <li>
-                <a href="{{ url_for('staff.dashboard') }}" class="btn btn-outline-success">
-                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                </a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a href="{{ url_for('auth.dashboard') }}" class="nav-link {% if request.endpoint.endswith('dashboard') %}active{% endif %}">
+                        <i class="fas fa-chart-line me-1"></i> Dashboard
+                    </a>
                 </li>
-                 {% endif %}
-
-                 <!--ADMIN DASHBOARD  -->
-                 {% if current_user.is_authenticated and current_user.role in ['admin'] %}
-                <li>
-                <a href="{{ url_for('auth.dashboard') }}" class="btn btn-outline-success">
-                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                </a>
+                <li class="nav-item">
+                    <a href="{{ url_for('devices.inventory') }}" class="nav-link {% if 'devices.' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-boxes me-1"></i> Inventory
+                    </a>
                 </li>
-                 {% endif %}
-
-                 
-                 <!-- END -->
-
-                {% if current_user.is_authenticated and current_user.role in ['admin', 'staff'] %}
-                    <!-- Admin/Staff Navbar Items -->
-                  <li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle hover-effect" href="#" id="storeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    <i class="fas fa-store me-1"></i> Stock & Sales
-  </a>
-  <ul class="dropdown-menu shadow-sm border rounded-3" aria-labelledby="storeDropdown">
-    <li>
-      <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('devices.inventory') }}">
-        <i class="fas fa-warehouse text-success me-2 small"></i> Inventory
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('sales.index') }}">
-        <i class="fas fa-shopping-cart text-primary me-2 small"></i> Sales
-      </a>
-    </li>
-
-    {% if current_user.is_authenticated and current_user.role in ['admin'] %}
-      <li>
-        <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.view_sold_devices') }}">
-          <i class="fas fa-mobile-alt text-info me-2 small"></i> Sold Devices
-        </a>
-      </li>
-      <li><a class="dropdown-item" href="{{ url_for('devices.deleted_inventory') }}">
-        <i class="fas fa-trash-restore-alt me-2"></i> Deleted Inventory
-      </a></li>
-      
-   
-    {% else %}
-      <li>
-        <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('staff.view_sold_items') }}">
-          <i class="fas fa-mobile-alt text-success me-2 small"></i> My Sold Items
-        </a>
-      </li>
-
-    {% endif %}
-  </ul>
+                <li class="nav-item">
+                    <a href="{{ url_for('sales.index') }}" class="nav-link {% if 'sales.' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-cash-register me-1"></i> Sales
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('main.index') }}" class="nav-link {% if 'reports.' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-file-alt me-1"></i> Reports
+                    </a>
+                </li>
+                
+                {% if current_user.is_authenticated and current_user.role == 'admin' %}
+         <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+        <i class="fas fa-tools me-1"></i> Admin Tools
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+        <li>
+            <a class="dropdown-item" href="{{ url_for('auth.users') }}">
+                <i class="fas fa-users-cog me-2"></i> User Management
+            </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <a class="dropdown-item" href="{{ url_for('auth.view_sold_devices') }}">
+                <i class="fas fa-mobile-alt me-2"></i> Sold Devices
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{{ url_for('devices.deleted_inventory') }}">
+                <i class="fas fa-trash-restore me-2"></i> Archived Inventory
+            </a>
+        </li>
+    </ul>
 </li>
-
-
-                       
-                    <!-- ADMIN ONLY -->
-                    {% if current_user.is_admin() %}
-                        
-                       <li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle hover-effect" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    <i class="fas fa-briefcase me-1"></i> Management
-  </a>
-  <ul class="dropdown-menu shadow-sm border rounded-3" aria-labelledby="adminDropdown">
-    <li>
-      <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('reports.dashboard') }}">
-        <i class="fas fa-chart-bar text-success me-2 small"></i> Reports
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item d-flex align-items-center small" href="{{ url_for('auth.users') }}">
-        <i class="fas fa-users text-success me-2 small"></i> Users
-      </a>
-    </li>
-  </ul>
-</li>
-
-
-
-<li class="nav-item">
-  <a class="nav-link hover-effect d-flex align-items-center small" href="{{ url_for('auth.view_assignments') }}">
-    <i class="fas fa-tasks me-2 small"></i> Staff Assignments
-  </a>
-</li>
-
-
-
-                            {% endif %}
-
-                    <!-- User account/login (shown to all except login page) -->
-                 {% if not request.endpoint == 'auth.login' %}         
-                    {% if current_user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i>{{ current_user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-id-card me-1"></i>Profile</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        
-                    {% endif %}
-                {% endif %}              
-                             
-      
-
-                    {% endif %}   
-                          
-
-
+                {% endif %}
             </ul>
         </div>
     </div>
