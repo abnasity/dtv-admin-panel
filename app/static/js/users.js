@@ -1,5 +1,4 @@
-
-// CSRF token
+// ===== CSRF Helpers =====
 function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 }
@@ -7,19 +6,18 @@ function getCsrfToken() {
 async function fetchWithCsrf(url, options = {}) {
     options.headers = options.headers || {};
     options.headers['X-CSRFToken'] = getCsrfToken();
-
     const response = await fetch(url, options);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     return response;
 }
 
-// Edit User Modal logic
+// ===== Edit User Logic =====
 async function editUser(userId) {
     try {
         const response = await fetchWithCsrf(`/auth/users/${userId}/edit`);
         const user = await response.json();
 
-        clearEditFormErrors();
+        clearFormErrors('edit');
 
         // Populate fields
         document.getElementById('edit_user_id').value = user.id;
@@ -34,7 +32,6 @@ async function editUser(userId) {
 
         if (addressSelect && newAddressInput && newAddressField) {
             const foundOption = [...addressSelect.options].find(opt => opt.value === user.address);
-
             if (foundOption) {
                 addressSelect.value = user.address;
                 newAddressInput.value = '';
@@ -47,8 +44,7 @@ async function editUser(userId) {
         }
 
         // Show modal
-        const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
-        editModal.show();
+        new bootstrap.Modal(document.getElementById('editUserModal')).show();
 
     } catch (error) {
         console.error('Error loading user:', error);
@@ -56,10 +52,10 @@ async function editUser(userId) {
     }
 }
 
-// Handle form submission
-document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+// ===== Edit User Submit =====
+document.getElementById('editUserForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    clearEditFormErrors();
+    clearFormErrors('edit');
 
     const userId = document.getElementById('edit_user_id').value;
     const addressSelect = document.getElementById('edit_address');
@@ -80,9 +76,7 @@ document.getElementById('editUserForm').addEventListener('submit', async functio
     try {
         const response = await fetchWithCsrf(`/auth/users/${userId}/edit`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
         });
 
@@ -94,9 +88,7 @@ document.getElementById('editUserForm').addEventListener('submit', async functio
             setTimeout(() => location.reload(), 1500);
         } else {
             showAlert('danger', result.error || 'Something went wrong');
-            if (result.errors) {
-                displayFormErrors(result.errors);
-            }
+            if (result.errors) displayFormErrors(result.errors, 'edit');
         }
     } catch (error) {
         console.error('Submit error:', error);
@@ -104,27 +96,82 @@ document.getElementById('editUserForm').addEventListener('submit', async functio
     }
 });
 
-// Toggle new address input visibility when user changes dropdown
-document.addEventListener('DOMContentLoaded', function () {
-    const addressSelect = document.getElementById('edit_address');
-    const newAddressField = document.getElementById('editNewAddressField');
+// ===== Add User Submit =====
+document.getElementById('addUserForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearFormErrors('add');
 
-    if (addressSelect && newAddressField) {
-        addressSelect.addEventListener('change', () => {
-            newAddressField.style.display = addressSelect.value === '__new__' ? 'block' : 'none';
+    const addressSelect = document.getElementById('add_address');
+    const newAddressInput = document.getElementById('add_new_address');
+
+    const address = (addressSelect && addressSelect.value === '__new__')
+        ? (newAddressInput ? newAddressInput.value : '')
+        : (addressSelect ? addressSelect.value : '');
+
+    const formData = {
+        username: document.getElementById('add_username').value,
+        email: document.getElementById('add_email').value,
+        role: document.getElementById('add_role').value,
+        password: document.getElementById('add_password').value,
+        address: address
+    };
+
+    try {
+        const response = await fetchWithCsrf('/auth/users/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
         });
+
+        const result = await response.json();
+
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+            showAlert('success', result.message || 'User added successfully');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('danger', result.error || 'Something went wrong');
+            if (result.errors) displayFormErrors(result.errors, 'add');
+        }
+    } catch (error) {
+        console.error('Add user error:', error);
+        showAlert('danger', 'Failed to add user.');
     }
 });
 
-// Helpers
-function clearEditFormErrors() {
-    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-    document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+// ===== Address Toggle Logic =====
+document.addEventListener('DOMContentLoaded', function () {
+    function setupAddressToggle(modalId, selectId, fieldId) {
+        const addressSelect = document.getElementById(selectId);
+        const newAddressField = document.getElementById(fieldId);
+
+        if (addressSelect && newAddressField) {
+            const toggle = () => {
+                newAddressField.style.display = addressSelect.value === '__new__' ? 'block' : 'none';
+            };
+            toggle();
+            addressSelect.addEventListener('change', toggle);
+        }
+    }
+
+    setupAddressToggle('editUserModal', 'edit_address', 'editNewAddressField');
+    setupAddressToggle('addUserModal', 'add_address', 'newAddressField');
+
+    // Attach edit button click events
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => editUser(btn.dataset.userId));
+    });
+});
+
+// ===== Helpers =====
+function clearFormErrors(prefix) {
+    document.querySelectorAll(`#${prefix}UserForm .is-invalid`).forEach(el => el.classList.remove('is-invalid'));
+    document.querySelectorAll(`#${prefix}UserForm .invalid-feedback`).forEach(el => el.remove());
 }
 
-function displayFormErrors(errors) {
+function displayFormErrors(errors, prefix) {
     Object.entries(errors).forEach(([field, message]) => {
-        const input = document.getElementById(`edit_${field}`);
+        const input = document.getElementById(`${prefix}_${field}`);
         if (input) {
             input.classList.add('is-invalid');
             const feedback = document.createElement('div');
@@ -134,34 +181,6 @@ function displayFormErrors(errors) {
         }
     });
 }
-
-// ADD USER JS
-document.addEventListener('DOMContentLoaded', function () {
-    const roleSelect = document.querySelector('#addUserModal select[name="role"]');
-    const addressSelect = document.querySelector('#addUserModal select[name="address"]');
-    const newAddressField = document.querySelector('#addUserModal #newAddressField');
-
-    function toggleNewAddressField() {
-        if (addressSelect.value === '__new__') {
-            newAddressField.style.display = 'block';
-        } else {
-            newAddressField.style.display = 'none';
-            const input = newAddressField.querySelector('input[name="new_address"]');
-            if (input) input.value = '';
-        }
-    }
-
-    // Only apply if elements exist
-    if (roleSelect && addressSelect && newAddressField) {
-        // Initial state
-        toggleNewAddressField();
-
-        // Watch for changes
-        addressSelect.addEventListener('change', toggleNewAddressField);
-    }
-});
-
-
 
 function showAlert(type, message) {
     const alertDiv = document.createElement('div');
@@ -174,4 +193,3 @@ function showAlert(type, message) {
     container.prepend(alertDiv);
     setTimeout(() => alertDiv.remove(), 5000);
 }
-
