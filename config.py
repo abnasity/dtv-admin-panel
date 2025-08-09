@@ -37,7 +37,7 @@ SQLALCHEMY_ENGINE_OPTIONS = {
     'pool_pre_ping': True,  # Enable connection health checks
     'pool_recycle': 300,    # Recycle connections after 5 minutes
     'pool_timeout': 30,     # Connection timeout in seconds
-    'max_overflow': 10      # Allow additional connections beyond pool size
+    'max_overflow': 10,     # Allow additional connections beyond pool size
         "connect_args": {
             "connect_timeout": 10,
             "keepalives": 1,
