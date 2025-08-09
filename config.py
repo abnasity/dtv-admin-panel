@@ -31,13 +31,13 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-please-change-in-production'
     
     # Database configuration (now a string, not a property)
-    SQLALCHEMY_DATABASE_URI = get_database_uri()
-
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_pre_ping": True,
-        "pool_recycle": 280,
-        "pool_timeout": 30,
-        "max_overflow": 10,
+# In your Flask app configuration (usually __init__.py or config.py)
+SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://user:password@dpg-d1o0ihripnbc73btv170-a.oregon-postgres.render.com:5432/database_name?sslmode=require'
+SQLALCHEMY_ENGINE_OPTIONS = {
+    'pool_pre_ping': True,  # Enable connection health checks
+    'pool_recycle': 300,    # Recycle connections after 5 minutes
+    'pool_timeout': 30,     # Connection timeout in seconds
+    'max_overflow': 10      # Allow additional connections beyond pool size
         "connect_args": {
             "connect_timeout": 10,
             "keepalives": 1,
