@@ -1,0 +1,26 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+<div class="container my-4">
+  <h1 class="mb-4 text-center fw-bold">Dashboard</h1>
+
+  <!-- Metrics -->
+  <div class="row mb-4 text-center">
+    <div class="col-md-4">
+      <div class="card shadow rounded-3">
+        <div class="card-body">
+          <h5 class="card-title text-primary">Total Users</h5>
+          <h2>{{ total_users }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow rounded-3">
+        <div class="card-body">
+          <h5 class="card-title text-success">Available Devices</h5>
+          <h2>{{ total_devices }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
