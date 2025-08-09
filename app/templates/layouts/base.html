@@ -40,29 +40,8 @@
     </header>
     
     <!-- Navigation -->
-    <nav>
-        <div class="container nav-container">
-            <button id="nav-toggle" class="nav-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="nav-items">
-                <a href="{{ url_for('auth.dashboard') }}" class="nav-item {% if request.endpoint.endswith('dashboard') %}active{% endif %}">
-                    <i class="fas fa-chart-line"></i> Dashboard
-                </a>
-            <a href="{{ url_for('devices.inventory') }}" class="nav-item {% if 'devices.' in request.endpoint %}active{% endif %}">
-                <i class="fas fa-boxes"></i> Inventory
-            </a>
-            <a href="{{ url_for('sales.index') }}" class="nav-item {% if 'sales.' in request.endpoint %}active{% endif %}">
-                <i class="fas fa-cash-register"></i> Sales
-            </a>
-            <a href="{{ url_for('main.index') }}" class="nav-item {% if 'reports.' in request.endpoint %}active{% endif %}">
-                <i class="fas fa-file-alt"></i> Reports
-            </a>
-            <a href="{{ url_for('auth.users') }}" class="nav-item {% if 'auth.users' in request.endpoint %}active{% endif %}">
-                <i class="fas fa-users"></i> Users
-            </a>
-        </div>
-    </nav>
+     {% include 'partials/navbar.html' %}
+
     
     <!-- Main Content -->
     <main>
