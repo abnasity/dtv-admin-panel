@@ -1,44 +1,49 @@
 import os
 from datetime import timedelta
+import os
+from datetime import timedelta
 from warnings import warn
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
 
 load_dotenv()
 
-class Config:
-    # Flask configuration
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    if not SECRET_KEY:
-        warn('Using default SECRET_KEY. Please set SECRET_KEY in production!', RuntimeWarning)
-        SECRET_KEY = 'dev-key-please-change-in-production'
+def get_database_uri():
+    """Helper function to properly format the database URI"""
+    db_url = os.environ.get('DATABASE_URL')
     
-    # Database configuration
-    @property
-    def SQLALCHEMY_DATABASE_URI(self):
-        db_url = os.environ.get('DATABASE_URL')
-        if db_url and db_url.startswith('postgres://'):
+    if db_url:
+        # Convert postgres:// to postgresql://
+        if db_url.startswith('postgres://'):
             db_url = db_url.replace('postgres://', 'postgresql://', 1)
         
-        # For Render PostgreSQL
-        if db_url and 'render.com' in db_url:
-            if '?sslmode=' not in db_url:
-                db_url += '?sslmode=require'
+        # Add SSL requirement for Render
+        if 'render.com' in db_url and '?sslmode=' not in db_url:
+            db_url += '?sslmode=require'
         
-        return db_url or \
-            'sqlite:///' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'diamond.db')
+        return db_url
+    
+    # Fallback to SQLite
+    return 'sqlite:///' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'diamond.db')
+
+class Config:
+    # Flask configuration
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-please-change-in-production'
+    
+    # Database configuration (now a string, not a property)
+    SQLALCHEMY_DATABASE_URI = get_database_uri()
 
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,
-        "pool_recycle": 280,  # Reset connections regularly
-        "pool_timeout": 30,   # 30 seconds timeout
-        "max_overflow": 10,   # Max overflow connections
+        "pool_recycle": 280,
+        "pool_timeout": 30,
+        "max_overflow": 10,
         "connect_args": {
-            "connect_timeout": 10,  # 10 seconds connection timeout
-            "keepalives": 1,        # Enable TCP keepalives
-            "keepalives_idle": 30,   # 30 seconds before sending keepalives
-            "keepalives_interval": 10,  # 10 seconds between keepalives
-            "keepalives_count": 5    # 5 failed keepalives before closing
+            "connect_timeout": 10,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5
         }
     }
 
