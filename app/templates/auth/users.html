@@ -5,6 +5,26 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/users.js') }}"></script>
 {% endblock extra_js %}
+{% block extra_css %}
+<style>
+    /* Prevent the body from having horizontal scroll */
+    body {
+        overflow-x: hidden;
+    }
+
+    /* Make sure only the table container scrolls horizontally */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
+        white-space: nowrap; /* prevents table wrapping */
+    }
+
+    /* Keep table cells from wrapping unexpectedly */
+    .table td, .table th {
+        white-space: nowrap;
+    }
+</style>
+{% endblock extra_css %}
 
 {% block content %}
 <div class="row mb-4">
