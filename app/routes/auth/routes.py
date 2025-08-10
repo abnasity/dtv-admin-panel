@@ -64,38 +64,24 @@ def reset_token(token):
 
 # LOGIN
 from sqlalchemy import or_
-@bp.route('/', methods=['GET', 'POST'])
-def login():         
+@bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        # Already logged in, go to dashboard
+        return redirect(url_for('main.dashboard'))
+
     form = LoginForm()
+
     if form.validate_on_submit():
-        # Accept identifier as either username or email
-        identifier = form.identifier.data.strip()
-
-        user = User.query.filter(
-            or_(
-                User.username.ilike(identifier),
-                User.email.ilike(identifier)
-            )
-        ).first()
-        
+        user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
-            user.last_seen = db.func.now()
-            db.session.commit()
-
-            login_user(user, remember=form.remember_me.data)
-            
-            # Redirect based on role
-            if user.role == 'admin':
-                return redirect(url_for('auth.dashboard'))
-            elif user.role == 'staff':
-                return redirect(url_for('staff.dashboard'))
-            elif user.role == 'customer':
-                return redirect(url_for('customers.dashboard'))
-
-            return redirect(url_for('auth.login'))  # Fallback
+            login_user(user, remember=form.remember.data)
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('main.dashboard'))
         else:
-            flash('Invalid login credentials. Please try again.', 'danger')
+            flash('Invalid email or password', 'danger')
 
+    # GET request or failed login → show the form
     return render_template('auth/login.html', form=form)
 
 
