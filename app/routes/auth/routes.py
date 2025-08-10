@@ -69,16 +69,25 @@ from sqlalchemy import or_
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        identifier = form.identifier.data
-        user = User.query.filter(
-            or_(User.email == identifier, User.username == identifier)
-        ).first()
-        if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember_me.data)
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('auth.dashboard'))
-        else:
-            flash('Invalid username/email or password', 'danger')
+        try:
+            identifier = form.identifier.data
+            user = User.query.filter(
+                or_(User.email == identifier, User.username == identifier)
+            ).first()
+
+            if user and user.check_password(form.password.data):
+                login_user(user, remember=form.remember_me.data)
+                next_page = request.args.get('next')
+                return redirect(next_page or url_for('auth.dashboard'))
+            else:
+                flash('Invalid username/email or password', 'danger')
+
+        except SQLAlchemyError as e:
+            print("SQLAlchemy error:", e)
+            traceback.print_exc()
+            flash('A server error occurred. Please try again later.', 'danger')
+            return render_template('auth/login.html', form=form), 500
+
     return render_template('auth/login.html', form=form)
 
 
