@@ -7,9 +7,9 @@ from app.utils.decorators import staff_required
 from app import db
 from decimal import Decimal
 from datetime import datetime
-import pdfkit
-from weasyprint import HTML
+from xhtml2pdf import pisa
 from io import BytesIO
+import base64
 from collections import defaultdict
 
 @bp.route('/')
@@ -215,48 +215,68 @@ def view_receipt(order_id):
 # Download receipt as PDF
 @bp.route('/download-receipt/<int:receipt_id>')
 def download_receipt_pdf(receipt_id):
-    order = CustomerOrder.query.get_or_404(receipt_id)
-    payment_option = (order.payment_option or '').lower()
-    is_cash = payment_option == 'cash'
+    try:
+        # Get order data
+        order = CustomerOrder.query.get_or_404(receipt_id)
+        payment_option = (order.payment_option or '').lower()
+        is_cash = payment_option == 'cash'
 
-    # Group items by brand and model
-    grouped = {}
-    for item in order.items:
-        device = item.device
-        price = device.price_cash if is_cash else device.price_credit
-        key = f"{device.brand} - {device.model}"
+        # Group items
+        grouped = {}
+        for item in order.items:
+            device = item.device
+            price = device.price_cash if is_cash else device.price_credit
+            key = f"{device.brand} - {device.model}"
 
-        if key not in grouped:
-            grouped[key] = {
-                'name': f"{device.brand} - {device.model}",
-                'imei': [device.imei],
-                'qty': 1,
-                'price': price,
-                'prices': [price],
-                'total': price
-            }
-        else:
-            grouped[key]['imei'].append(device.imei)
-            grouped[key]['prices'].append(price)
-            grouped[key]['qty'] += 1
-            grouped[key]['total'] += price
+            if key not in grouped:
+                grouped[key] = {
+                    'name': f"{device.brand} - {device.model}",
+                    'imei': [device.imei],
+                    'qty': 1,
+                    'price': price,
+                    'prices': [price],
+                    'total': price
+                }
+            else:
+                grouped[key]['imei'].append(device.imei)
+                grouped[key]['prices'].append(price)
+                grouped[key]['qty'] += 1
+                grouped[key]['total'] += price
 
-    receipt = {
-        'number': order.id,
-        'date': order.created_at.strftime('%Y-%m-%d'),
-        'time': order.created_at.strftime('%H:%M'),
-        'user': f"{order.assigned_staff.username}" if order.assigned_staff else 'N/A',
-        'customer_name': order.customer.full_name,
-        'customer_phone': order.customer.phone_number,
-        'id_number': order.customer.id_number,
-        'items': list(grouped.values()),
-        'total': sum(item['total'] for item in grouped.values())
-    }
+        receipt = {
+            'number': order.id,
+            'date': order.created_at.strftime('%Y-%m-%d'),
+            'time': order.created_at.strftime('%H:%M'),
+            'user': f"{order.assigned_staff.username}" if order.assigned_staff else 'N/A',
+            'customer_name': order.customer.full_name,
+            'customer_phone': order.customer.phone_number,
+            'id_number': order.customer.id_number,
+            'items': list(grouped.values()),
+            'total': sum(item['total'] for item in grouped.values())
+        }
 
-    html = render_template('receipt.html', receipt=receipt, pdf_mode=True)
-    pdf = HTML(string=html, base_url=request.base_url).write_pdf()
+        # Generate HTML with inline CSS (no external file needed)
+        html = render_template('receipt.html', receipt=receipt, pdf_mode=True)
 
-    return send_file(BytesIO(pdf),
-                     download_name=f"receipt_{receipt_id}.pdf",
-                     as_attachment=True,
-                     mimetype='application/pdf')
+        # Create PDF in memory
+        pdf_buffer = BytesIO()
+        pisa_status = pisa.CreatePDF(
+            html,
+            dest=pdf_buffer,
+            encoding='UTF-8',
+            link_callback=lambda uri: os.path.join(current_app.root_path, 'static', uri)
+        )
+
+        if pisa_status.err:
+            current_app.logger.error("PDF generation failed")
+            abort(500, description="PDF generation failed")
+
+        pdf_buffer.seek(0)
+        response = make_response(pdf_buffer.getvalue())
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=receipt_{receipt_id}.pdf'
+        return response
+
+    except Exception as e:
+        current_app.logger.error(f"PDF generation error: {str(e)}")
+        abort(500, description="Failed to generate PDF")
