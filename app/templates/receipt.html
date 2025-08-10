@@ -2,125 +2,216 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>Receipt #{{ receipt.number }}</title>
+    <title>Receipt #{{ receipt.number }} - Diamond Tree Ventures</title>
     <style>
+        /* Base styling optimized for both HTML and PDF */
         body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
             color: #333;
+            line-height: 1.4;
         }
-        .header, .footer {
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
             text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
         }
+        
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #2c3e50;
+        }
+        
+        .header p {
+            margin: 5px 0 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
         .details {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
         }
-        .details div {
+        
+        .detail-item {
             margin-bottom: 5px;
         }
+        
+        .detail-item strong {
+            display: inline-block;
+            min-width: 100px;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
+            font-size: 12px;
+            page-break-inside: avoid;
         }
-        th, td {
-            border: 1px solid #999;
-            padding: 8px;
-            text-align: left;
-        }
+        
         th {
-            background-color: #f4f4f4;
-        }
-        .total {
-            text-align: right;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: left;
             font-weight: bold;
         }
         
-      .btn {
-          display: inline-block;
-          padding: 8px 16px;
-          font-size: 14px;
-          color: #fff;
-          background-color: #28a745;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          text-decoration: none;
-    }
-    .btn i {
-        margin-right: 6px;
-    }
+        td {
+            border: 1px solid #dee2e6;
+            padding: 8px 10px;
+            vertical-align: top;
+        }
+        
+        .total {
+            text-align: right;
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        /* Print-specific styles */
+        @media print {
+            body {
+                padding: 0;
+                font-size: 11px;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        /* HTML-only styles */
     </style>
+    {% if not pdf_mode %}
+    <style>
+        .btn-container {
+            text-align: right;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            font-size: 14px;
+            color: white;
+            background-color: #28a745;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #218838;
+        }
+    </style>
+    {% endif %}
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h2>Diamond Tree Ventures</h2>
+            <p>Sales Receipt</p>
+        </div>
 
-    <div class="header">
-        <h2>Diamond Tree Ventures</h2>
-        <p><strong>Receipt</strong></p>
-    </div>
+        <div class="details">
+            <div class="detail-item">
+                <strong>Receipt No:</strong> {{ receipt.number }}
+            </div>
+            <div class="detail-item">
+                <strong>Date:</strong> {{ receipt.date }}
+            </div>
+            <div class="detail-item">
+                <strong>Time:</strong> {{ receipt.time }}
+            </div>
+            <div class="detail-item">
+                <strong>Staff:</strong> {{ receipt.user }}
+            </div>
+            <div class="detail-item">
+                <strong>Customer:</strong> {{ receipt.customer_name }}
+            </div>
+            <div class="detail-item">
+                <strong>Phone:</strong> {{ receipt.customer_phone }}
+            </div>
+            <div class="detail-item">
+                <strong>ID No:</strong> {{ receipt.id_number }}
+            </div>
+        </div>
 
-    <div class="details">
-        <div><strong>Receipt No:</strong> {{ receipt.number }}</div>
-        <div><strong>Date:</strong> {{ receipt.date }} <strong>Time:</strong> {{ receipt.time }}</div>
-        <div><strong>Served By:</strong> {{ receipt.user }}</div>
-        <div><strong>Customer Name:</strong> {{ receipt.customer_name }}</div>
-        <div><strong>Phone No:</strong> {{ receipt.customer_phone }}</div>
-        <div><strong>ID No:</strong> {{ receipt.id_number }}</div>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Device</th>
-                <th>IMEI</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-          <tbody>
-              {% for item in receipt["items"] %}
-              <tr>
-                <td>{{ item.name }}</td>
-                <td>
-                  {% for imei in item.imei %}
-                    <div>{{ imei }}</div>
-                  {% endfor %}
-                </td>
-                <td>{{ item.qty }}</td>
-                <td>
-                  {% for price in item.prices %}
-                    <div>KES {{ '{:,.2f}'.format(price) }}</div>
-                  {% endfor %}
-                </td>
-                <td>KES {{ '{:,.2f}'.format(item.total) }}</td>
-              </tr>
-              {% endfor %}
+        <table>
+            <thead>
+                <tr>
+                    <th width="25%">Device</th>
+                    <th width="30%">IMEI</th>
+                    <th width="10%">Qty</th>
+                    <th width="15%">Unit Price</th>
+                    <th width="20%">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in receipt.items %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>
+                        {% for imei in item.imei %}
+                        <div>{{ imei }}</div>
+                        {% endfor %}
+                    </td>
+                    <td>{{ item.qty }}</td>
+                    <td>
+                        {% for price in item.prices %}
+                        <div>KES {{ '{:,.2f}'.format(price) }}</div>
+                        {% endfor %}
+                    </td>
+                    <td>KES {{ '{:,.2f}'.format(item.total) }}</td>
+                </tr>
+                {% endfor %}
             </tbody>
+        </table>
 
+        <div class="total">
+            TOTAL AMOUNT: KES {{ '{:,.2f}'.format(receipt.total) }}
+        </div>
 
+        <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>For any inquiries, please contact: 0712 345 678</p>
+        </div>
 
-    </table>
-
-    <div class="total">
-        Total Amount: KES {{ '{:,.2f}'.format(receipt.total) }}
+        {% if not pdf_mode %}
+        <div class="btn-container no-print">
+            <a href="{{ url_for('sales.download_receipt_pdf', receipt_id=receipt.number) }}" 
+               class="btn">
+                Download PDF Receipt
+            </a>
+        </div>
+        {% endif %}
     </div>
-
-    <div class="footer">
-        <p>Thank you for your purchase!</p>
-    </div>
-
-      {% if not pdf_mode %}
-          <div class="text-end no-print" style="margin-bottom: 20px;">
-              <a href="{{ url_for('sales.download_receipt_pdf', receipt_id=receipt.number) }}" 
-                class="btn btn-success" style="text-decoration: none;">
-                  <i class="fas fa-file-pdf me-1"></i>Download
-              </a>
-          </div>
-      {% endif %}
-
-
-
 </body>
 </html>
