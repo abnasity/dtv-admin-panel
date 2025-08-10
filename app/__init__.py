@@ -55,10 +55,33 @@ def create_app(config_class=Config):
     app.logger.setLevel(logging.DEBUG)
     logging.basicConfig(level=logging.DEBUG)
 
+
+    from werkzeug.exceptions import HTTPException
+    from flask import render_template, send_from_directory
+
+    # Serve favicon.ico from static folder
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(
+            os.path.join(app.root_path, 'static'),
+            'favicon.ico',
+            mimetype='image/vnd.microsoft.icon'
+        )
+
+    # Handle 404 separately (missing pages / files)
+    @app.errorhandler(404)
+    def page_not_found(e):
+        app.logger.warning(f"404 Not Found: {request.path}")
+        return render_template("404.html"), 404  # Or a simple string if you prefer
+
+    # Handle all other exceptions (real server errors)
     @app.errorhandler(Exception)
     def handle_exception(e):
+        if isinstance(e, HTTPException):
+            return e  # Let Flask handle HTTP errors normally
         app.logger.exception("Unhandled Exception: %s", e)
-        return "Internal Server Error", 500
+        return render_template("500.html"), 500
+
 
     # Initialize extensions
     db.init_app(app)
