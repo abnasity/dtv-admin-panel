@@ -12,13 +12,6 @@ import cloudinary
 
 load_dotenv()
 
-# Configure Cloudinary
-cloudinary.config(
-    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
-    api_key=os.getenv('CLOUDINARY_API_KEY'),
-    api_secret=os.getenv('CLOUDINARY_API_SECRET')
-)
-
 # Login manager hooks
 @login_manager.unauthorized_handler
 def custom_unauthorized():
@@ -45,6 +38,22 @@ def create_app(config_class=Config):
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax'
     )
+
+     # Initialize Cloudinary inside app context
+    try:
+        cloudinary.config(
+            cloud_name=os.environ['CLOUDINARY_CLOUD_NAME'],
+            api_key=os.environ['CLOUDINARY_API_KEY'],
+            api_secret=os.environ['CLOUDINARY_API_SECRET']
+        )
+    except KeyError as e:
+        app.logger.error(f"❌ Missing Cloudinary env var: {e}")
+        raise RuntimeError("Missing required Cloudinary credentials.")
+
+    # 🔹 Add health check route for Railway
+    @app.route("/")
+    def health():
+      return "✅ App is running", 200
 
     # Logging to stdout for Vercel
     handler = logging.StreamHandler(sys.stdout)
