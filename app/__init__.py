@@ -95,13 +95,12 @@ def create_app(config_class=Config):
     from app.api.reports import bp as reports_api_bp
     from app.api.users import bp as users_api_bp
         
-    # Register API blueprints
-    app.register_blueprint(auth_api_bp, url_prefix='/api/auth')
-    app.register_blueprint(devices_api_bp, url_prefix='/api/devices')
-    app.register_blueprint(sales_api_bp, url_prefix='/api/sales')
-    app.register_blueprint(reports_api_bp, url_prefix='/api/reports')
-    app.register_blueprint(users_api_bp, url_prefix='/api/users')
-
+   # Register API blueprints
+    app.register_blueprint(auth_api_bp, url_prefix='/api/auth', name='api_auth')
+    app.register_blueprint(devices_api_bp, url_prefix='/api/devices', name='api_devices')
+    app.register_blueprint(sales_api_bp, url_prefix='/api/sales', name='api_sales')
+    app.register_blueprint(reports_api_bp, url_prefix='/api/reports', name='api_reports')
+    app.register_blueprint(users_api_bp, url_prefix='/api/users', name='api_users')
     
 
     # Initialize extensions

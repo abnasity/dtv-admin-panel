@@ -64,22 +64,23 @@ def reset_token(token):
 
 # LOGIN
 from sqlalchemy import or_
+
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
-    print("Login route accessed")
     form = LoginForm()
     if form.validate_on_submit():
-        print("Form validated")
-        user = User.query.filter_by(email=form.email.data).first()
+        identifier = form.identifier.data
+        user = User.query.filter(
+            or_(User.email == identifier, User.username == identifier)
+        ).first()
         if user and user.check_password(form.password.data):
-            print(f"User {user.email} authenticated")
-            login_user(user, remember=form.remember.data)
+            login_user(user, remember=form.remember_me.data)
             next_page = request.args.get('next')
-            print(f"Redirecting to: {next_page or url_for('auth.dashboard')}")
             return redirect(next_page or url_for('auth.dashboard'))
         else:
-            flash('Invalid email or password', 'danger')
+            flash('Invalid username/email or password', 'danger')
     return render_template('auth/login.html', form=form)
+
 
 
 # PROFILE MANAGEMENT   
