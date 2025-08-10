@@ -34,5 +34,6 @@ pillow
 python-slugify
 pdfkit
 cloudinary
-WeasyPrint
++ xhtml2pdf==0.2.10
++ reportlab==4.1.0
 Flask-JWT-Extended
