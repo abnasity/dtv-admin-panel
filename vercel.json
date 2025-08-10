@@ -8,6 +8,8 @@
         "maxLambdaSize": "15mb",
         "includeFiles": [
           "app/**",
+          "templates/**",
+          "static/**",
           "config.py",
           "requirements.txt"
         ]

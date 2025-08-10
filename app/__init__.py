@@ -29,13 +29,18 @@ def load_user(user_id):
     return None
 
 def create_app(config_class=Config):
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
+        static_folder=os.path.join(os.path.dirname(__file__), 'static')
+    )
     app.config.from_object(config_class)
     app.config.update(
         SESSION_COOKIE_SECURE=True,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax'
     )
+
 
     # Initialize extensions
     db.init_app(app)
@@ -46,10 +51,7 @@ def create_app(config_class=Config):
     mail.init_app(app)
     init_cloudinary()
 
-    @app.route("/")
-    def home():
-        return "Hello from Flask on Vercel!"
-
+  
     # Context Processors
     @app.context_processor
     def inject_now():
