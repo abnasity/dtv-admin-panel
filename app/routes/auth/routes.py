@@ -66,23 +66,20 @@ def reset_token(token):
 from sqlalchemy import or_
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        # Already logged in, go to dashboard
-        return redirect(url_for('main.dashboard'))
-
+    print("Login route accessed")
     form = LoginForm()
-
     if form.validate_on_submit():
+        print("Form validated")
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
+            print(f"User {user.email} authenticated")
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
             return redirect(next_page or url_for('main.dashboard'))
         else:
             flash('Invalid email or password', 'danger')
-
-    # GET request or failed login → show the form
     return render_template('auth/login.html', form=form)
+
 
 
 # PROFILE MANAGEMENT   
