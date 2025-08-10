@@ -1,6 +1,7 @@
 .dtv
 __pycache__
 diamond.db
+dtv_inventory.db
 migrations/
 .env
 # Ignore all image files
