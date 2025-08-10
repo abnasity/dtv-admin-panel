@@ -155,7 +155,7 @@ def assigned_orders():
 
 
 # ADMIN DASHBOARD
-@bp.route('/auth/dashboard')
+@bp.route('/dashboard')
 @login_required
 def dashboard():
     print(f"Current user: {current_user}, authenticated: {current_user.is_authenticated}")
