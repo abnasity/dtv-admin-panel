@@ -14,3 +14,4 @@ migrations/
 
 # Ignore device image folder recursively
 app/static/images/devices/
+.vercel

@@ -46,6 +46,10 @@ def create_app(config_class=Config):
     mail.init_app(app)
     init_cloudinary()
 
+    @app.route("/")
+    def home():
+        return "Hello from Flask on Vercel!"
+
     # Context Processors
     @app.context_processor
     def inject_now():

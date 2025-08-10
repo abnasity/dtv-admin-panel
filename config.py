@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from warnings import warn
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
 
 load_dotenv()
 
@@ -9,14 +10,23 @@ class Config:
     # Flask configuration
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-please-change-in-production'
     
-    # SQLite Database configuration
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'dtv_inventory.db')
+    # PostgreSQL Database configuration
+    DB_USER = os.environ.get('DB_USER', 'postgres')
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
+    DB_HOST = os.environ.get('DB_HOST', 'localhost')
+    DB_PORT = os.environ.get('DB_PORT', '5432')
+    DB_NAME = os.environ.get('DB_NAME', 'dtv_inventory')
     
-    # Simplified engine options for SQLite
+    # Construct database URI
+    SQLALCHEMY_DATABASE_URI = f"postgresql://{DB_USER}:{quote_plus(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    
+    # Connection pool settings
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
+        'pool_size': 5,
+        'max_overflow': 10,
+        'pool_timeout': 30,
     }
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -37,6 +47,12 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', MAIL_USERNAME)
+
+class ProductionConfig(Config):
+    DEBUG = False
+    # Use DATABASE_URL environment variable if available (common on hosting platforms)
+    if os.environ.get('DATABASE_URL'):
+        SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL').replace('postgres://', 'postgresql://', 1)
 
 class DevelopmentConfig(Config):
     DEBUG = True
