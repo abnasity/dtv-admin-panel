@@ -10,6 +10,8 @@ from datetime import datetime
 from xhtml2pdf import pisa
 from io import BytesIO
 import base64
+import os
+from flask import current_app
 from collections import defaultdict
 
 @bp.route('/')
@@ -170,7 +172,6 @@ def update_payment(sale_id):
 # RECEIPT/INVOICE DOWNLOAD
 @bp.route('/receipt/<int:order_id>')
 def view_receipt(order_id):
-    order = CustomerOrder.query.get_or_404(order_id)
     payment_option = (order.payment_option or '').lower()
     is_cash = payment_option == 'cash'
 
@@ -217,7 +218,6 @@ def view_receipt(order_id):
 def download_receipt_pdf(receipt_id):
     try:
         # Get order data
-        order = CustomerOrder.query.get_or_404(receipt_id)
         payment_option = (order.payment_option or '').lower()
         is_cash = payment_option == 'cash'
 
