@@ -78,13 +78,30 @@ def create_app(config_class=Config):
     from app.routes.sales import bp as sales_bp
     from app.routes.reports import bp as reports_bp
     from app.routes.staff import bp as staff_bp
-
+   
+    # Register web blueprints
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(devices_bp)
     app.register_blueprint(sales_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(staff_bp)
+
+
+    # Import API blueprints
+    from app.api.auth import bp as auth_api_bp
+    from app.api.devices import bp as devices_api_bp
+    from app.api.sales import bp as sales_api_bp
+    from app.api.reports import bp as reports_api_bp
+    from app.api.users import bp as users_api_bp
+        
+    # Register API blueprints
+    app.register_blueprint(auth_api_bp, url_prefix='/api/auth', name='api_auth')
+    app.register_blueprint(devices_api_bp, url_prefix='/api/devices', name='api_devices')
+    app.register_blueprint(sales_api_bp, url_prefix='/api/sales', name='api_sales')
+    app.register_blueprint(reports_api_bp, url_prefix='/api/reports', name='api_reports')
+    app.register_blueprint(users_api_bp, url_prefix='/api/users', name='api_users')
+    
 
     # Initialize extensions
     db.init_app(app)
