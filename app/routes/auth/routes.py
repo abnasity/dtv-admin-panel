@@ -75,11 +75,11 @@ def login():
             print(f"User {user.email} authenticated")
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
-            return redirect(next_page or url_for('main.dashboard'))
+            print(f"Redirecting to: {next_page or url_for('auth.dashboard')}")
+            return redirect(next_page or url_for('auth.dashboard'))
         else:
             flash('Invalid email or password', 'danger')
     return render_template('auth/login.html', form=form)
-
 
 
 # PROFILE MANAGEMENT   
@@ -158,6 +158,7 @@ def assigned_orders():
 @bp.route('/auth/dashboard')
 @login_required
 def dashboard():
+    print(f"Current user: {current_user}, authenticated: {current_user.is_authenticated}")
     total_users = User.query.count()
     total_devices = Device.query.filter(
     Device.status == 'available',
