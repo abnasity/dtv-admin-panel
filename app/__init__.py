@@ -50,10 +50,7 @@ def create_app(config_class=Config):
         app.logger.error(f"❌ Missing Cloudinary env var: {e}")
         raise RuntimeError("Missing required Cloudinary credentials.")
 
-    # 🔹 Add health check route for Railway
-    @app.route("/")
-    def health():
-      return "✅ App is running", 200
+    
 
     # Logging to stdout for Vercel
     handler = logging.StreamHandler(sys.stdout)
