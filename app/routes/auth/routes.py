@@ -1,8 +1,9 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, abort, after_this_request
 from flask_login import login_user, logout_user, current_user, login_required
+from flask_wtf.csrf import validate_csrf, ValidationError
 from app.extensions import db
 from app.models import User, Notification, Device
-from app.forms import LoginForm, ProfileForm, RegisterForm, ResetPasswordForm, RequestResetForm
+from app.forms import LoginForm, ProfileForm, RegisterForm, ResetPasswordForm, RequestResetForm, EditUserForm
 from app.decorators  import admin_required
 from app.utils.decorators import staff_required
 from app.utils.helpers import assign_staff_to_order
@@ -234,17 +235,18 @@ def users():
 
 
 # CREATE USER
-@bp.route('/users/create', methods=['POST'])
+@bp.route('/users/create', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def create_user():
     form = RegisterForm()
 
     if form.validate_on_submit():
-        # Check for duplicate email
+        # Check duplicate email
         existing_user = User.query.filter_by(email=form.email.data).first()
         if existing_user:
-            return jsonify({'status': 'error', 'message': 'A user with this email already exists.'}), 400
+            flash('A user with this email already exists.', 'warning')
+            return redirect(url_for('auth.users'))
 
         address = form.address.data
         if address == '__new__':
@@ -257,22 +259,21 @@ def create_user():
             address=address
         )
         user.set_password(form.password.data)
-        db.session.add(user)
 
+        db.session.add(user)
         try:
             db.session.commit()
-            return jsonify({'status': 'success', 'message': f'User {user.username} has been created successfully'})
+            flash(f'User {user.username} has been created successfully.', 'success')
         except Exception as e:
             db.session.rollback()
+            flash('Error creating user: possible duplicate or database issue.', 'danger')
             print(f"[ERROR] User creation failed: {e}")
-            return jsonify({'status': 'error', 'message': 'Database error while creating user.'}), 500
 
-    # If form is invalid, return errors
-    print("[DEBUG] Form errors:", form.errors)
-    return jsonify({'status': 'error', 'message': 'Form validation failed', 'errors': form.errors}), 400
+        return redirect(url_for('auth.users'))
 
-
-
+    # GET or invalid POST: render create user form
+    addresses = ["Address1", "Address2"]  # or fetch dynamically if needed
+    return render_template('auth/create_user.html', form=form, addresses=addresses)
 
 
 # TOGGLE USER STATUS
@@ -352,345 +353,36 @@ def bulk_update_status():
 # EDIT USER
 @bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
 def edit_user(user_id):
-    """Handle user edit form submission"""
     user = User.query.get_or_404(user_id)
-    
-    if request.method == 'GET':
-        return jsonify({
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'role': user.role,
-            'address': user.address
-        })
 
-    data = request.get_json()
-    if not data:
-        return jsonify({'success': False, 'error': 'No data provided'}), 400
+    form = EditUserForm(
+        original_username=user.username,
+        original_email=user.email,
+        obj=user
+    )
 
-    try:
-        # Check if it's an attempt to modify the current admin's role
-        if user.id == current_user.id and data.get('role') != 'admin' and user.role == 'admin':
-            return jsonify({'success': False, 'error': 'Cannot remove admin role from yourself'}), 400
-        
-        # Validate required fields
-        if not data.get('username') or not data.get('email') or not data.get('role'):
-            return jsonify({'success': False, 'error': 'Please fill in all required fields'}), 400
-        
-        if data.get('role') not in ['admin', 'staff']:
-            return jsonify({'success': False, 'error': 'Invalid role selected'}), 400
-        
-        # Check if username/email are taken by other users
-        username_exists = User.query.filter(User.username == data['username'], User.id != user_id).first()
-        email_exists = User.query.filter(User.email == data['email'], User.id != user_id).first()
-        
-        if username_exists:
-            return jsonify({'success': False, 'error': 'Username already exists'}), 400
-        if email_exists:
-            return jsonify({'success': False, 'error': 'Email already registered'}), 400
+    if form.validate_on_submit():
+        form.populate_obj(user)
 
-        # Update user
-        user.username = data['username']
-        user.email = data['email']
-        user.role = data['role']
-        user.address = data.get('address', user.address)
-
-        
-        if data.get('password'):
-            user.set_password(data['password'])
-        
-        db.session.commit()
-        return jsonify({
-            'success': True, 
-            'message': 'User updated successfully',
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'role': user.role
-            }
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
-    
-
-# CUSTOMER MANAGEMENT (ADMIN DASHBOARD) 
-# # ADMIN ORDER APPROVAL  
-@bp.route('/orders/<int:order_id>/approve', methods=['POST'])
-@login_required
-@admin_required
-def approve_order(order_id):
-    order = CustomerOrder.query.get_or_404(order_id)
-
-    if order.status not in ['pending', 'awaiting_approval']:
-        flash("This order cannot be approved.", "warning")
-        return redirect(url_for('auth.view_orders', order_id=order.id))
-
-    # Step 1: Conflict check - ensure no device is already sold
-    sold_devices = [
-        item.device for item in order.items
-        if item.device and item.device.status == 'sold'
-    ]
-
-    if sold_devices:
-        sold_names = [f"{d.brand} {d.model}" for d in sold_devices]
-        sold_names_str = ', '.join(sold_names)
-
-        order.status = 'rejected'
-        order.notes = f"The following device(s) are no longer available: {sold_names_str}"
-        order.approved_by_id = current_user.id
-        order.approved_at = datetime.utcnow()
-
-        notif_link_staff = url_for('auth.view_order_staff', order_id=order.id)
-        notif_link_customer = url_for('customers.order_detail', order_id=order.id)
-
-        # Notify assigned staff
-        if order.assigned_staff_id:
-            Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link_staff).delete()
-            db.session.add(Notification(
-                user_id=order.assigned_staff_id,
-                message=f"Order #{order.id} was rejected. Sold device(s): {sold_names_str}",
-                recipient_type='staff',
-                link=notif_link_staff
-            ))
-
-        # Notify the customer
-        if order.customer and isinstance(order.customer, Customer):
-            db.session.add(Notification(
-                Customer_id=order.customer.id,
-                message=f"Your order #{order.id} was rejected. Device(s) unavailable: {sold_names_str}",
-                recipient_type='customer',
-                link=notif_link_customer
-            ))
+        selected_address = request.form.get("address_select")
+        if selected_address == "__new__":
+            new_address = request.form.get("new_address")
+            if new_address:
+                user.address = new_address
+        else:
+            user.address = selected_address
 
         db.session.commit()
-        flash(f"Order #{order.id} rejected. Device(s) already sold: {sold_names_str}", "danger")
-        return redirect(url_for('auth.view_order', order_id=order.id))  # ✅ MISSING return fixed here
+        flash("User updated successfully", "success")
+        return redirect(url_for('auth.users'))
 
-    # Step 1.5: Check if any device is already in another active order for a different staff
-    conflicting_devices = []
-    for item in order.items:
-        if item.device:
-            active_conflict = db.session.query(CustomerOrder).join(CustomerOrder.items).filter(
-                CustomerOrder.id != order.id,
-                CustomerOrder.status.in_(['pending', 'awaiting_approval', 'approved']),
-                CustomerOrder.assigned_staff_id != None,
-                CustomerOrder.items.any(device_id=item.device.id)
-            ).first()
-            if active_conflict:
-                conflicting_devices.append(item.device)
-
-    if conflicting_devices:
-        conflict_names = [f"{d.brand} {d.model}" for d in conflicting_devices]
-        conflict_names_str = ', '.join(conflict_names)
-
-        order.status = 'rejected'
-        order.notes = f"The following device(s) are in another sale process: {conflict_names_str}"
-        order.approved_by_id = current_user.id
-        order.approved_at = datetime.utcnow()
-
-        notif_link_staff = url_for('auth.view_order_staff', order_id=order.id)
-        notif_link_customer = url_for('customers.order_detail', order_id=order.id)
-
-        # Notify assigned staff
-        if order.assigned_staff_id:
-            Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link_staff).delete()
-            db.session.add(Notification(
-                user_id=order.assigned_staff_id,
-                message=f"Order #{order.id} was rejected. Conflict: {conflict_names_str}",
-                recipient_type='staff',
-                link=notif_link_staff
-            ))
-
-        # Notify the customer
-        if order.customer:
-            db.session.add(Notification(
-                customer_id=order.customer.id,
-                message=f"Your order #{order.id} was rejected. Device(s) in use: {conflict_names_str}",
-                recipient_type='customer',
-                link=notif_link_customer
-            ))
-
-        db.session.commit()
-        flash(f"Order #{order.id} rejected. Device(s) already in another sale process: {conflict_names_str}", "danger")
-        return redirect(url_for('auth.view_order', order_id=order.id))
-
-    # Step 2: Approve the order
-    order.status = 'approved'
-    order.approved_by_id = current_user.id
-    order.approved_at = datetime.utcnow()
-
-    for item in order.items:
-        if item.device:
-            item.device.status = 'available'
-
-    # Step 3: Notify assigned staff
-    notif_link_staff = url_for('auth.view_order_staff', order_id=order.id)
-    if order.assigned_staff_id:
-        Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link_staff).delete()
-        db.session.add(Notification(
-            user_id=order.assigned_staff_id,
-            message=f"Order #{order.id} has been approved and awaiting sale confirmation.",
-            recipient_type='staff',
-            link=notif_link_staff
-        ))
-
-    # Step 4: Notify customer
-    notif_link_customer = url_for('customers.order_detail', order_id=order.id)
-    if order.customer:
-        db.session.add(Notification(
-            customer_id=order.customer.id,
-            message=f"Your order #{order.id} has been approved! You will be contacted shortly.",
-            recipient_type='customer',
-            link=notif_link_customer
-        ))
-
-    db.session.commit()
-    flash(f"Order #{order.id} approved. Awaiting sale confirmation.", "success")
-    return redirect(url_for('auth.view_orders', order_id=order.id))
-
-
-
-
-# CUSTOMER ORDERS 
-@bp.route('/admin/orders')
-@login_required
-@admin_required
-def view_orders():
-    orders = CustomerOrder.query.filter_by(is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
-
-    return render_template('admin/orders.html', orders=orders)
-
-# SINGLE ORDER VIEW
-@bp.route('/admin/order/<int:order_id>')
-@login_required
-@admin_required
-def view_order(order_id):
-    order = CustomerOrder.query.get_or_404(order_id)
-    return render_template('admin/order_detail.html', order=order)
-
-# ADMIN CANCEL ORDER
-@bp.route('/admin/orders/<int:order_id>/cancel', methods=['POST'])
-@login_required
-@admin_required
-def cancel_order(order_id):
-    order = CustomerOrder.query.get_or_404(order_id)
-
-    if order.status not in ['pending', 'awaiting_approval']:
-        flash(f"Order #{order.id} cannot be cancelled because its current status is '{order.status}'.", "warning")
-        return redirect(url_for('auth.view_order', order_id=order.id))
-
-    reason = request.form.get('cancel_reason', '').strip()
-    if not reason:
-        flash("Cancellation reason is required.", "danger")
-        return redirect(url_for('auth.view_order', order_id=order.id))
-
-    order.status = 'cancelled'
-    order.rejection_reason = reason  # REQUIRED for display
-    order.approved_by_id = current_user.id
-    order.approved_at = datetime.utcnow()
-    order.notes = f"{reason}"
-
-    # Notify staff if assigned
-    if order.assigned_staff_id:
-        notif_link_staff = url_for('auth.view_order_staff', order_id=order.id)
-        Notification.query.filter_by(user_id=order.assigned_staff_id, link=notif_link_staff).delete()
-        db.session.add(Notification(
-            user_id=order.assigned_staff_id,
-            message=f"Order #{order.id} was cancelled by admin. Reason: {reason}",
-            recipient_type='staff',
-            link=notif_link_staff
-        ))
-
-    # Notify customer
-    if order.customer:
-        notif_link_customer = url_for('customers.order_detail', order_id=order.id)
-        db.session.add(Notification(
-            customer_id=order.customer.id,
-            message=f"Your order #{order.id} was cancelled. Reason: {reason}",
-            recipient_type='customer',
-            link=notif_link_customer
-        ))
-
-    db.session.commit()
-    flash("Order has been cancelled and notifications sent.", "success")
-    return redirect(url_for('auth.view_orders'))
-
-
-# ADMIN DELETE ORDER
-@bp.route('/admin/orders/<int:order_id>/delete', methods=['POST'])
-@login_required
-@admin_required
-def delete_order(order_id):
-    order = CustomerOrder.query.get_or_404(order_id)
-
-    if order.status != 'cancelled':
-        flash("Only cancelled orders can be deleted.", "warning")
-        return redirect(url_for('auth.view_order', order_id=order.id))
-
-    order.is_deleted = True
-    db.session.commit()
-    flash("Cancelled order deleted successfully.", "success")
-    return redirect(url_for('auth.view_orders'))
-
-# PENDING ORDERS
-@bp.route('/orders/pending')
-@login_required
-@admin_required
-def pending_orders():
-    orders = CustomerOrder.query.filter_by(status='pending', is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
-
-    return render_template('admin/orders_pending.html', orders=orders)
-
-# ORDERS AWAITING APPROVAL
-@bp.route('/orders/awaiting_approval')
-@login_required
-@admin_required
-def awaiting_approval_orders():
-    orders = CustomerOrder.query.filter_by(status='awaiting_approval', is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
-    return render_template('admin/orders_awaiting_approval.html', orders=orders)
-
-
-# APPROVED ORDERS
-@bp.route('/orders/approved')
-@login_required
-@admin_required
-def approved_orders():
-    orders = CustomerOrder.query.filter_by(status='approved', is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
-
-    return render_template('admin/orders_approved.html', orders=orders)
-
-
-# REJECTED ORDERS
-@bp.route('/orders/rejected')
-@login_required
-@admin_required
-def rejected_orders():
-    orders = CustomerOrder.query.filter_by(status='rejected', is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
-
-    return render_template('admin/orders_rejected.html', orders=orders)
-
-# CANCELLED ORDERS
-@bp.route('/orders/cancelled')
-@login_required
-@admin_required
-def cancelled_orders():
-    orders = CustomerOrder.query.filter_by(status='cancelled', is_deleted=False).order_by(CustomerOrder.created_at.desc()).all()
-
-    return render_template('admin/orders_cancelled.html', orders=orders)
-
-
-# DELETED ORDERS
-@bp.route('/orders/deleted')
-@login_required
-@admin_required
-def deleted_orders():
-    orders = CustomerOrder.query.filter_by(is_deleted=True).order_by(CustomerOrder.created_at.desc()).all()
-    return render_template('admin/orders_deleted.html', orders=orders)
+    return render_template(
+        'auth/edit_user.html',
+        form=form,
+        user=user,
+        addresses=["Address1", "Address2"]
+    )
 
 
 # ASSIGN STAFF TO CUSTOMER
