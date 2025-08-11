@@ -1,0 +1,66 @@
+{% extends "layouts/base.html" %}
+{% block title %}Create User - Diamond Tree Ventures{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 600px;">
+    <h2>Create New User</h2>
+
+    <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+            {{ form.username.label(class="form-label") }}
+            {{ form.username(class="form-control", placeholder="Enter username") }}
+            {% for error in form.username.errors %}
+            <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control", placeholder="Enter email") }}
+            {% for error in form.email.errors %}
+            <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control", placeholder="Enter password") }}
+            <div class="form-text">Minimum 6 characters</div>
+            {% for error in form.password.errors %}
+            <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.role.label(class="form-label") }}
+            {{ form.role(class="form-select") }}
+            {% for error in form.role.errors %}
+            <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+ <div class="mb-3">
+    <label for="address" class="form-label">Staff Address</label>
+    <input type="text" id="address" name="address" class="form-control" 
+           value="{{ user.address if user else '' }}" placeholder="Enter address">
+</div>
+
+
+        <div id="newAddressField" style="display:none;" class="mb-3">
+            <label for="new_address" class="form-label">New Address</label>
+            <input type="text" id="new_address" name="new_address" class="form-control" placeholder="Enter new address">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create User</button>
+        <a href="{{ url_for('auth.users') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+<script>
+function toggleNewAddress(val) {
+    document.getElementById('newAddressField').style.display = (val === '__new__') ? 'block' : 'none';
+}
+</script>
+{% endblock %}
