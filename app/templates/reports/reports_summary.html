@@ -1,0 +1,64 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Reports Summary{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4"><i class="fas fa-file-alt me-2"></i> Reports Summary (Last {{ days }} days)</h2>
+
+  <div class="row g-4">
+
+    <!-- Sales Metrics Card -->
+    <div class="col-md-4">
+      <div class="card border-primary shadow-sm h-100">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0"><i class="fas fa-chart-line me-2"></i> Sales Metrics</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Total Sales:</strong> {{ sales_metrics.total_sales }}</p>
+          <p>
+            <strong>Sales Growth:</strong> 
+            <span class="{{ 'text-success' if sales_metrics.sales_growth >= 0 else 'text-danger' }}">
+              {{ sales_metrics.sales_growth }}%
+              <i class="fas fa-arrow-{{ 'up' if sales_metrics.sales_growth >= 0 else 'down' }}"></i>
+            </span>
+          </p>
+          <p><strong>Total Revenue:</strong> ${{ "{:,.2f}".format(sales_metrics.total_revenue) }}</p>
+          <p>
+            <strong>Revenue Growth:</strong> 
+            <span class="{{ 'text-success' if sales_metrics.revenue_growth >= 0 else 'text-danger' }}">
+              {{ sales_metrics.revenue_growth }}%
+              <i class="fas fa-arrow-{{ 'up' if sales_metrics.revenue_growth >= 0 else 'down' }}"></i>
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Metrics Card -->
+    <div class="col-md-4">
+      <div class="card border-success shadow-sm h-100">
+        <div class="card-header bg-success text-white">
+          <h5 class="card-title mb-0"><i class="fas fa-boxes me-2"></i> Inventory Metrics</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Available Devices:</strong> {{ inventory_metrics.available_devices }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Credit Metrics Card -->
+    <div class="col-md-4">
+      <div class="card border-warning shadow-sm h-100">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="card-title mb-0"><i class="fas fa-credit-card me-2"></i> Credit Metrics</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Total Outstanding:</strong> ${{ "{:,.2f}".format(credit_metrics.total_outstanding) }}</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
