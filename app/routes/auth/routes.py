@@ -13,6 +13,8 @@ from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 from flask_mail import Message
 from app.extensions import mail
+from sqlalchemy.exc import SQLAlchemyError
+
 
 # RESET EMAIL
 def send_reset_email(user):
