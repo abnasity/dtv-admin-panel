@@ -101,7 +101,6 @@ def dashboard():
                          payment_data=payment_data,
                          recent_sales=recent_sales,
                          top_products=top_products)
-
 @bp.route('/reports/summary')
 @login_required
 @admin_required
@@ -109,7 +108,28 @@ def summary():
     days = request.args.get('days', 30, type=int)
     cutoff_date = datetime.now() - timedelta(days=days)
     
-    # (Your existing data querying code here)
+    # Get current period sales metrics
+    total_sales = Sale.query.filter(Sale.sale_date >= cutoff_date).count()
+    total_revenue = db.session.query(
+        func.sum(Sale.sale_price)
+    ).filter(
+        Sale.sale_date >= cutoff_date
+    ).scalar() or 0
+    
+    # Get previous period metrics for growth calculation
+    prev_cutoff = cutoff_date - timedelta(days=days)
+    prev_sales = Sale.query.filter(
+        Sale.sale_date.between(prev_cutoff, cutoff_date)
+    ).count()
+    prev_revenue = db.session.query(
+        func.sum(Sale.sale_price)
+    ).filter(
+        Sale.sale_date.between(prev_cutoff, cutoff_date)
+    ).scalar() or 0
+    
+    # Calculate growth rates safely
+    sales_growth = ((total_sales - prev_sales) / prev_sales * 100) if prev_sales > 0 else 0
+    revenue_growth = ((total_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
     
     sales_metrics = {
         'total_sales': total_sales,
@@ -117,9 +137,11 @@ def summary():
         'total_revenue': round(total_revenue, 2),
         'revenue_growth': round(revenue_growth, 1)
     }
+    
     inventory_metrics = {
         'available_devices': Device.query.filter_by(status='available').count()
     }
+    
     credit_metrics = {
         'total_outstanding': round(db.session.query(
             func.sum(Sale.sale_price - Sale.amount_paid)
