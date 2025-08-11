@@ -23,12 +23,24 @@
                         <i class="fas fa-cash-register me-1"></i> Sales
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ url_for('reports.dashboard') }}" class="nav-link {% if 'reports.' in request.endpoint %}active{% endif %}">
-                        <i class="fas fa-file-alt me-1"></i> Reports
-                    </a>
-                </li>
-                
+            <li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle {% if 'reports.' in request.endpoint %}active{% endif %}" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="fas fa-file-alt me-1"></i> Reports
+  </a>
+  <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+    <li>
+      <a class="dropdown-item {% if request.endpoint == 'reports.dashboard' %}active{% endif %}" href="{{ url_for('reports.dashboard') }}">
+        Dashboard
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item {% if request.endpoint == 'reports.summary' %}active{% endif %}" href="{{ url_for('reports.summary') }}">
+        Reports summary
+      </a>
+    </li>
+  </ul>
+</li>
+
                 {% if current_user.is_authenticated and current_user.role == 'admin' %}
          <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
