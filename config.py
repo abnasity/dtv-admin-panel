@@ -57,7 +57,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    WTF_CSRF_ENABLED = False
+    WTF_CSRF_ENABLED = True
 
 class ProductionConfig(Config):
     DEBUG = False
