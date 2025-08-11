@@ -149,6 +149,7 @@ class EditUserForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     password = PasswordField('Password')  # Optional for editing
     role = SelectField('Role', choices=[('staff', 'Staff'), ('admin', 'Admin')], validators=[DataRequired()])
+    address = StringField('Address', validators=[Optional()])
     submit = SubmitField('Update User')
 
     def __init__(self, original_username, original_email, *args, **kwargs):
