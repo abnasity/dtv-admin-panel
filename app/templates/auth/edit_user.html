@@ -1,0 +1,55 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+<h2>Edit User</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.username.label(class="form-label") }}
+        {{ form.username(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.email.label(class="form-label") }}
+        {{ form.email(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.role.label(class="form-label") }}
+        {{ form.role(class="form-select") }}
+    </div>
+<div class="mb-3">
+    <label for="address" class="form-label">Staff Address</label>
+    <input type="text" id="address" name="address" class="form-control" 
+           value="{{ user.address if user else '' }}" placeholder="Enter address">
+</div>
+
+    <div class="mb-3">
+        {{ form.password.label(class="form-label") }}
+        {{ form.password(class="form-control") }}
+        <div class="form-text">Leave blank if not changing password</div>
+    </div>
+    {{ form.submit(class="btn btn-primary") }}
+    <a href="{{ url_for('auth.users') }}" class="btn btn-secondary">Cancel</a>
+</form>
+
+<script>
+function openEditModal(userId) {
+  fetch(`/users/${userId}`, {
+    headers: { "X-Requested-With": "XMLHttpRequest" }
+  })
+    .then(res => res.json())
+    .then(data => {
+      $('#edit_user_id').val(data.id);
+      $('#edit_username').val(data.username);
+      $('#edit_email').val(data.email);
+      $('#edit_role').val(data.role);
+      $('#edit_address').val(data.address);
+      $('#editUserForm').attr('action', `/users/${data.id}/edit`);
+      $('#editUserModal').modal('show');
+    })
+    .catch(err => {
+      console.error("Failed to load user data:", err);
+      alert("Could not load user data. Please try again.");
+    });
+}
+
+</script>
+{% endblock %}
