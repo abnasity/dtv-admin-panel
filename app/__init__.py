@@ -3,6 +3,7 @@ import sys
 import logging
 from dotenv import load_dotenv
 from flask import Flask, request, redirect, url_for, send_from_directory
+from flask_wtf.csrf import generate_csrf
 from config import Config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf, mail
 from flask_login import current_user
@@ -50,7 +51,9 @@ def create_app(config_class=Config):
         app.logger.error(f"❌ Missing Cloudinary env var: {e}")
         raise RuntimeError("Missing required Cloudinary credentials.")
 
-    
+    @app.context_processor
+    def inject_csrf_token():
+        return dict(csrf_token=generate_csrf())
 
     # Logging to stdout for Vercel
     handler = logging.StreamHandler(sys.stdout)
