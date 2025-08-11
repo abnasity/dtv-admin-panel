@@ -14,7 +14,7 @@ import os
 from flask import current_app
 from collections import defaultdict
 
-@bp.route('/')
+@bp.route('/sales')
 @login_required
 def index():
     """Display sales dashboard"""

@@ -7,7 +7,7 @@ from app import db
 from sqlalchemy import func
 from datetime import datetime, timedelta
 
-@bp.route('/dashboard')
+@bp.route('reports/dashboard')
 @login_required
 def dashboard():
     # Get time ranges for comparison
