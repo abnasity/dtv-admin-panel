@@ -73,6 +73,8 @@
 
                         {{ form.notes.label(class="form-label mt-3") }}
                         {{ form.notes(class="form-control", rows=3) }}
+                        {{ form.assigned_staff_id.label(class="form-label mt-3") }}
+                        {{ form.assigned_staff_id(class="form-select", required=true) }}
 
                         <div class="text-end mt-3">
                             {{ form.submit(class="btn btn-primary") }}
