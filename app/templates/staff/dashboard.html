@@ -1,31 +1,36 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}Staff Dashboard{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h2 class="mb-4">Welcome, {{ current_user.username }}!</h2>
 
     <div class="row g-4">
-        <!-- Assigned Orders Card -->
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-clipboard-check me-2"></i>Assigned Orders</h5>
-                    <p class="card-text">Check orders assigned to you and take action.</p>
-                    <a href="{{ url_for('auth.assigned_orders') }}" class="btn btn-primary">View Orders</a>
-                </div>
-            </div>
-        </div>
-       
 
-        <!-- Notifications Card -->
-        <div class="col-md-6">
+        <!-- Devices Assigned to Current User -->
+        <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-bell me-2"></i>Notifications</h5>
-                    <p class="card-text">You have <strong>{{ unread_notifications_count }}</strong> unread notification{{ unread_notifications_count != 1 and 's' or '' }}.</p>
-                    <a href="{{ url_for('auth.notifications') }}" class="btn btn-warning">View Notifications</a>
+                    <h5 class="card-title"><i class="fas fa-mobile-alt me-2"></i>Your Assigned Devices</h5>
+                    {% if devices %}
+                    <ul class="list-group list-group-flush">
+                        {% for device in devices %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ device.brand }} {{ device.model }}</strong> <br>
+                                IMEI: {{ device.imei or 'N/A' }} <br>
+                                Status: <span class="badge bg-{{ 'success' if device.status == 'available' else 'secondary' }}">{{ device.status }}</span>
+                            </div>
+                            <a href="{{ url_for('devices.view_device_by_imei', imei=device.imei) }}" class="btn btn-sm btn-primary">
+                                View Details
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">No devices assigned to you.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -46,6 +51,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 {% endblock %}
