@@ -70,6 +70,8 @@ def reset_token(token):
 # LOGIN
 from sqlalchemy import or_
 
+
+
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -82,8 +84,19 @@ def login():
 
             if user and user.check_password(form.password.data):
                 login_user(user, remember=form.remember_me.data)
+
+                # Role-based redirection logic
                 next_page = request.args.get('next')
-                return redirect(next_page or url_for('auth.dashboard'))
+                if next_page:
+                    return redirect(next_page)
+                elif user.role == 'admin':
+                    return redirect(url_for('auth.dashboard'))
+                elif user.role == 'staff':
+                    return redirect(url_for('staff.dashboard'))
+                else:
+                    # fallback if role doesn't match known types
+                    return redirect(url_for('auth.dashboard'))
+
             else:
                 flash('Invalid username/email or password', 'danger')
 
