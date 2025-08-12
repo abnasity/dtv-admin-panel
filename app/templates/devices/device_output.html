@@ -10,14 +10,22 @@
     </div>
     <div class="card-body">
       {% if device %}
-      <ul class="list-group">
-        <li class="list-group-item"><strong>IMEI:</strong> {{ device.imei }}</li>
-        <li class="list-group-item"><strong>Brand:</strong> {{ device.brand }}</li>
-        <li class="list-group-item"><strong>Model:</strong> {{ device.model }}</li>
-        <li class="list-group-item"><strong>Status:</strong> {{ device.status }}</li>
-        <li class="list-group-item"><strong>Cash Price:</strong> KES {{ device.price_cash }}</li>
-        <li class="list-group-item"><strong>Description:</strong> {{ device.description or "No description available" }}</li>
-      </ul>
+<ul class="list-group">
+  <li class="list-group-item"><strong>IMEI:</strong> {{ device.imei }}</li>
+  <li class="list-group-item"><strong>Brand:</strong> {{ device.brand }}</li>
+  <li class="list-group-item"><strong>Model:</strong> {{ device.model }}</li>
+  <li class="list-group-item"><strong>Status:</strong> {{ device.status }}</li>
+  <li class="list-group-item"><strong>Cash Price:</strong> KES {{ device.price_cash }}</li>
+  <li class="list-group-item"><strong>Assigned Staff:</strong>
+    {% if device.assigned_staff %}
+      {{ device.assigned_staff.username }} ({{ device.assigned_staff.email }})
+    {% else %}
+      <em>Not assigned</em>
+    {% endif %}
+  </li>
+  <li class="list-group-item"><strong>Description:</strong> {{ device.description or "No description available" }}</li>
+</ul>
+
       {% else %}
       <div class="alert alert-warning mt-3">No device found for the scanned IMEI.</div>
       {% endif %}
