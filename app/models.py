@@ -90,21 +90,14 @@ class Device(db.Model):
     arrival_date = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     notes = db.Column(db.Text)
-    color = db.Column(db.String(50), nullable=True)
-    image_variants = db.Column(db.JSON, default=dict, nullable=True)
-    main_image = db.Column(db.String(255), nullable=True) 
-    image_folder = db.Column(db.String(255), nullable=True)
-    specs_id = db.Column(db.Integer, db.ForeignKey('device_specs.id'), nullable=True)
-    slug = db.Column(db.String(100), unique=True, index=True)
-    featured = db.Column(db.Boolean, default=False)
+    assigned_staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    assigned_staff = db.relationship('User', backref='assigned_devices')
     deleted = db.Column(db.Boolean, default=False, nullable=False)
     
 
  
     # Relationships
     sale = db.relationship('Sale', back_populates='device', uselist=False)
-    specs = db.relationship('DeviceSpecs', back_populates='device', uselist=False, foreign_keys=[specs_id])
-
     transactions = db.relationship('InventoryTransaction', back_populates='device')
     alerts = db.relationship('Alert', back_populates='device')
     
@@ -154,17 +147,6 @@ class Device(db.Model):
     def __repr__(self):
         return f"<Device {self.brand} {self.model} ({self.color or 'no color'})>"
 
-# DEVICE SPECS
-class DeviceSpecs(db.Model):
-    __tablename__ = 'device_specs'
-    id = db.Column(db.Integer, primary_key=True)
-    details = db.Column(db.Text)  
-
-    device = db.relationship(
-            'Device',
-            back_populates='specs',
-            uselist=False
-        )
 
 
 # INVENTORY TRANSACTION MODEL
