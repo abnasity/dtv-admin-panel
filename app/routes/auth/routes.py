@@ -15,6 +15,8 @@ from sqlalchemy.orm import joinedload
 from flask_mail import Message
 from app.extensions import mail
 from sqlalchemy.exc import SQLAlchemyError
+import traceback
+
 
 
 # RESET EMAIL
@@ -174,8 +176,7 @@ def dashboard():
     print(f"Current user: {current_user}, authenticated: {current_user.is_authenticated}")
     total_users = User.query.count()
     total_devices = Device.query.filter(
-    Device.status == 'available',
-    Device.featured == False
+    Device.status == 'available'
 ).count()
 
   
