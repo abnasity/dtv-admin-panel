@@ -2,18 +2,18 @@ from app.routes.staff import bp
 from app.utils.decorators import staff_required
 from flask_login import login_required, current_user
 from flask import render_template, flash, redirect, url_for, request, abort
-from app.models import User, Notification
+from app.models import User, Notification, Device
 from app.extensions import db
 from datetime import datetime
 
 
 
-# DASHBOARD
 @bp.route('/dashboard')
 @login_required
 @staff_required
 def dashboard():
-    return render_template('staff/dashboard.html')
+    devices = Device.query.filter_by(assigned_staff_id=current_user.id, deleted=False).order_by(Device.arrival_date.desc()).all()
+    return render_template('staff/dashboard.html', devices=devices)
 
 
 # MARK TASK AS FAILED
