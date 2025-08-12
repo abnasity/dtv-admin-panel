@@ -1,9 +1,9 @@
 from flask import render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
-from app.models import Device, DeviceSpecs
+from app.models import Device
 from app.decorators import admin_required
-from app.forms import DeviceForm, DeviceSpecsForm
+from app.forms import DeviceForm
 from app.routes.devices import bp
 from app import db
 from slugify import slugify
@@ -17,8 +17,12 @@ def inventory():
     status = request.args.get('status')
     imei = request.args.get('imei')
 
-    # Start with a base query
-    query = Device.query.filter(Device.featured == False, Device.deleted == False)
+    # Base query only for non-deleted devices
+    query = Device.query.filter(Device.deleted == False)
+
+    # If current user is staff (not admin), show only assigned devices
+    if not current_user.is_admin():
+        query = query.filter_by(assigned_staff_id=current_user.id)
 
     if brand:
         query = query.filter_by(brand=brand)
@@ -29,38 +33,18 @@ def inventory():
 
     devices = query.order_by(Device.id.desc()).all()
 
-    # For filter dropdowns
     brands = db.session.query(Device.brand).distinct().all()
-    brands = [b[0] for b in brands]  # Unpack from tuples
+    brands = [b[0] for b in brands]
 
-    device_form = DeviceForm()  # Form for add modal
-    specs_form = DeviceSpecsForm()
-    
-
+    device_form = DeviceForm()
 
     return render_template(
         'devices/inventory.html',
         devices=devices,
         device_form=device_form,
-        specs_form=specs_form,
-        brands=brands  # Needed for the Brand dropdown in template
+        brands=brands
     )
-    
-# GET OR CREATE SPECS
-def get_or_create_specs(spec_data):
-    existing = DeviceSpecs.query.filter_by(
-        os=spec_data['os'],
-        chipset=spec_data['chipset'],
-        display_size=spec_data['display_size'],
-        main_camera=spec_data['main_camera']
-    ).first()
-    if existing:
-        return existing
-    new_specs = DeviceSpecs(**spec_data)
-    db.session.add(new_specs)
-    db.session.commit()
-    return new_specs
- 
+
 
 # ADD DEVICE
 @bp.route('/device/add', methods=['GET', 'POST'])
@@ -68,12 +52,13 @@ def get_or_create_specs(spec_data):
 @admin_required
 def add_device():
     form = DeviceForm()
-    if form.validate_on_submit():
+    form.set_staff_choices()  # Populate staff choices each time
 
+    if form.validate_on_submit():
         imei = form.imei.data.strip() if form.imei.data else None
 
         device = Device(
-            imei=imei if not form.featured.data else None,
+            imei=imei,
             brand=form.brand.data,
             model=form.model.data,
             ram=form.ram.data,
@@ -82,19 +67,20 @@ def add_device():
             price_cash=form.price_cash.data or 0,
             price_credit=form.price_credit.data or 0,
             notes=form.notes.data,
-         
+            assigned_staff_id=form.assigned_staff_id.data  # Assign the staff user here
         )
 
         db.session.add(device)
         try:
             db.session.commit()
-            flash(f'{device.brand} {device.model} added successfully', 'success')
+            flash(f'{device.brand} {device.model} added and assigned successfully', 'success')
             return redirect(url_for('devices.inventory'))
         except Exception as e:
             db.session.rollback()
             flash(f'Error adding device: {str(e)}', 'danger')
 
     return render_template('devices/add.html', form=form)
+
 
 
 
@@ -105,7 +91,7 @@ def add_device():
 def edit_device(imei):
     device = Device.query.filter_by(imei=imei).first_or_404()
     form = DeviceForm(original_imei=imei, obj=device)
-    specs_form = DeviceSpecsForm(obj=device.specs)
+  
 
     if request.method == 'POST':
         form.imei.data = device.imei  # Prevent IMEI change
@@ -119,50 +105,7 @@ def edit_device(imei):
             device.price_cash = form.price_cash.data or 0
             device.price_credit = form.price_credit.data or 0
             device.notes = form.notes.data
-            device.featured = form.featured.data
-
-            # 🔐 Cloudinary Image Upload
-            if form.image.data:
-                try:
-                    from app.utils.cloudinary_utils import generate_signature
-                    import time
-                    import os
-
-                    timestamp = int(time.time())
-                    params = {
-                        'folder': 'devices',
-                        'overwrite': True,
-                        'timestamp': timestamp
-                    }
-                    signature = generate_signature(params)
-
-                    result = upload(
-                        form.image.data,
-                        folder="devices",
-                        overwrite=True,
-                        timestamp=timestamp,
-                        api_key=os.getenv("CLOUDINARY_API_KEY"),
-                        signature=signature
-                    )
-
-                    device.main_image = result.get('secure_url')
-                except Exception as e:
-                    flash(f"Image upload failed: {str(e)}", 'warning')
-
-            # Update specs
-            if device.specs:
-                device.specs.details = specs_form.details.data
-            else:
-                device.specs = DeviceSpecs(details=specs_form.details.data)
-
-            try:
-                db.session.commit()
-                flash(f'{device.brand} {device.model} updated successfully', 'success')
-                return redirect(url_for('devices.inventory'))
-            except Exception as e:
-                db.session.rollback()
-                flash(f'Error updating device: {str(e)}', 'danger')
-
+         
     return render_template('devices/edit.html', form=form, specs_form=specs_form, device=device)
 
 
