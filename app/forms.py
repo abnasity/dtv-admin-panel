@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, NumberRange, EqualTo, Optional
-from app.models import User
+from app.models import User, Device
 from flask_wtf.file import FileField, FileAllowed
 
 # USER LOGIN FORM
@@ -73,41 +73,29 @@ class DeviceForm(FlaskForm):
     price_credit = DecimalField('Credit Price', validators=[Optional(), NumberRange(min=0)])
     description = TextAreaField('Description', validators=[Optional()])
     notes = TextAreaField('Notes')
-    image = FileField('Device Image', validators=[
-        FileAllowed(['jpg', 'jpeg', 'png'], 'Only images allowed!')
-    ])
-    color = StringField('Color (for image matching)')
-    featured = BooleanField('Feature this device on homepage')
+    assigned_staff_id = SelectField('Assign to Staff', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Save Device')
     
     def __init__(self, original_imei=None, *args, **kwargs):
         super(DeviceForm, self).__init__(*args, **kwargs)
         self.original_imei = original_imei
         
+    def set_staff_choices(self):
+        # Query staff users only
+        staff_users = User.query.filter_by(role='staff').order_by(User.username).all()
+        self.assigned_staff_id.choices = [(u.id, u.username) for u in staff_users]
+
     def validate_imei(self, imei):
-        from app.models import Device
-        
-         # If not a featured device, IMEI is required
-        if not self.featured.data:
-            if not imei.data:
-                raise ValidationError('IMEI is required for non-featured devices.')
-            if len(imei.data) != 15:
-                raise ValidationError('IMEI must be exactly 15 digits long.')
-            
-        if self.original_imei != imei.data:
+        if not imei.data:
+            raise ValidationError('IMEI is required.')
+        if len(imei.data) != 15:
+            raise ValidationError('IMEI must be exactly 15 digits long.')
+
+        if hasattr(self, 'original_imei') and self.original_imei != imei.data:
             device = Device.query.filter_by(imei=imei.data).first()
             if device:
                 raise ValidationError('This IMEI is already registered in the system.')
-            
- 
-# DEVICE SPECS FORM
-class DeviceSpecsForm(FlaskForm):
-    details = TextAreaField('Product Details & Specs', validators=[Optional()])
-    submit = SubmitField('Save')
- 
- 
 
-# SALE FORM           
 class SaleForm(FlaskForm):
     imei = StringField('IMEI', validators=[
         DataRequired(),
