@@ -278,7 +278,7 @@ def download_receipt_image(sale_id):
 
     # Prepare data
     receipt_data = {
-        'number': sale.id,
+        'number': generate_receipt_number(),
         'date': sale.sale_date.strftime('%Y-%m-%d'),
         'time': sale.sale_date.strftime('%H:%M'),
         'user': sale.seller.username,
