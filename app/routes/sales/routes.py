@@ -106,7 +106,7 @@ def complete_sale():
 
 
 # SALE DETAILS
-@app.route("/sales/<int:sale_id>/details")
+@bp.route("/sales/<int:sale_id>/details")
 @login_required
 def sale_details(sale_id):
     sale = Sale.query.get_or_404(sale_id)
