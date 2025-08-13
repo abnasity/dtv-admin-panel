@@ -306,10 +306,7 @@ def download_receipt_image(sale_id):
         'width': '600'
     }
 
-    # Generate image bytes
-    image_bytes = imgkit.from_string(html, False, options=options)
-
-       try:
+    try:
         # Generate image bytes
         image_bytes = imgkit.from_string(html, False, options=options)
 
