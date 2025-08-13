@@ -291,26 +291,3 @@ def view_receipt(order_id):
 
 
 
-# Download receipt as PDF/image
-@bp.route("/download-receipt-image/<int:sale_id>")
-@login_required
-def download_receipt_image(sale_id):
-    sale = Sale.query.get_or_404(sale_id)
-
-    # Example: save your receipt images in /static/receipts/
-    receipt_path = os.path.join(
-        app.root_path,
-        "static",
-        "receipts",
-        f"receipt_{sale_id}.png"
-    )
-
-    if not os.path.exists(receipt_path):
-        abort(404, description="Receipt not found.")
-
-    # Force download
-    return send_file(
-        receipt_path,
-        as_attachment=True,
-        download_name=f"receipt_{sale_id}.png"
-    )
