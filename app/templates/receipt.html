@@ -5,20 +5,20 @@
     <title>Receipt #{{ receipt.number }}</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 30px;
-            background: #f9f9f9;
+            padding: 20px;
+            background: #f5f5f5;
             color: #333;
         }
 
         .receipt-container {
             background: #fff;
-            max-width: 600px;
+            max-width: 400px;
             margin: auto;
-            padding: 30px;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
         }
 
         .header, .footer {
@@ -27,50 +27,57 @@
 
         .header h2 {
             margin: 0;
-            font-size: 24px;
-            color: #2a2a2a;
+            font-size: 18px;
+            color: #222;
+        }
+
+        .header p {
+            margin: 4px 0 0;
+            font-size: 13px;
+            font-weight: bold;
         }
 
         .section {
-            margin-top: 30px;
+            margin-top: 20px;
         }
 
         .section-title {
             text-align: center;
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 4px;
             color: #444;
         }
 
         .info-table {
             width: 100%;
-            margin-top: 10px;
+            font-size: 12px;
         }
 
         .info-table td {
-            padding: 5px 0;
+            padding: 3px 0;
+            vertical-align: top;
         }
 
         .info-label {
-            font-weight: bold;
+            font-weight: 600;
             width: 40%;
         }
 
         .total {
             font-weight: bold;
-            font-size: 18px;
+            font-size: 14px;
             text-align: center;
-            margin-top: 30px;
+            margin-top: 25px;
             border-top: 1px solid #ccc;
-            padding-top: 15px;
+            padding-top: 10px;
         }
 
         .footer p {
-            margin: 5px;
-            font-size: 12px;
+            margin: 4px 0;
+            font-size: 11px;
             color: #777;
         }
     </style>
@@ -81,7 +88,7 @@
         <!-- Header -->
         <div class="header">
             <h2>Diamond Tree Ventures</h2>
-            <p><strong>SALES RECEIPT</strong></p>
+            <p>SALES RECEIPT</p>
         </div>
 
         <!-- Transaction Info -->
@@ -112,9 +119,8 @@
                 <tr><td class="info-label">IMEI:</td><td>{{ receipt.imei }}</td></tr>
                 <tr><td class="info-label">Brand:</td><td>{{ receipt.brand }}</td></tr>
                 <tr><td class="info-label">Model:</td><td>{{ receipt.device }}</td></tr>
-                <tr><td class="info-label">Ram:</td><td>{{ receipt.ram }}</td></tr>
+                <tr><td class="info-label">RAM:</td><td>{{ receipt.ram }}</td></tr>
                 <tr><td class="info-label">Storage:</td><td>{{ receipt.storage }}</td></tr>
-
             </table>
         </div>
 
