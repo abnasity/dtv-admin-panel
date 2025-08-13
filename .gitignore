@@ -15,3 +15,9 @@ migrations/
 # Ignore device image folder recursively
 app/static/images/devices/
 .vercel
+
+# Ignore wkhtmltopdf installers
+*.deb
+*.tar.xz
+wkhtmltox*
+

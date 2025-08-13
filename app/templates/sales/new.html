@@ -1,271 +1,162 @@
 {% extends "layouts/base.html" %}
-{% from "macros/components.html" import scanner_modal, imei_input %}
+{% block title %}Complete Sale{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">New Sale</h2>
+    <form method="POST" action="{{ url_for('sales.complete_sale') }}">
+        {{ form.hidden_tag() }}
+        <div class="card">
+            <div class="card-header">
+                <h5>Sale Information</h5>
+            </div>
+            <div class="card-body">
+
+                <!-- Device IMEI -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold" for="imei">IMEI</label>
+                    {{ form.imei(class="form-control", id="imei", placeholder="Enter device IMEI") }}
+                    {% if form.imei.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.imei.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
-                <div class="card-body">
-                    <form id="saleForm" method="POST">
-                        {{ form.csrf_token }}
-                        <!-- IMEI Scanner Section -->
-                        <div class="mb-4">
-                            {{ form.imei.label(class="form-label") }}
-                            <div class="input-group">
-                                {{ imei_input(form.imei, "Scan or enter 15-digit IMEI") }}
-                                <button type="button" class="btn btn-primary" onclick="findDevice()">
-                                    Find Device
-                                </button>
-                            </div>
-                            <div class="form-text">Scan barcode or enter 15-digit IMEI number</div>
-                            {% if form.imei.errors %}
+
+                <!-- Sale Price & Seller -->
+                <div class="row mb-3">
+                    <div class="col">
+                        <label class="form-label fw-bold" for="sale_price">Sale Price (Ksh)</label>
+                        {{ form.sale_price(class="form-control", id="sale_price", placeholder="Enter sale price") }}
+                        {% if form.sale_price.errors %}
                             <div class="invalid-feedback d-block">
-                                {% for error in form.imei.errors %}
+                                {% for error in form.sale_price.errors %}
                                     {{ error }}
                                 {% endfor %}
                             </div>
-                            {% endif %}
-                        </div>
+                        {% endif %}
+                    </div>
 
-                        <!-- Device Details Section (hidden initially) -->
-                        <div id="deviceDetails" style="display: none;">
-                            <div class="alert alert-info mb-4">
-                                <h4 class="alert-heading mb-2">Device Information</h4>
-                                <p class="mb-1"><strong>Brand:</strong> <span id="deviceBrand"></span></p>
-                                <p class="mb-1"><strong>Model:</strong> <span id="deviceModel"></span></p>
-                                <p class="mb-0"><strong>Purchase Price:</strong> Ksh <span id="devicePurchasePrice"></span></p>
-                            </div>
-
-                            <!-- Sale Details -->
-                            <div class="mb-3">
-                                {{ form.sale_price.label(class="form-label") }}
-                                <div class="input-group">
-                                    <span class="input-group-text">Ksh </span>
-                                    {{ form.sale_price(class="form-control") }}
-                                </div>
-                                {% if form.sale_price.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.sale_price.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="mb-3">
-                                {{ form.payment_type.label(class="form-label") }}
-                                {{ form.payment_type(class="form-select", onchange="togglePaymentFields()") }}
-                                {% if form.payment_type.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.payment_type.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="mb-3">
-                                {{ form.amount_paid.label(class="form-label") }}
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    {{ form.amount_paid(class="form-control") }}
-                                </div>
-                                {% if form.amount_paid.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.amount_paid.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="mb-3">
-                                {{ form.notes.label(class="form-label") }}
-                                {{ form.notes(class="form-control", rows=3) }}
-                                {% if form.notes.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.notes.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="d-grid gap-2">
-                                {{ form.submit(class="btn btn-success btn-lg") }}
-                                <button type="button" class="btn btn-secondary" onclick="resetForm()">
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
-                    </form>
                 </div>
+
+                <!-- Customer Details -->
+<h6 class="fw-bold mt-4">Customer Information</h6>
+<div class="row mb-3">
+    <div class="col">
+        <label class="form-label fw-bold" for="customer_name">Customer Name</label>
+        {{ form.customer_name(class="form-control", id="customer_name", placeholder="Enter customer name") }}
+        {% if form.customer_name.errors %}
+            <div class="invalid-feedback d-block">
+                {% for error in form.customer_name.errors %}
+                    {{ error }}
+                {% endfor %}
             </div>
-        </div>
+        {% endif %}
+    </div>
+    <div class="col">
+        <label class="form-label fw-bold" for="customer_phone">Phone Number</label>
+        {{ form.customer_phone(class="form-control", id="customer_phone", placeholder="Enter phone number") }}
+        {% if form.customer_phone.errors %}
+            <div class="invalid-feedback d-block">
+                {% for error in form.customer_phone.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 </div>
 
-<!-- Scanner Modal -->
-<div class="modal fade" id="scannerModal" tabindex="-1" aria-labelledby="scannerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="scannerModalLabel">Scan IMEI Barcode</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="interactive" class="viewport"></div>
-                <div class="alert alert-info mt-3">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Point your camera at the IMEI barcode. Make sure it's well lit and clearly visible.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
+<div class="mb-3">
+    <label class="form-label fw-bold" for="id_number">ID Number</label>
+    {{ form.id_number(class="form-control", id="id_number", placeholder="Enter ID number") }}
+    {% if form.id_number.errors %}
+        <div class="invalid-feedback d-block">
+            {% for error in form.id_number.errors %}
+                {{ error }}
+            {% endfor %}
         </div>
-    </div>
+    {% endif %}
 </div>
 
+
+                <!-- Payment Type -->
+                <h6 class="fw-bold">Payment Method</h6>
+                <div class="d-flex mb-3">
+                    {% for subfield in form.payment_type %}
+                        <div class="form-check me-4">
+                            {{ subfield(class="form-check-input", id=subfield.id) }}
+                            <label class="form-check-label" for="{{ subfield.id }}">
+                                <strong>{{ subfield.label.text | capitalize }} Payment</strong><br>
+                                <small>
+                                    {% if subfield.data == 'cash' %}
+                                        Full amount paid immediately
+                                    {% else %}
+                                        Partial payment with installment plan
+                                    {% endif %}
+                                </small>
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% if form.payment_type.errors %}
+                    <div class="invalid-feedback d-block mb-3">
+                        {% for error in form.payment_type.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Amount Paid -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold" for="amount_paid">Amount Paid (Ksh)</label>
+                    {{ form.amount_paid(class="form-control", id="amount_paid", placeholder="Enter amount paid") }}
+                    {% if form.amount_paid.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.amount_paid.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold" for="notes">Notes (optional)</label>
+                    {{ form.notes(class="form-control", id="notes", rows="3") }}
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check-circle me-1"></i> Complete Sale
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-let currentDevice = null;
+document.addEventListener('DOMContentLoaded', function () {
+    const cashRadio = document.getElementById('payment_cash');
+    const creditRadio = document.getElementById('payment_credit');
+    const salePrice = document.getElementById('sale_price');
+    const amountPaid = document.getElementById('amount_paid');
 
-async function findDevice() {
-    const imei = document.getElementById('imei').value;
-    if (!imei || imei.length !== 15) {
-        alert('Please enter a valid 15-digit IMEI number');
-        return;
-    }
-
-    try {
-        const response = await fetch(`/sales/device/${imei}`);
-        const data = await response.json();
-        
-        if (response.ok) {
-            currentDevice = data;
-            document.getElementById('deviceBrand').textContent = data.brand;
-            document.getElementById('deviceModel').textContent = data.model;
-            document.getElementById('deviceRam').textContent = data.ram;
-            document.getElementById('deviceRom').textContent = data.rom;
-            document.getElementById('devicePurchasePrice').textContent = data.purchase_price;
-            document.getElementById('deviceDetails').style.display = 'block';
+    function updateAmountPaid() {
+        if (cashRadio && cashRadio.checked) {
+            amountPaid.value = salePrice.value;
+            amountPaid.readOnly = true;
         } else {
-            alert(data.error || 'Device not found');
-            resetForm();
+            amountPaid.value = '';
+            amountPaid.readOnly = false;
         }
-    } catch (error) {
-        alert('Error finding device');
-        resetForm();
     }
-}
 
-function togglePaymentFields() {
-    const paymentType = document.getElementById('paymentType').value;
-    const amountPaid = document.getElementById('amountPaid');
-    const salePrice = document.getElementById('salePrice').value;
-    
-    if (paymentType === 'cash') {
-        amountPaid.value = salePrice;
-        amountPaid.readOnly = true;
-    } else {
-        amountPaid.readOnly = false;
-        amountPaid.value = '';
-    }
-}
-
-function resetForm() {
-    document.getElementById('saleForm').reset();
-    document.getElementById('deviceDetails').style.display = 'none';
-    currentDevice = null;
-}
-
-document.getElementById('saleForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    if (!currentDevice) {
-        alert('Please scan a device first');
-        return;
-    }
-    
-    const salePrice = parseFloat(document.getElementById('salePrice').value);
-    const amountPaid = parseFloat(document.getElementById('amountPaid').value);
-    
-    if (amountPaid > salePrice) {
-        alert('Amount paid cannot be greater than sale price');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/sales/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                imei: currentDevice.imei,
-                sale_price: salePrice,
-                payment_type: document.getElementById('paymentType').value,
-                amount_paid: amountPaid,
-                notes: document.getElementById('notes').value
-            })
-        });
-        
-        const data = await response.json();
-        if (response.ok) {
-            alert('Sale recorded successfully!');
-            window.location.href = '/sales';
-        } else {
-            alert(data.error || 'Failed to record sale');
-        }
-    } catch (error) {
-        alert('Error recording sale');
-    }
-});
-
-// Update amount paid when sale price changes (for cash payments)
-document.getElementById('salePrice').addEventListener('change', function() {
-    if (document.getElementById('paymentType').value === 'cash') {
-        document.getElementById('amountPaid').value = this.value;
-    }
-});
-
-// Scanner functionality
-function startScanner(imeiFieldId) {
-    const imeiField = document.getElementById(imeiFieldId);
-    const modal = new bootstrap.Modal(document.getElementById('scannerModal'));
-    
-    // Clear previous scan result
-    imeiField.value = '';
-    
-    // Start the scanner
-    Quagga.init({
-        inputStream : {
-            name : "Live",
-            type : "LiveStream",
-            target: document.getElementById('interactive')    // Or '#yourElement' (optional)
-        },
-        decoder : {
-            readers : ["ean_reader"] // List of active readers
-        }
-    });
-    // Initialize scan functionality on page load
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    // After scan callback
-    document.addEventListener('barcodeScanned', function(e) {
-        const imei = e.detail.code;
-        document.getElementById('imei').value = imei;
-        findDevice();
-    });
+    if (cashRadio) cashRadio.addEventListener('change', updateAmountPaid);
+    if (creditRadio) creditRadio.addEventListener('change', updateAmountPaid);
+    if (salePrice) salePrice.addEventListener('input', updateAmountPaid);
 });
 </script>
 {% endblock %}

@@ -1,0 +1,38 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.env/
+venv/
+.dtv/
+
+# Environment files
+.env
+*.env
+
+# Databases
+*.db
+*.sqlite3
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Git
+.git
+.gitignore
+
+# OS-level crap
+*.swp
+*.bak
+
+# Cache
+*.egg-info/
+dist/
+build/
+.cache/

@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, DecimalField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, DecimalField, RadioField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, NumberRange, EqualTo, Optional
 from app.models import User, Device
 from flask_wtf.file import FileField, FileAllowed
@@ -105,7 +105,7 @@ class SaleForm(FlaskForm):
         validators=[DataRequired(), NumberRange(min=0)],
         places=2
     )
-    payment_type = SelectField('Payment Type',
+    payment_type = RadioField('Payment Type',
         choices=[('cash', 'Cash'), ('credit', 'Credit')],
         validators=[DataRequired()]
     )
@@ -113,6 +113,9 @@ class SaleForm(FlaskForm):
         validators=[DataRequired(), NumberRange(min=0)],
         places=2
     )
+    customer_name = StringField('Customer Name', validators=[DataRequired(), Length(max=100)])
+    customer_phone = StringField('Phone Number', validators=[DataRequired(), Length(max=15)])
+    id_number = StringField('ID Number', validators=[DataRequired(), Length(max=20)])
     notes = TextAreaField('Notes')
     submit = SubmitField('Record Sale')
 

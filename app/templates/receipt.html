@@ -5,108 +5,140 @@
     <title>Receipt #{{ receipt.number }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 30px;
+            background: #f9f9f9;
             color: #333;
-            font-size: 12px;
         }
-        .header {
+
+        .receipt-container {
+            background: #fff;
+            max-width: 600px;
+            margin: auto;
+            padding: 30px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        .header, .footer {
             text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
         }
+
         .header h2 {
             margin: 0;
-            font-size: 18px;
+            font-size: 24px;
+            color: #2a2a2a;
         }
-        .details {
-            margin-bottom: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
+
+        .section {
+            margin-top: 30px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .total {
-            text-align: right;
+
+        .section-title {
+            text-align: center;
+            font-size: 16px;
             font-weight: bold;
-            font-size: 14px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            color: #444;
+        }
+
+        .info-table {
+            width: 100%;
             margin-top: 10px;
         }
-        .footer {
+
+        .info-table td {
+            padding: 5px 0;
+        }
+
+        .info-label {
+            font-weight: bold;
+            width: 40%;
+        }
+
+        .total {
+            font-weight: bold;
+            font-size: 18px;
             text-align: center;
             margin-top: 30px;
-            font-size: 11px;
-            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 15px;
+        }
+
+        .footer p {
+            margin: 5px;
+            font-size: 12px;
+            color: #777;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h2>Diamond Tree Ventures</h2>
-        <p><strong>SALES RECEIPT</strong></p>
-    </div>
+    <div class="receipt-container">
 
-    <div class="details">
-        <div><strong>Receipt No:</strong> {{ receipt.number }}</div>
-        <div><strong>Date:</strong> {{ receipt.date }}</div>
-        <div><strong>Time:</strong> {{ receipt.time }}</div>
-        <div><strong>Staff:</strong> {{ receipt.user }}</div>
-        <div><strong>Customer:</strong> {{ receipt.customer_name }}</div>
-        <div><strong>Phone:</strong> {{ receipt.customer_phone }}</div>
-        <div><strong>ID No:</strong> {{ receipt.id_number }}</div>
-    </div>
+        <!-- Header -->
+        <div class="header">
+            <h2>Diamond Tree Ventures</h2>
+            <p><strong>SALES RECEIPT</strong></p>
+        </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Device</th>
-                <th>IMEI</th>
-                <th>Qty</th>
-                <th>Price (KES)</th>
-                <th>Total (KES)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in receipt.items %}
-            <tr>
-                <td>{{ item.name }}</td>
-                <td>
-                    {% for imei in item.imei %}
-                    <div>{{ imei }}</div>
-                    {% endfor %}
-                </td>
-                <td>{{ item.qty }}</td>
-                <td>
-                    {% for price in item.prices %}
-                    <div>{{ '{:,.2f}'.format(price) }}</div>
-                    {% endfor %}
-                </td>
-                <td>{{ '{:,.2f}'.format(item.total) }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <!-- Transaction Info -->
+        <div class="section">
+            <div class="section-title">Transaction Details</div>
+            <table class="info-table">
+                <tr><td class="info-label">Receipt No:</td><td>{{ receipt.number }}</td></tr>
+                <tr><td class="info-label">Date:</td><td>{{ receipt.date }}</td></tr>
+                <tr><td class="info-label">Time:</td><td>{{ receipt.time }}</td></tr>
+                <tr><td class="info-label">Staff:</td><td>{{ receipt.user }}</td></tr>
+            </table>
+        </div>
 
-    <div class="total">
-        TOTAL AMOUNT: KES {{ '{:,.2f}'.format(receipt.total) }}
-    </div>
+        <!-- Customer Info -->
+        <div class="section">
+            <div class="section-title">Customer Information</div>
+            <table class="info-table">
+                <tr><td class="info-label">Name:</td><td>{{ receipt.customer_name }}</td></tr>
+                <tr><td class="info-label">Phone:</td><td>{{ receipt.customer_phone }}</td></tr>
+                <tr><td class="info-label">ID Number:</td><td>{{ receipt.id_number }}</td></tr>
+            </table>
+        </div>
 
-    <div class="footer">
-        <p>Thank you for your business!</p>
-        <p>For inquiries, contact: 0712 345 678</p>
+        <!-- Device Info -->
+        <div class="section">
+            <div class="section-title">Device Details</div>
+            <table class="info-table">
+                <tr><td class="info-label">IMEI:</td><td>{{ receipt.imei }}</td></tr>
+                <tr><td class="info-label">Brand:</td><td>{{ receipt.brand }}</td></tr>
+                <tr><td class="info-label">Model:</td><td>{{ receipt.device }}</td></tr>
+                <tr><td class="info-label">Ram:</td><td>{{ receipt.ram }}GB</td></tr>
+                <tr><td class="info-label">Storage:</td><td>{{ receipt.storage }}GB</td></tr>
+
+            </table>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="section">
+            <div class="section-title">Payment Summary</div>
+            <table class="info-table">
+                <tr><td class="info-label">Payment Method:</td><td>{{ receipt.payment_type | capitalize }} Payment</td></tr>
+                <tr><td class="info-label">Sale Price:</td><td>KES {{ '{:,.2f}'.format(receipt.sale_price or 0) }}</td></tr>
+                <tr><td class="info-label">Amount Paid:</td><td>KES {{ '{:,.2f}'.format(receipt.amount_paid or 0) }}</td></tr>
+            </table>
+        </div>
+
+        <!-- Total -->
+        <div class="total">
+            TOTAL: KES {{ '{:,.2f}'.format(receipt.sale_price or 0) }}
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>Call us: 0725 567 905</p>
+        </div>
+
     </div>
 </body>
 </html>

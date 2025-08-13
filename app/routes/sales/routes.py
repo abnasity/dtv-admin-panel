@@ -1,9 +1,10 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify, make_response, send_file, abort
+from flask import render_template, redirect, url_for, flash, request, jsonify, make_response, Response, send_file, abort
 from flask_login import login_required, current_user
 from app.models import Device, Sale
 from app.forms import SaleForm
 from app.routes.sales import bp
 from app.utils.decorators import staff_required
+from app.utils.helpers import generate_receipt_number
 from app import db
 from decimal import Decimal
 from datetime import datetime
@@ -13,6 +14,10 @@ import base64
 import os
 from flask import current_app
 from collections import defaultdict
+import imgkit
+import io
+
+
 
 @bp.route('/sales')
 @login_required
@@ -28,8 +33,12 @@ def index():
 @login_required
 @staff_required
 def new_sale():
-    """Show new sale form and handle form submission"""
     form = SaleForm()
+    imei = request.args.get('imei')
+
+    if imei:
+        form.imei.data = imei
+
     if form.validate_on_submit():
         device = Device.query.filter_by(imei=form.imei.data, status='available').first()
         if not device:
@@ -37,7 +46,7 @@ def new_sale():
             return render_template('sales/new.html', form=form)
 
         try:
-            # Create sale record
+            # Create sale
             sale = Sale(
                 device=device,
                 seller=current_user,
@@ -46,22 +55,66 @@ def new_sale():
                 amount_paid=form.amount_paid.data,
                 notes=form.notes.data
             )
-            
-            # Mark device as sold
             device.mark_as_sold()
-            
-            # Save changes
+
             db.session.add(sale)
             db.session.commit()
-            
+
             flash('Sale recorded successfully!', 'success')
-            return redirect(url_for('sales.detail', sale_id=sale.id))
-            
+            return redirect(url_for('sales.sale_detail', sale_id=sale.id))
         except Exception as e:
             db.session.rollback()
             flash(f'Error recording sale: {str(e)}', 'danger')
-            
+
     return render_template('sales/new.html', form=form)
+
+
+
+@bp.route('/sales/complete', methods=['GET', 'POST'])
+@login_required
+def complete_sale():
+    form = SaleForm()
+
+    if form.validate_on_submit():
+        # Check if device exists and is available
+        device = Device.query.filter_by(imei=form.imei.data).first()
+        if not device:
+            form.imei.errors.append('Device with this IMEI not found in inventory.')
+            return render_template('sales/new_sale.html', form=form)
+
+        # Prepare receipt data
+        receipt_data = {
+            'number': generate_receipt_number(), 
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            'time': datetime.now().strftime('%H:%M:%S'),
+            'user': current_user.username,
+            'customer_name': form.customer_name.data,
+            'customer_phone': form.customer_phone.data,
+            'id_number': form.id_number.data,
+            'brand': device.brand,
+            'device': device.model,
+            'ram': device.ram,
+            'storage': device.rom,
+            'imei': form.imei.data,
+            'sale_price': float(form.sale_price.data),
+            'amount_paid': float(form.amount_paid.data),
+            'payment_type': form.payment_type.data,
+            'total': float(form.sale_price.data),
+        }
+
+
+        # Render HTML and convert to image
+        html = render_template('receipt.html', receipt=receipt_data)
+        img_bytes = imgkit.from_string(html, False, options={'format': 'png'})
+
+        return Response(img_bytes, mimetype='image/png')
+
+    # GET request or failed validation
+    return render_template('sales/new.html', form=form)
+
+
+
+
 
 @bp.route('/create', methods=['POST'])
 @login_required

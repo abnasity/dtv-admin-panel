@@ -6,7 +6,6 @@ from app.models import User, Notification, Device
 from app.forms import LoginForm, ProfileForm, RegisterForm, ResetPasswordForm, RequestResetForm, EditUserForm
 from app.decorators  import admin_required
 from app.utils.decorators import staff_required
-from app.utils.helpers import assign_staff_to_order
 from app.utils.mixins import ResetTokenMixin 
 from app.routes.auth import bp
 from datetime import datetime
