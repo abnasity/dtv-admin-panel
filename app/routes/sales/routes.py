@@ -137,6 +137,26 @@ def complete_sale():
 
 
 
+@bp.route('/sales/<int:sale_id>/complete', methods=['POST'])
+@login_required
+@staff_required
+def complete_sale_api(sale_id):
+    """Mark a sale as fully paid/completed."""
+    sale = Sale.query.get_or_404(sale_id)
+
+    # Ensure the user has permission
+    if not current_user.is_admin() and sale.seller_id != current_user.id:
+        return jsonify({'error': 'Permission denied'}), 403
+
+    try:
+        # Mark as fully paid
+        sale.amount_paid = sale.sale_price
+        db.session.commit()
+        return jsonify({'success': True})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 
 @bp.route('/create', methods=['POST'])

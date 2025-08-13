@@ -204,6 +204,11 @@ class Sale(db.Model):
     def is_fully_paid(self):
       return self.amount_paid >= self.sale_price
 
+    @property
+    def is_completed(self):
+      return self.is_fully_paid
+
+
 # RECEIPT ITEM MODEL
 class ReceiptItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
