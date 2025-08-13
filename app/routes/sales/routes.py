@@ -84,6 +84,7 @@ def complete_sale():
 
         # Prepare receipt data
         receipt_data = {
+            'sale_id': sale.id,
             'number': generate_receipt_number(), 
             'date': datetime.now().strftime('%Y-%m-%d'),
             'time': datetime.now().strftime('%H:%M:%S'),
@@ -278,6 +279,7 @@ def download_receipt_image(sale_id):
 
     # Prepare data
     receipt_data = {
+        'sale_id': sale.id,
         'number': generate_receipt_number(),
         'date': sale.sale_date.strftime('%Y-%m-%d'),
         'time': sale.sale_date.strftime('%H:%M'),
