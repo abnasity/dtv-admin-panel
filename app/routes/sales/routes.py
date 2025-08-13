@@ -82,27 +82,41 @@ def complete_sale():
             form.imei.errors.append('Device with this IMEI not found in inventory.')
             return render_template('sales/new_sale.html', form=form)
 
+        # Create the sale record
+        sale = Sale(
+            seller_id=current_user.id,
+            customer_name=form.customer_name.data,
+            customer_phone=form.customer_phone.data,
+            id_number=form.id_number.data,
+            device_id=device.id,
+            sale_price=form.sale_price.data,
+            amount_paid=form.amount_paid.data,
+            payment_type=form.payment_type.data,
+            sale_date=datetime.utcnow()
+        )
+        db.session.add(sale)
+        db.session.commit()  # This ensures sale.id is generated
+
         # Prepare receipt data
         receipt_data = {
             'sale_id': sale.id,
-            'number': generate_receipt_number(), 
-            'date': datetime.now().strftime('%Y-%m-%d'),
-            'time': datetime.now().strftime('%H:%M:%S'),
+            'number': generate_receipt_number(),
+            'date': sale.sale_date.strftime('%Y-%m-%d'),
+            'time': sale.sale_date.strftime('%H:%M:%S'),
             'user': current_user.username,
-            'customer_name': form.customer_name.data,
-            'customer_phone': form.customer_phone.data,
-            'id_number': form.id_number.data,
+            'customer_name': sale.customer_name,
+            'customer_phone': sale.customer_phone,
+            'id_number': sale.id_number,
             'brand': device.brand,
             'device': device.model,
             'ram': device.ram,
             'storage': device.rom,
-            'imei': form.imei.data,
-            'sale_price': float(form.sale_price.data),
-            'amount_paid': float(form.amount_paid.data),
-            'payment_type': form.payment_type.data,
-            'total': float(form.sale_price.data),
+            'imei': device.imei,
+            'sale_price': float(sale.sale_price),
+            'amount_paid': float(sale.amount_paid),
+            'payment_type': sale.payment_type,
+            'total': float(sale.sale_price),
         }
-
 
         # Render HTML and convert to image
         html = render_template('receipt.html', receipt=receipt_data)
@@ -110,8 +124,7 @@ def complete_sale():
 
         return Response(img_bytes, mimetype='image/png')
 
-    # GET request or failed validation
-    return render_template('sales/new.html', form=form)
+    return render_template('sales/new_sale.html', form=form)
 
 
 
