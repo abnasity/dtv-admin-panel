@@ -266,69 +266,56 @@ def view_receipt(order_id):
 
 
 
-# Download receipt as PDF
-@bp.route('/download-receipt/<int:receipt_id>')
-def download_receipt_pdf(receipt_id):
-    try:
-        # Get order data
-        payment_option = (order.payment_option or '').lower()
-        is_cash = payment_option == 'cash'
+# Download receipt as PDF/image
+@bp.route('/download-receipt-image/<int:sale_id>')
+@login_required
+def download_receipt_image(sale_id):
+    """Generate and download the receipt as an image (PNG)"""
+    sale = Sale.query.get_or_404(sale_id)
 
-        # Group items
-        grouped = {}
-        for item in order.items:
-            device = item.device
-            price = device.price_cash if is_cash else device.price_credit
-            key = f"{device.brand} - {device.model}"
+    if not current_user.is_admin() and sale.seller_id != current_user.id:
+        abort(403)
 
-            if key not in grouped:
-                grouped[key] = {
-                    'name': f"{device.brand} - {device.model}",
-                    'imei': [device.imei],
-                    'qty': 1,
-                    'price': price,
-                    'prices': [price],
-                    'total': price
-                }
-            else:
-                grouped[key]['imei'].append(device.imei)
-                grouped[key]['prices'].append(price)
-                grouped[key]['qty'] += 1
-                grouped[key]['total'] += price
+    # Prepare data
+    receipt_data = {
+        'number': sale.id,
+        'date': sale.sale_date.strftime('%Y-%m-%d'),
+        'time': sale.sale_date.strftime('%H:%M'),
+        'user': sale.seller.username,
+        'customer_name': sale.customer_name,
+        'customer_phone': sale.customer_phone,
+        'id_number': sale.id_number,
+        'brand': sale.device.brand,
+        'device': sale.device.model,
+        'ram': sale.device.ram,
+        'storage': sale.device.rom,
+        'imei': sale.device.imei,
+        'sale_price': float(sale.sale_price),
+        'amount_paid': float(sale.amount_paid),
+        'payment_type': sale.payment_type,
+        'total': float(sale.sale_price),
+    }
 
-        receipt = {
-            'number': order.id,
-            'date': order.created_at.strftime('%Y-%m-%d'),
-            'time': order.created_at.strftime('%H:%M'),
-            'user': f"{order.assigned_staff.username}" if order.assigned_staff else 'N/A',
-            'customer_name': order.customer.full_name,
-            'customer_phone': order.customer.phone_number,
-            'id_number': order.customer.id_number,
-            'items': list(grouped.values()),
-            'total': sum(item['total'] for item in grouped.values())
-        }
+    # Render the receipt HTML
+    html = render_template('receipt.html', receipt=receipt_data, download_button=False)
 
-        # Generate HTML with inline CSS (no external file needed)
-        html = render_template('receipt.html', receipt=receipt, pdf_mode=True)
+    # Set wkhtmltoimage options
+    options = {
+        'format': 'png',
+        'encoding': 'UTF-8',
+        'width': '600'
+    }
 
-        # Create PDF in memory
-        pdf_buffer = BytesIO()
-        pisa_status = pisa.CreatePDF(
-            html,
-            dest=pdf_buffer,
-            encoding='UTF-8',
-            link_callback=lambda uri: os.path.join(current_app.root_path, 'static', uri)
-        )
+    # Generate image bytes
+    image_bytes = imgkit.from_string(html, False, options=options)
 
-        if pisa_status.err:
-            current_app.logger.error("PDF generation failed")
-            abort(500, description="PDF generation failed")
-
-        pdf_buffer.seek(0)
-        response = make_response(pdf_buffer.getvalue())
-        response.headers['Content-Type'] = 'application/pdf'
-        response.headers['Content-Disposition'] = f'attachment; filename=receipt_{receipt_id}.pdf'
-        return response
+    # Send image as downloadable file
+    return send_file(
+        io.BytesIO(image_bytes),
+        mimetype='image/png',
+        as_attachment=True,
+        download_name=f"receipt_{sale_id}.png"
+    )
 
     except Exception as e:
         current_app.logger.error(f"PDF generation error: {str(e)}")

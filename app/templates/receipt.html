@@ -146,5 +146,12 @@
         </div>
 
     </div>
+{% if download_button is not defined or download_button %}
+    <a href="{{ url_for('sales.download_receipt_image', sale_id=receipt.number) }}" class="btn btn-secondary">
+        Download Receipt as Image
+    </a>
+{% endif %}
+
+
 </body>
 </html>
