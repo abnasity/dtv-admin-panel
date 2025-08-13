@@ -133,7 +133,7 @@ def complete_sale():
             download_name=f"receipt_{sale.id}.png"
         )
 
-    return render_template('sales/new_sale.html', form=form)
+    return render_template('sales/new.html', form=form)
 
 
 
