@@ -100,9 +100,18 @@ def complete_sale():
         db.session.commit()  # sale.id now available
 
         # Redirect to separate download route
-        return redirect(url_for('sales.download_receipt_image', sale_id=sale.id))
+        return redirect(url_for('sales.sale_details', sale_id=sale.id))
 
     return render_template('sales/new.html', form=form)
+
+
+# SALE DETAILS
+@app.route("/sales/<int:sale_id>/details")
+@login_required
+def sale_details(sale_id):
+    sale = Sale.query.get_or_404(sale_id)
+    return render_template("sales/details.html", sale=sale)
+
 
 # DOWNLOAD RECEIPT
 @bp.route('/download-receipt-image/<int:sale_id>')

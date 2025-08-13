@@ -1,0 +1,19 @@
+<h1>Sale Completed</h1>
+<p>Sale ID: {{ sale.id }}</p>
+<p>Customer: {{ sale.customer.name }}</p>
+
+<a href="{{ url_for('sales.download_receipt_image', sale_id=sale.id) }}" class="btn btn-primary">
+    Download Receipt
+</a>
+
+<script>
+    // Auto-download in background
+    window.onload = function() {
+        const link = document.createElement("a");
+        link.href = "{{ url_for('sales.download_receipt_image', sale_id=sale.id) }}";
+        link.download = "";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
