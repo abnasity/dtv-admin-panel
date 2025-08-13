@@ -70,9 +70,8 @@ def new_sale():
 
 
 
-from flask import send_file
-import io
 
+# COMPLETE SALE
 @bp.route('/sales/complete', methods=['GET', 'POST'])
 @login_required
 def complete_sale():
@@ -98,42 +97,52 @@ def complete_sale():
             sale_date=datetime.utcnow()
         )
         db.session.add(sale)
-        db.session.commit()  # sale.id is now available
+        db.session.commit()  # sale.id now available
 
-        # Prepare receipt data
-        receipt_data = {
-            'sale_id': sale.id,
-            'number': generate_receipt_number(),
-            'date': sale.sale_date.strftime('%Y-%m-%d'),
-            'time': sale.sale_date.strftime('%H:%M:%S'),
-            'user': current_user.username,
-            'customer_name': sale.customer_name,
-            'customer_phone': sale.customer_phone,
-            'id_number': sale.id_number,
-            'brand': device.brand,
-            'device': device.model,
-            'ram': device.ram,
-            'storage': device.rom,
-            'imei': device.imei,
-            'sale_price': float(sale.sale_price),
-            'amount_paid': float(sale.amount_paid),
-            'payment_type': sale.payment_type,
-            'total': float(sale.sale_price),
-        }
-
-        # Render HTML and convert to image
-        html = render_template('receipt.html', receipt=receipt_data)
-        img_bytes = imgkit.from_string(html, False, options={'format': 'png'})
-
-        # Send file for download
-        return send_file(
-            io.BytesIO(img_bytes),
-            mimetype='image/png',
-            as_attachment=True,
-            download_name=f"receipt_{sale.id}.png"
-        )
+        # Redirect to separate download route
+        return redirect(url_for('sales.download_receipt_image', sale_id=sale.id))
 
     return render_template('sales/new.html', form=form)
+
+# DOWNLOAD RECEIPT
+@bp.route('/download-receipt-image/<int:sale_id>')
+@login_required
+def download_receipt_image(sale_id):
+    sale = Sale.query.get_or_404(sale_id)
+
+    if not current_user.is_admin() and sale.seller_id != current_user.id:
+        abort(403)
+
+    receipt_data = {
+        'sale_id': sale.id,
+        'number': generate_receipt_number(),
+        'date': sale.sale_date.strftime('%Y-%m-%d'),
+        'time': sale.sale_date.strftime('%H:%M'),
+        'user': sale.seller.username,
+        'customer_name': sale.customer_name,
+        'customer_phone': sale.customer_phone,
+        'id_number': sale.id_number,
+        'brand': sale.device.brand,
+        'device': sale.device.model,
+        'ram': sale.device.ram,
+        'storage': sale.device.rom,
+        'imei': sale.device.imei,
+        'sale_price': float(sale.sale_price),
+        'amount_paid': float(sale.amount_paid),
+        'payment_type': sale.payment_type,
+        'total': float(sale.sale_price),
+    }
+
+    html = render_template('receipt.html', receipt=receipt_data)
+    img_bytes = imgkit.from_string(html, False, options={'format': 'png'})
+
+    return send_file(
+        io.BytesIO(img_bytes),
+        mimetype='image/png',
+        as_attachment=True,
+        download_name=f"receipt_{sale.id}.png"
+    )
+
 
 
 
