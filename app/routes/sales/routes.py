@@ -70,6 +70,9 @@ def new_sale():
 
 
 
+from flask import send_file
+import io
+
 @bp.route('/sales/complete', methods=['GET', 'POST'])
 @login_required
 def complete_sale():
@@ -95,7 +98,7 @@ def complete_sale():
             sale_date=datetime.utcnow()
         )
         db.session.add(sale)
-        db.session.commit()  # This ensures sale.id is generated
+        db.session.commit()  # sale.id is now available
 
         # Prepare receipt data
         receipt_data = {
@@ -122,7 +125,13 @@ def complete_sale():
         html = render_template('receipt.html', receipt=receipt_data)
         img_bytes = imgkit.from_string(html, False, options={'format': 'png'})
 
-        return Response(img_bytes, mimetype='image/png')
+        # Send file for download
+        return send_file(
+            io.BytesIO(img_bytes),
+            mimetype='image/png',
+            as_attachment=True,
+            download_name=f"receipt_{sale.id}.png"
+        )
 
     return render_template('sales/new_sale.html', form=form)
 
