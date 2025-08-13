@@ -1,6 +1,9 @@
 <h1>Sale Completed</h1>
 <p>Sale ID: {{ sale.id }}</p>
-<p>Customer: {{ sale.customer.name }}</p>
+<p>ID Number: {{ sale.id_number }}</p>
+<p>Customer: {{ sale.customer_name }}</p>
+<p>Phone: {{ sale.customer_phone }}</p>
+
 
 <a href="{{ url_for('sales.download_receipt_image', sale_id=sale.id) }}" class="btn btn-primary">
     Download Receipt
