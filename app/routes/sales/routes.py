@@ -159,47 +159,20 @@ def complete_sale_api(sale_id):
         return jsonify({'error': str(e)}), 500
 
 
-@bp.route('/create', methods=['POST'])
+@bp.route("/create-sale", methods=["POST"])
 @login_required
-@staff_required
 def create_sale():
-    """Create a new sale"""
-    data = request.get_json()
-    
-    # Validate required fields
-    required_fields = ['imei', 'sale_price', 'payment_type', 'amount_paid']
-    if not all(field in data for field in required_fields):
-        return jsonify({'error': 'Missing required fields'}), 400
-    
-    # Get device and validate availability
-    device = Device.query.filter_by(imei=data['imei'], status='available').first()
-    if not device:
-        return jsonify({'error': 'Device not found or not available'}), 404
-    
-    try:
-        # Create sale record
-        sale = Sale(
-            device=device,
-            seller=current_user,
-            sale_price=Decimal(data['sale_price']),
-            payment_type=data['payment_type'],
-            amount_paid=Decimal(data['amount_paid']),
-            notes=data.get('notes', '')
-        )
-        
-        # Mark device as sold
-        device.mark_as_sold()
-        
-        # Save changes
-        db.session.add(sale)
-        db.session.commit()
-        
-        flash('Sale recorded successfully!', 'success')
-        return jsonify(sale.to_dict()), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+    # 1. Process sale logic
+    sale = Sale(...)
+    db.session.add(sale)
+    db.session.commit()
+
+    # 2. Generate the receipt image
+    generate_receipt_image(sale)  # your custom function
+
+    # 3. Redirect to download route
+    return redirect(url_for("download_receipt_image", sale_id=sale.id))
+
 
 @bp.route('/sales/check_imei/<imei>')
 @login_required
@@ -310,58 +283,25 @@ def view_receipt(order_id):
 
 
 # Download receipt as PDF/image
-@bp.route('/download-receipt-image/<int:sale_id>')
+@bp.route("/download-receipt-image/<int:sale_id>")
 @login_required
 def download_receipt_image(sale_id):
-    """Generate and download the receipt as an image (PNG)"""
     sale = Sale.query.get_or_404(sale_id)
 
-    if not current_user.is_admin() and sale.seller_id != current_user.id:
-        abort(403)
+    # Example: save your receipt images in /static/receipts/
+    receipt_path = os.path.join(
+        app.root_path,
+        "static",
+        "receipts",
+        f"receipt_{sale_id}.png"
+    )
 
-    # Prepare data
-    receipt_data = {
-        'sale_id': sale.id,
-        'number': generate_receipt_number(),
-        'date': sale.sale_date.strftime('%Y-%m-%d'),
-        'time': sale.sale_date.strftime('%H:%M'),
-        'user': sale.seller.username,
-        'customer_name': sale.customer_name,
-        'customer_phone': sale.customer_phone,
-        'id_number': sale.id_number,
-        'brand': sale.device.brand,
-        'device': sale.device.model,
-        'ram': sale.device.ram,
-        'storage': sale.device.rom,
-        'imei': sale.device.imei,
-        'sale_price': float(sale.sale_price),
-        'amount_paid': float(sale.amount_paid),
-        'payment_type': sale.payment_type,
-        'total': float(sale.sale_price),
-    }
+    if not os.path.exists(receipt_path):
+        abort(404, description="Receipt not found.")
 
-    # Render the receipt HTML
-    html = render_template('receipt.html', receipt=receipt_data, download_button=False)
-
-    # Set wkhtmltoimage options
-    options = {
-        'format': 'png',
-        'encoding': 'UTF-8',
-        'width': '600'
-    }
-
-    try:
-        # Generate image bytes
-        image_bytes = imgkit.from_string(html, False, options=options)
-
-        # Send image as downloadable file
-        return send_file(
-            io.BytesIO(image_bytes),
-            mimetype='image/png',
-            as_attachment=True,
-            download_name=f"receipt_{sale_id}.png"
-        )
-
-    except Exception as e:
-        current_app.logger.error(f"Image generation error: {str(e)}")
-        abort(500, description="Failed to generate receipt image")
+    # Force download
+    return send_file(
+        receipt_path,
+        as_attachment=True,
+        download_name=f"receipt_{sale_id}.png"
+    )
