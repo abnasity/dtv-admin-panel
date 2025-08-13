@@ -190,6 +190,11 @@ class Sale(db.Model):
     modified_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     notes = db.Column(db.Text)
 
+    # New customer fields
+    customer_name = db.Column(db.String(100), nullable=False)
+    customer_phone = db.Column(db.String(20), nullable=True)
+    id_number = db.Column(db.String(50), nullable=True)
+
     # Foreign Keys
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), unique=True, nullable=False)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
