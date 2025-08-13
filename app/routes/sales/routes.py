@@ -309,14 +309,18 @@ def download_receipt_image(sale_id):
     # Generate image bytes
     image_bytes = imgkit.from_string(html, False, options=options)
 
-    # Send image as downloadable file
-    return send_file(
-        io.BytesIO(image_bytes),
-        mimetype='image/png',
-        as_attachment=True,
-        download_name=f"receipt_{sale_id}.png"
-    )
+       try:
+        # Generate image bytes
+        image_bytes = imgkit.from_string(html, False, options=options)
+
+        # Send image as downloadable file
+        return send_file(
+            io.BytesIO(image_bytes),
+            mimetype='image/png',
+            as_attachment=True,
+            download_name=f"receipt_{sale_id}.png"
+        )
 
     except Exception as e:
-        current_app.logger.error(f"PDF generation error: {str(e)}")
-        abort(500, description="Failed to generate PDF")
+        current_app.logger.error(f"Image generation error: {str(e)}")
+        abort(500, description="Failed to generate receipt image")
