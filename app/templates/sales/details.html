@@ -3,7 +3,8 @@
 <p>ID Number: {{ sale.id_number }}</p>
 <p>Customer: {{ sale.customer_name }}</p>
 <p>Phone: {{ sale.customer_phone }}</p>
-
+<p>Device: {{ sale.device_name }}</p>
+<p>Receipt: <a href="{{ url_for('sales.download_receipt_image', sale_id=sale.id) }}">Download</a></p>
 
 <a href="{{ url_for('sales.download_receipt_image', sale_id=sale.id) }}" class="btn btn-primary">
     Download Receipt
