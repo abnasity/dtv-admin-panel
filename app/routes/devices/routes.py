@@ -106,7 +106,7 @@ def edit_device(imei):
             device.price_credit = form.price_credit.data or 0
             device.notes = form.notes.data
          
-    return render_template('devices/edit.html', form=form, specs_form=specs_form, device=device)
+    return render_template('devices/edit.html', form=form, device=device)
 
 
 # DELETE DEVICE
