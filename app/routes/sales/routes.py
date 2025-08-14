@@ -84,6 +84,11 @@ def complete_sale():
             form.imei.errors.append('Device with this IMEI not found in inventory.')
             return render_template('sales/new_sale.html', form=form)
 
+        # OPTIONAL: Ensure device isn't already sold
+        if device.status.lower() == "sold":
+            form.imei.errors.append('This device is already sold.')
+            return render_template('sales/new_sale.html', form=form)
+
         # Create the sale record
         sale = Sale(
             seller_id=current_user.id,
@@ -96,10 +101,14 @@ def complete_sale():
             payment_type=form.payment_type.data,
             sale_date=datetime.utcnow()
         )
-        db.session.add(sale)
-        db.session.commit()  # sale.id now available
 
-        # Redirect to separate download route
+        # Mark device as sold
+        device.status = "sold"  # assuming your Device model has a 'status' field
+
+        db.session.add(sale)
+        db.session.commit()  # This saves both the sale and the updated device status
+
+        # Redirect to sale details
         return redirect(url_for('sales.sale_details', sale_id=sale.id))
 
     return render_template('sales/new.html', form=form)
