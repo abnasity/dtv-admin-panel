@@ -91,7 +91,11 @@ def add_device():
 def edit_device(imei):
     device = Device.query.filter_by(imei=imei).first_or_404()
     form = DeviceForm(original_imei=imei, obj=device)
-  
+
+    # ✅ Populate any select field choices here to avoid "Choices cannot be None"
+    form.brand.choices = [(b.name, b.name) for b in Brand.query.all()]  
+    form.ram.choices = [(r.size, r.size) for r in RAM.query.all()]      
+    form.rom.choices = [(r.size, r.size) for r in ROM.query.all()]      
 
     if request.method == 'POST':
         form.imei.data = device.imei  # Prevent IMEI change
@@ -105,8 +109,13 @@ def edit_device(imei):
             device.price_cash = form.price_cash.data or 0
             device.price_credit = form.price_credit.data or 0
             device.notes = form.notes.data
-         
+
+            db.session.commit()
+            flash("Device updated successfully.", "success")
+            return redirect(url_for('devices.device_list'))
+
     return render_template('devices/edit.html', form=form, device=device)
+
 
 
 # DELETE DEVICE
