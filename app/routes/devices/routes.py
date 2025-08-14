@@ -96,7 +96,7 @@ def edit_device(imei):
     if request.method == 'POST':
         form.imei.data = device.imei  # Prevent IMEI change
 
-        if form.validate_on_submit() and specs_form.validate_on_submit():
+        if form.validate_on_submit():
             device.brand = form.brand.data
             device.model = form.model.data
             device.ram = form.ram.data
