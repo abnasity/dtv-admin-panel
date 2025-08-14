@@ -156,9 +156,7 @@ def permanently_delete_device(device_id):
         flash("Device must be soft-deleted first before permanent deletion.", "warning")
         return redirect(url_for('devices.inventory'))
 
-    # Delete associated records first if applicable (e.g., specs, order items, etc.)
-    if device.specs:
-        db.session.delete(device.specs)
+   
 
     db.session.delete(device)
     db.session.commit()
