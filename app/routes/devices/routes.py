@@ -92,11 +92,6 @@ def edit_device(imei):
     device = Device.query.filter_by(imei=imei).first_or_404()
     form = DeviceForm(original_imei=imei, obj=device)
 
-    # ✅ Populate any select field choices here to avoid "Choices cannot be None"
-    form.brand.choices = [(b.name, b.name) for b in Brand.query.all()]  
-    form.ram.choices = [(r.size, r.size) for r in RAM.query.all()]      
-    form.rom.choices = [(r.size, r.size) for r in ROM.query.all()]      
-
     if request.method == 'POST':
         form.imei.data = device.imei  # Prevent IMEI change
 
