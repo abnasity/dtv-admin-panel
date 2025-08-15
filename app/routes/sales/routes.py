@@ -166,7 +166,7 @@ def download_receipt_image(sale_id):
 @bp.route('/sales/<int:sale_id>/complete', methods=['POST'])
 @login_required
 @staff_required
-def complete_sale(sale_id):
+def complete_sale_api(sale_id):
     """Mark a sale as fully paid/completed and redirect."""
     sale = Sale.query.get_or_404(sale_id)
 
