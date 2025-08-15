@@ -109,7 +109,7 @@ def edit_device(imei):
 
             db.session.commit()
             flash("Device updated successfully.", "success")
-            return redirect(url_for('devices.device_list'))
+            return redirect(url_for('devices.inventory'))
 
     return render_template('devices/edit.html', form=form, device=device)
 
