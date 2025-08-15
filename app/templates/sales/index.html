@@ -92,19 +92,21 @@ function completeSale(saleId) {
             'X-CSRFToken': '{{ csrf_token }}'
         }
     })
-    .then(r => r.json())
+    .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.href = `/sales/${saleId}`; // go to details
+            // Redirect to sale details page only after success
+            window.location.href = `/sales/${saleId}`;
         } else {
             alert(data.error || 'Failed to complete sale');
         }
     })
-    .catch(err => {
-        console.error(err);
+    .catch(error => {
+        console.error('Error:', error);
         alert('Failed to complete sale');
     });
 }
+
 
 </script>
 {% endblock %}
