@@ -91,6 +91,7 @@ def add_device():
 def edit_device(imei):
     device = Device.query.filter_by(imei=imei).first_or_404()
     form = DeviceForm(original_imei=imei, obj=device)
+    form.set_staff_choices()  # Important: avoids "Choices cannot be None"
 
     if request.method == 'POST':
         form.imei.data = device.imei  # Prevent IMEI change
@@ -104,6 +105,7 @@ def edit_device(imei):
             device.price_cash = form.price_cash.data or 0
             device.price_credit = form.price_credit.data or 0
             device.notes = form.notes.data
+            device.assigned_staff_id = form.assigned_staff_id.data
 
             db.session.commit()
             flash("Device updated successfully.", "success")
