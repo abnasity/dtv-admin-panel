@@ -85,7 +85,7 @@ function completeSale(saleId) {
         return;
     }
 
-    fetch(`/web_sales/sales/${saleId}/complete`, {
+    fetch(`/sales/${saleId}/complete`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
