@@ -164,7 +164,7 @@ def download_receipt_image(sale_id):
 
 
 
-@bp.route('/sales/<int:sale_id>/complete', methods=['POST'])
+@bp.route('/sales/<int:sale_id>/complete', methods=['GET', 'POST'])
 @login_required
 @staff_required
 def complete_sale_api(sale_id):
