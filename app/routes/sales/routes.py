@@ -162,30 +162,37 @@ def download_receipt_image(sale_id):
     )
 
 
-
-
-@bp.route('/sales/<int:sale_id>/complete', methods=['GET', 'POST'])
+# COMPLETE SALE
+@bp.route('/sales/<int:sale_id>/complete', methods=['POST'])
 @login_required
 @staff_required
-def complete_sale_api(sale_id):
-    """Mark a sale as fully paid/completed."""
+def complete_sale(sale_id):
+    """Mark a sale as fully paid/completed and redirect."""
     sale = Sale.query.get_or_404(sale_id)
 
-    # Ensure the user has permission
+    # Ensure permission
     if not current_user.is_admin() and sale.seller_id != current_user.id:
-        return jsonify({'error': 'Permission denied'}), 403
+        flash('Permission denied.', 'danger')
+        return redirect(url_for('sales.sale_details', sale_id=sale_id))
+
+    if sale.status != 'pending':
+        flash('Sale cannot be completed.', 'warning')
+        return redirect(url_for('sales.sale_details', sale_id=sale_id))
 
     try:
         # Mark as fully paid
         sale.amount_paid = sale.sale_price
+        sale.status = 'completed'
         db.session.commit()
-        return jsonify({'success': True})
 
+        flash('Sale marked as completed.', 'success')
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        flash(f'Error completing sale: {str(e)}', 'danger')
 
+    return redirect(url_for('sales.sale_details', sale_id=sale_id))
 
+# CREATE SALE
 @bp.route("/create-sale", methods=["POST"])
 @login_required
 def create_sale():
@@ -201,6 +208,7 @@ def create_sale():
     return redirect(url_for("download_receipt_image", sale_id=sale.id))
 
 
+# CHECK IMEI
 @bp.route('/sales/check_imei/<imei>')
 @login_required
 def check_imei(imei):
@@ -214,6 +222,7 @@ def check_imei(imei):
         })
     return jsonify({'found': False})
 
+# GET DEVICE
 @bp.route('/device/<imei>', methods=['GET'])
 @login_required
 @staff_required
@@ -224,6 +233,7 @@ def get_device(imei):
         return jsonify({'error': 'Device not found or not available'}), 404
     return jsonify(device.to_dict())
 
+# SALE DETAIL
 @bp.route('/detail/<int:sale_id>')
 @login_required
 def sale_detail(sale_id):
@@ -234,6 +244,7 @@ def sale_detail(sale_id):
         return redirect(url_for('sales.index'))
     return render_template('sales/detail.html', sale=sale)
 
+# UPDATE PAYMENT
 @bp.route('/update_payment/<int:sale_id>', methods=['POST'])
 @login_required
 @staff_required
