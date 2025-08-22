@@ -25,7 +25,7 @@
             <i class="fas fa-mobile-alt me-1"></i> Sold Devices
         </a>
     </li>
-    
+
                     {% endif %}
                 {% endif %}
 
@@ -40,7 +40,10 @@
                     </a>
                 </li>
 
-                <li class="nav-item dropdown">
+          
+
+                {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                      <li class="nav-item dropdown">
                   <a class="nav-link dropdown-toggle {% if 'reports.' in request.endpoint %}active{% endif %}" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-file-alt me-1"></i> Reports
                   </a>
@@ -58,8 +61,7 @@
                     </li>
                   </ul>
                 </li>
-
-                {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                
                  <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-tools me-1"></i> Admin Tools
