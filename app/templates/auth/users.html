@@ -15,7 +15,6 @@
         <a href="{{ url_for('auth.create_user') }}" class="btn btn-primary">
             <i class="fas fa-user-plus me-1"></i> Add User
         </a>
-
     </div>
 </div>
 
@@ -25,8 +24,7 @@
         <form method="GET" class="row g-3">
             <div class="col-md-4">
                 <div class="input-group">
-                    <input type="text" name="search" class="form-control" placeholder="Search users..." 
-                           value="{{ search }}">
+                    <input type="text" name="search" class="form-control" placeholder="Search users..." value="{{ search }}">
                     <button class="btn btn-outline-primary" type="submit">
                         <i class="fas fa-search"></i>
                     </button>
@@ -81,8 +79,7 @@
                     <tr>
                         <td>
                             <div class="form-check">
-                                <input class="form-check-input user-select" type="checkbox" value="{{ user.id }}"
-                                       {% if user.id == current_user.id %}disabled{% endif %}>
+                                <input class="form-check-input user-select" type="checkbox" value="{{ user.id }}" {% if user.id == current_user.id %}disabled{% endif %}>
                             </div>
                         </td>
                         <td>{{ user.username }}</td>
@@ -97,31 +94,51 @@
                                 {{ 'Active' if user.is_active else 'Inactive' }}
                             </span>
                         </td>
-                      
                         <td>
                             <div class="btn-group">
-                              <a href="{{ url_for('auth.edit_user', user_id=user.id) }}" class="btn btn-sm btn-warning">
+                                <a href="{{ url_for('auth.edit_user', user_id=user.id) }}" class="btn btn-sm btn-warning">
                                     <i class="fas fa-edit"></i>
-                              </a>
+                                </a>
 
                                 {% if user.id != current_user.id %}
-
                                 <button type="button" class="btn btn-sm btn-{{ 'danger' if user.is_active else 'success' }}"
-                                   
-                                   onclick='toggleUserStatus("{{ user.id }}", "{{ user.is_active }}")'>
-
+                                        onclick='toggleUserStatus("{{ user.id }}", "{{ user.is_active }}")'>
                                     {% if user.is_active %}
                                         <i class="fas fa-user-times"></i>
                                     {% else %}
                                         <i class="fas fa-user-check"></i>
                                     {% endif %}
-                                    
                                 </button>
-                       
-                             {% endif %}
+                                {% endif %}
+
+                                <!-- Devices toggle -->
+                                <button class="btn btn-sm btn-info" data-bs-toggle="collapse" 
+                                        data-bs-target="#devices-{{ user.id }}" aria-expanded="false">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </button>
                             </div>
                         </td>
-                    </tr>                        
+                    </tr>
+
+                    <!-- Collapsible row for user devices -->
+                    <tr class="collapse" id="devices-{{ user.id }}">
+                        <td colspan="6">
+                            <div class="card card-body">
+                                <h6>Devices for {{ user.username }}</h6>
+                                {% if user.sold_devices %}
+                                    <ul class="list-group">
+                                        {% for device in user.sold_devices %}
+                                            <li class="list-group-item">
+                                                {{ device.device.name }} – IMEI: {{ device.imei }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-muted">No devices found.</p>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -171,7 +188,6 @@
         {% endif %}
     </div>
 </div>
-
 
 
 <!-- Add User Modal -->
@@ -229,21 +245,17 @@
                             </div>
                         {% endif %}
                     </div>
-                                        
-                        <div class="mb-3">
-                            {{ form.address.label(class="form-label") }}
-                            {{ form.address(class="form-control") }}
-                            {% if form.address.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.address.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                
-
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control") }}
+                        {% if form.address.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.address.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
