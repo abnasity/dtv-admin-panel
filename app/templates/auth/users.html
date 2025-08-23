@@ -125,18 +125,19 @@
                         <td colspan="6">
                             <div class="card card-body">
                                 <h6>Devices for {{ user.username }}</h6>
-                                {% if user.sold_devices %}
+                                {% if user.assigned_devices %}
                                     <ul class="list-group">
-                                        {% for device in user.sold_devices %}
+                                        {% for device in user.assigned_devices %}
                                             <li class="list-group-item">
-                                                {{ device.device.name }} – IMEI: {{ device.imei }}
+                                                {{ device.brand }} {{ device.model }} – IMEI: {{ device.imei }} ({{ device.status }})
                                             </li>
                                         {% endfor %}
                                     </ul>
                                 {% else %}
                                     <p class="text-muted">No devices found.</p>
                                 {% endif %}
-                            </div>
+
+                                                            </div>
                         </td>
                     </tr>
                     {% endfor %}

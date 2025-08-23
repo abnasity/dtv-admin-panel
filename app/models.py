@@ -122,21 +122,17 @@ class Device(db.Model):
 
     # Serialization
     def to_dict(self, include_variants=False):
-        """Enhanced serialization with image support"""
-        data = {
+        return {
             'id': self.id,
             'imei': self.imei,
             'brand': self.brand,
             'model': self.model,
-            'color': self.color,
             'ram': self.ram,
             'rom': self.rom,
             'status': self.status,
             'purchase_price': float(self.purchase_price),
             'price_cash': float(self.price_cash) if self.price_cash else None,
             'price_credit': float(self.price_credit) if self.price_credit else None,
-            'image_url': self.image_url,
-            'thumbnail_url': self.thumbnail_url,
             'arrival_date': self.arrival_date.isoformat(),
             'modified_at': self.modified_at.isoformat()
         }
@@ -145,7 +141,7 @@ class Device(db.Model):
         return data
 
     def __repr__(self):
-        return f"<Device {self.brand} {self.model} ({self.color or 'no color'})>"
+        return f"<Device {self.brand} {self.model}>"
 
 
 
