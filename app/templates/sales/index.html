@@ -24,9 +24,10 @@
     <tr>
         <th>#</th>  <!-- New column for numbering -->
     
-        <th>IMEI</th>
+        
         <th>Device</th>
         <th>Ram&Rom</th>
+        <th>IMEI</th>
         <th>Sale Price</th>
         <th>Payment Type</th>
         <th>Seller</th>
@@ -40,9 +41,10 @@
     <tr>
         <td>{{ loop.index }}</td>  <!-- Numbering starts from 1 -->
         
-        <td>{{ sale.device.imei }}</td>
+       
         <td>{{ sale.device.brand }} {{ sale.device.model }}</td>
         <td>{{ sale.device.ram }} {{ sale.device.rom }}</td>
+         <td>{{ sale.device.imei }}</td>
         <td>Ksh {{ "%.2f"|format(sale.sale_price) }}</td>
         <td>
             <span class="badge bg-{{ 'success' if sale.payment_type == 'cash' else 'info' }}">
