@@ -162,9 +162,10 @@
     
                 <thead>
                     <tr>
-                        <th>IMEI</th>
+                        
                         <th>Brand</th>
                         <th>Model</th>
+                        <th>IMEI</th>
                         <th>Ram</th>
                         <th>Rom</th>
                         <th>Purchase Price</th>
@@ -178,9 +179,10 @@
                 <tbody>
                     {% for device in devices %}
                     <tr>
-                        <td>{{ device.imei }}</td>
+                        
                         <td>{{ device.brand }}</td>
                         <td>{{ device.model }}</td>
+                        <td>{{ device.imei }}</td>
                         <td>{{ device.ram }}</td>
                         <td>{{ device.rom }}</td>
                         <td>Ksh {{ "{:,.2f}".format(device.purchase_price or 0) }}</td>
