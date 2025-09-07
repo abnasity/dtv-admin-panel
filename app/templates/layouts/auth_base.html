@@ -42,10 +42,12 @@
             font-size: 0.875rem;
         }
     </style>
+
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <main class="container">
-        {% block content %}  {% endblock %}
+        {% block content %}{% endblock %}
     </main>
 </body>
 </html>
