@@ -62,12 +62,21 @@
 {% endblock %}
 {% block extra_css %}
 <style> 
-.btn-secondary:hover {
-    background-color: #007bff; /* Bootstrap primary blue */
-    border-color: #007bff;
+/* default button style (red) */
+.btn-secondary {
+    background-color: red;
+    border-color: red;
     color: white;
     transition: all 0.3s ease; /* smooth hover transition */
 }
+
+/* hover style (green) */
+.btn-secondary:hover {
+    background-color: green;
+    border-color: green;
+    color: white;
+}
 </style>
 {% endblock %}
+
 
