@@ -86,7 +86,6 @@ def create_app(config_class=Config):
     from app.routes.devices import bp as devices_bp
     from app.routes.sales import bp as sales_bp
     from app.routes.reports import bp as reports_bp
-    from app.routes.staff import bp as staff_bp
    
     # Register web blueprints
     app.register_blueprint(main_bp)
@@ -94,7 +93,7 @@ def create_app(config_class=Config):
     app.register_blueprint(devices_bp)
     app.register_blueprint(sales_bp)
     app.register_blueprint(reports_bp)
-    app.register_blueprint(staff_bp)
+
 
 
     # Import API blueprints
