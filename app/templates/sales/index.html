@@ -23,7 +23,7 @@
             <thead>
     <tr>
         <th>#</th>  <!-- New column for numbering -->
-        <th>Date</th>
+    
         <th>IMEI</th>
         <th>Device</th>
         <th>Ram&Rom</th>
@@ -31,6 +31,7 @@
         <th>Payment Type</th>
         <th>Seller</th>
         <th>Status</th>
+        <th>Date</th>
         <th>Actions</th>
     </tr>
 </thead>
@@ -38,7 +39,7 @@
     {% for sale in sales %}
     <tr>
         <td>{{ loop.index }}</td>  <!-- Numbering starts from 1 -->
-        <td>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</td>
+        
         <td>{{ sale.device.imei }}</td>
         <td>{{ sale.device.brand }} {{ sale.device.model }}</td>
         <td>{{ sale.device.ram }} {{ sale.device.rom }}</td>
@@ -54,6 +55,7 @@
                 {{ 'Completed' if sale.is_completed else 'Pending' }}
             </span>
         </td>
+        <td>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</td>
         <td>
             <div class="btn-group">
                 <a href="{{ url_for('sales.sale_details', sale_id=sale.id) }}" 
