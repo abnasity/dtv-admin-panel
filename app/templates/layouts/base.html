@@ -31,8 +31,6 @@
                     <i class="fas fa-user-shield"></i> {{ current_user.role|title }}
                 </div>
                 <div class="user-actions">
-                    <button class="btn btn-outline"><i class="fas fa-bell"></i></button>
-                    <button class="btn btn-outline"><i class="fas fa-cog"></i></button>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i></a>
                 </div>
             </div>
