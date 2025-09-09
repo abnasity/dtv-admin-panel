@@ -295,21 +295,21 @@ def create_user():
 @admin_required
 def toggle_user_status(user_id):
     user = User.query.get_or_404(user_id)
-    
-    # Prevent self-deactivation
+
     if user.id == current_user.id:
-        return jsonify({'success': False, 'error': 'Cannot modify your own status'})
-    
+        flash("You cannot deactivate yourself.", "warning")
+        return redirect(url_for("auth.users", status="active"))
+
     user.is_active = not user.is_active
     try:
         db.session.commit()
-        return jsonify({
-            'success': True,
-            'message': f'User {user.username} has been {"activated" if user.is_active else "deactivated"}'
-        })
+        flash(f'User {user.username} has been {"activated" if user.is_active else "deactivated"}', "success")
+        return redirect(url_for("auth.users", status="inactive" if not user.is_active else "active"))
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'error': 'Database error occurred'})
+        flash("Database error occurred", "danger")
+        return redirect(url_for("auth.users", status="active"))
+
 
 # GET USER DATA FOR EDITING
 @bp.route('/users/<int:user_id>', methods=['GET'])
