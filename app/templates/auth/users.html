@@ -100,16 +100,23 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
 
-                                {% if user.id != current_user.id %}
-                                <button type="button" class="btn btn-sm btn-{{ 'danger' if user.is_active else 'success' }}"
-                                        onclick='toggleUserStatus("{{ user.id }}", "{{ user.is_active }}")'>
-                                    {% if user.is_active %}
-                                        <i class="fas fa-user-times"></i>
-                                    {% else %}
-                                        <i class="fas fa-user-check"></i>
-                                    {% endif %}
-                                </button>
+                          {% if user.id != current_user.id %}
+                        <form id="toggle-form-{{ user.id }}" 
+                            action="{{ url_for('auth.toggle_user_status', user_id=user.id) }}" 
+                            method="POST" style="display: inline;">
+                            {{ form.csrf_token }}
+                            <button type="submit" 
+                                    class="btn btn-sm btn-{{ 'danger' if user.is_active else 'success' }}">
+                                {% if user.is_active %}
+                                    <i class="fas fa-user-times"></i>
+                                {% else %}
+                                    <i class="fas fa-user-check"></i>
                                 {% endif %}
+                            </button>
+                        </form>
+                        {% endif %}
+
+
 
                                 <!-- Devices toggle -->
                                 <button class="btn btn-sm btn-info" data-bs-toggle="collapse" 
