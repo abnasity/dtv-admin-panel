@@ -62,39 +62,50 @@ class RegisterForm(FlaskForm):
 
 # DEVICE FORM
 class DeviceForm(FlaskForm):
-    imei = StringField('IMEI', validators=[Optional(), Length(min=15, max=15, message='IMEI must be exactly 15 digits long.')
-    ])
-    brand = StringField('Brand', validators=[DataRequired(), Length(max=50)])
-    model = StringField('Model', validators=[DataRequired(), Length(max=50)])
-    ram = StringField('RAM', validators=[DataRequired(), Length(max=20)])
-    rom = StringField('ROM', validators=[DataRequired(), Length(max=20)])
-    purchase_price = DecimalField('Purchase Price', validators=[DataRequired(), NumberRange(min=0)], places=2)
-    price_cash = DecimalField('Cash Price', validators=[Optional(), NumberRange(min=0)])
-    price_credit = DecimalField('Credit Price', validators=[Optional(), NumberRange(min=0)])
-    description = TextAreaField('Description', validators=[Optional()])
-    notes = TextAreaField('Notes')
-    assigned_staff_id = SelectField('Assign to Staff', coerce=int, validators=[DataRequired()])
-    submit = SubmitField('Save Device')
-    
+    brand = SelectField(
+        "Brand",
+        choices=[
+            ("itel", "Itel"),
+            ("samsung", "Samsung"),
+            ("tecno", "Tecno"),
+            ("infinix", "Infinix"),
+        ],
+        validators=[DataRequired()],
+    )
+    imei = StringField(
+        "IMEI",
+        validators=[Optional(), Length(min=15, max=15, message="IMEI must be exactly 15 digits long.")],
+    )
+    model = StringField("Model", validators=[DataRequired(), Length(max=50)])
+    ram = StringField("RAM", validators=[DataRequired(), Length(max=20)])
+    rom = StringField("ROM", validators=[DataRequired(), Length(max=20)])
+    purchase_price = DecimalField("Purchase Price", validators=[DataRequired(), NumberRange(min=0)], places=2)
+    price_cash = DecimalField("Cash Price", validators=[Optional(), NumberRange(min=0)])
+    price_credit = DecimalField("Credit Price", validators=[Optional(), NumberRange(min=0)])
+    description = TextAreaField("Description", validators=[Optional()])
+    notes = TextAreaField("Notes")
+    assigned_staff_id = SelectField("Assign to Staff", coerce=int, validators=[DataRequired()])
+    submit = SubmitField("Save Device")
+
     def __init__(self, original_imei=None, *args, **kwargs):
         super(DeviceForm, self).__init__(*args, **kwargs)
         self.original_imei = original_imei
-        
+
     def set_staff_choices(self):
         # Query staff users only
-        staff_users = User.query.filter_by(role='staff').order_by(User.username).all()
+        staff_users = User.query.filter_by(role="staff").order_by(User.username).all()
         self.assigned_staff_id.choices = [(u.id, u.username) for u in staff_users]
 
     def validate_imei(self, imei):
         if not imei.data:
-            raise ValidationError('IMEI is required.')
+            raise ValidationError("IMEI is required.")
         if len(imei.data) != 15:
-            raise ValidationError('IMEI must be exactly 15 digits long.')
+            raise ValidationError("IMEI must be exactly 15 digits long.")
 
-        if hasattr(self, 'original_imei') and self.original_imei != imei.data:
+        if hasattr(self, "original_imei") and self.original_imei != imei.data:
             device = Device.query.filter_by(imei=imei.data).first()
             if device:
-                raise ValidationError('This IMEI is already registered in the system.')
+                raise ValidationError("This IMEI is already registered in the system.")
 
 class SaleForm(FlaskForm):
     imei = StringField('IMEI', validators=[
