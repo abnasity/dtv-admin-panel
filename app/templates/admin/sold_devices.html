@@ -16,6 +16,7 @@
                 <th>Model</th>
                 <th>Purchase Price</th>
                 <th>Status</th>
+                <th>Sold By</th>
             </tr>
         </thead>
         <tbody>
@@ -26,6 +27,13 @@
                 <td>{{ device.model }}</td>
                 <td>Ksh {{ device.purchase_price }}</td>
                 <td><span class="badge bg-success fs-6">{{ device.status }}</span></td>
+                <td>
+                    {% if device.sale and device.sale.seller %}
+                        {{ device.sale.seller.username }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
