@@ -53,6 +53,7 @@ def new_sale():
                 sale_price=form.sale_price.data,
                 payment_type=form.payment_type.data,
                 amount_paid=form.amount_paid.data,
+                shop=form.shop.data ,
                 notes=form.notes.data
             )
             device.mark_as_sold()
@@ -194,8 +195,7 @@ def create_sale():
     db.session.add(sale)
     db.session.commit()
 
-    # 2. Generate the receipt image
-    generate_receipt_image(sale)  # your custom function
+    # 2. (Optional) Generate the receipt image here if needed
 
     # 3. Redirect to download route
     return redirect(url_for("download_receipt_image", sale_id=sale.id))
@@ -272,6 +272,10 @@ def update_payment(sale_id):
 # RECEIPT/INVOICE DOWNLOAD
 @bp.route('/receipt/<int:order_id>')
 def view_receipt(order_id):
+    # Fetch the order from the database
+    from app.models import Order  # Make sure Order is imported at the top if not already
+    order = Order.query.get_or_404(order_id)
+
     payment_option = (order.payment_option or '').lower()
     is_cash = payment_option == 'cash'
 
