@@ -79,53 +79,22 @@
     {% endif %}
 </div>
 
+<!-- Shop Dropdown -->
+<div class="mb-3">
+    <label class="form-label fw-bold" for="shop">Select Shop</label>
+    {{ form.shop(class="form-select", id="shop") }}
+    {% if form.shop.errors %}
+        <div class="invalid-feedback d-block">
+            {% for error in form.shop.errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
 
-                <!-- Payment Type -->
-                <h6 class="fw-bold">Payment Method</h6>
-                <div class="d-flex mb-3">
-                    {% for subfield in form.payment_type %}
-                        <div class="form-check me-4">
-                            {{ subfield(class="form-check-input", id=subfield.id) }}
-                            <label class="form-check-label" for="{{ subfield.id }}">
-                                <strong>{{ subfield.label.text | capitalize }} Payment</strong><br>
-                                <small>
-                                    {% if subfield.data == 'cash' %}
-                                        Full amount paid immediately
-                                    {% else %}
-                                        Partial payment with installment plan
-                                    {% endif %}
-                                </small>
-                            </label>
-                        </div>
-                    {% endfor %}
-                </div>
-                {% if form.payment_type.errors %}
-                    <div class="invalid-feedback d-block mb-3">
-                        {% for error in form.payment_type.errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
 
-                <!-- Amount Paid -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold" for="amount_paid">Amount Paid (Ksh)</label>
-                    {{ form.amount_paid(class="form-control", id="amount_paid", placeholder="Enter amount paid") }}
-                    {% if form.amount_paid.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.amount_paid.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
 
-                <!-- Notes -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold" for="notes">Notes (optional)</label>
-                    {{ form.notes(class="form-control", id="notes", rows="3") }}
-                </div>
-
+        
                 <!-- Submit Button -->
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-check-circle me-1"></i> Complete Sale
