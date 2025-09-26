@@ -116,18 +116,21 @@ class SaleForm(FlaskForm):
         validators=[DataRequired(), NumberRange(min=0)],
         places=2
     )
-    payment_type = RadioField('Payment Type',
-        choices=[('cash', 'Cash'), ('credit', 'Credit')],
+  # NEW: shop dropdown
+    shop = SelectField(
+        "Shop",
+        choices=[
+            ("Machu", "Machu"),
+            ("Wachumba", "Wachumba"),
+            ("ANC", "ANC"),
+            ("Oasis", "Oasis"),
+        ],
         validators=[DataRequired()]
     )
-    amount_paid = DecimalField('Amount Paid',
-        validators=[DataRequired(), NumberRange(min=0)],
-        places=2
-    )
+
     customer_name = StringField('Customer Name', validators=[DataRequired(), Length(max=100)])
     customer_phone = StringField('Phone Number', validators=[DataRequired(), Length(max=15)])
     id_number = StringField('ID Number', validators=[DataRequired(), Length(max=20)])
-    notes = TextAreaField('Notes')
     submit = SubmitField('Record Sale')
 
     def validate_imei(self, imei):
