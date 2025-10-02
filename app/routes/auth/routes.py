@@ -91,7 +91,11 @@ def login():
                 elif user.role == 'admin':
                     return redirect(url_for('auth.dashboard'))
                 elif user.role == 'staff':
-                    return redirect(url_for('staff.dashboard'))
+                    try:
+                        return redirect(url_for('staff.dashboard'))
+                    except Exception:
+                        # fallback if staff dashboard route doesn't exist
+                        return redirect(url_for('auth.dashboard'))
                 else:
                     # fallback if role doesn't match known types
                     return redirect(url_for('auth.dashboard'))
@@ -106,6 +110,7 @@ def login():
             return render_template('auth/login.html', form=form), 500
 
     return render_template('auth/login.html', form=form)
+
 
 
 

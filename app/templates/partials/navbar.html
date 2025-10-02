@@ -16,15 +16,15 @@
                         </li>
                     {% elif current_user.role == 'staff' %}
                         <li class="nav-item">
-                            <a href="{{ url_for('staff.dashboard') }}" class="nav-link {% if request.endpoint == 'staff.dashboard' %}active{% endif %}">
+                            <a href="{{ url_for('auth.dashboard') }}" class="nav-link {% if request.endpoint == 'auth.dashboard' %}active{% endif %}">
                                 <i class="fas fa-chart-line me-1"></i> Dashboard
                             </a>
-                        </li>
+                        <!-- </li>
                         <li class="nav-item">
-        <a href="{{ url_for('staff.view_sold_items') }}" class="nav-link {% if request.endpoint == 'staff.view_sold_devices' %}active{% endif %}">
+        <a href="{{ url_for('auth.view_sold_devices') }}" class="nav-link {% if request.endpoint == 'staff.view_sold_devices' %}active{% endif %}">
             <i class="fas fa-mobile-alt me-1"></i> Sold Devices
         </a>
-    </li>
+    </li> -->
 
                     {% endif %}
                 {% endif %}
