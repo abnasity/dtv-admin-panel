@@ -74,7 +74,6 @@ def add_device():
             purchase_price=form.purchase_price.data,
             price_cash=form.price_cash.data or 0,
             price_credit=form.price_credit.data or 0,
-            notes=form.notes.data,
             assigned_staff_id=form.assigned_staff_id.data  # Assign the staff user here
         )
 
