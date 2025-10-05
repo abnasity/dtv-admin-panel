@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
-from app.models import Device
+from app.models import Device, User
 from app.decorators import admin_required
 from app.forms import DeviceForm
 from app.routes.devices import bp
@@ -16,33 +16,41 @@ def inventory():
     brand = request.args.get('brand')
     status = request.args.get('status')
     imei = request.args.get('imei')
+    agent_id = request.args.get('agent')
 
-    # Base query only for non-deleted devices
+    # Fetch all staff (for dropdown)
+    staff = User.query.filter(User.role == 'staff').all()
+
+    # Base query (exclude deleted devices)
     query = Device.query.filter(Device.deleted == False)
 
-    # If current user is staff (not admin), show only assigned devices
+    # If current user is staff (not admin), restrict to assigned devices
     if not current_user.is_admin():
         query = query.filter_by(assigned_staff_id=current_user.id)
 
+    # Apply filters
     if brand:
         query = query.filter_by(brand=brand)
     if status:
         query = query.filter_by(status=status)
     if imei:
-        query = query.filter(Device.imei.ilike(f'%{imei}%'))
+        query = query.filter(Device.imei.ilike(f"%{imei}%"))
+    if agent_id:
+        query = query.filter(Device.assigned_staff_id == agent_id)
 
     devices = query.order_by(Device.id.desc()).all()
 
-    brands = db.session.query(Device.brand).distinct().all()
-    brands = [b[0] for b in brands]
+    # Distinct brand list for dropdown
+    brands = [b[0] for b in db.session.query(Device.brand).distinct().all()]
 
     device_form = DeviceForm()
 
     return render_template(
-        'devices/inventory.html',
+        "devices/inventory.html",
         devices=devices,
         device_form=device_form,
-        brands=brands
+        brands=brands,
+        staff=staff
     )
 
 
