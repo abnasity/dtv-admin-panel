@@ -266,32 +266,37 @@ def create_user():
             flash('A user with this email already exists.', 'warning')
             return redirect(url_for('auth.users'))
 
-        address = form.address.data
-        if address == '__new__':
-            address = form.new_address.data
+        # Only require and use address for staff
+        address = None
+        if form.role.data == 'staff':
+            address = form.address.data
+            if address == '__new__':
+                address = form.new_address.data
 
+        # Only set username and address for staff
         user = User(
-            username=form.username.data,
+            username=form.username.data if form.role.data == 'staff' else None,
             email=form.email.data,
             role=form.role.data,
-            address=address
+            address=address if form.role.data == 'staff' else None
         )
         user.set_password(form.password.data)
 
         db.session.add(user)
         try:
             db.session.commit()
-            flash(f'User {user.username} has been created successfully.', 'success')
+            flash(f'User {user.username or user.email} has been created successfully.', 'success')
         except Exception as e:
             db.session.rollback()
-            flash('Error creating user: possible duplicate or database issue.', 'danger')
+            flash(f'Error creating user: {str(e)}', 'danger')
             print(f"[ERROR] User creation failed: {e}")
 
         return redirect(url_for('auth.users'))
 
-    # GET or invalid POST: render create user form
-    addresses = ["Address1", "Address2"]  # or fetch dynamically if needed
+    # Render form
+    addresses = ["Address1", "Address2"]  # optional — only relevant for staff
     return render_template('auth/create_user.html', form=form, addresses=addresses)
+
 
 
 # TOGGLE USER STATUS
@@ -300,6 +305,7 @@ def create_user():
 @admin_required
 def toggle_user_status(user_id):
     user = User.query.get_or_404(user_id)
+
 
     if user.id == current_user.id:
         flash("You cannot deactivate yourself.", "warning")
