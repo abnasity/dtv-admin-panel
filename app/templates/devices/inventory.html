@@ -111,45 +111,49 @@
                 </div>
             </div>
 
- <div class="row g-3 align-items-end">
+            <!-- Brand -->
+            <div class="col-12 col-md-3">
+                <label for="brand" class="form-label fw-semibold">Brand</label>
+                <select name="brand" id="brand" class="form-select shadow-sm rounded-pill" onchange="this.form.submit()">
+                    <option value="">All Brands</option>
+                    {% for brand in brands %}
+                        <option value="{{ brand }}" {% if request.args.get('brand') == brand %}selected{% endif %}>{{ brand }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-    <!-- Brand -->
-    <div class="col-12 col-md-4">
+            <!-- Status -->
+            <div class="col-12 col-md-2">
+                <label for="status" class="form-label fw-semibold">Status</label>
+                <select name="status" id="status" class="form-select shadow-sm rounded-pill" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>Available</option>
+                    <option value="sold" {% if request.args.get('status') == 'sold' %}selected{% endif %}>Sold</option>
+                </select>
+            </div>
 
-        <label for="brand" class="form-label fw-semibold">Brand</label>
-        <select name="brand" id="brand" class="form-select shadow-sm rounded-pill" onchange="this.form.submit()">
-            <option value="">All Brands</option>
-            {% for brand in brands %}
-                <option value="{{ brand }}" {% if request.args.get('brand') == brand %}selected{% endif %}>{{ brand }}</option>
-            {% endfor %}
-        </select>
-    </div>
+            <!-- Agent/Staff -->
+            <div class="col-12 col-md-3">
+                <label for="agent" class="form-label fw-semibold">Agent / Staff</label>
+                <select name="agent" id="agent" class="form-select shadow-sm rounded-pill" onchange="this.form.submit()">
+                    <option value="">All Agents</option>
+                    {% for user in staff %}
+                        <option value="{{ user.id }}" {% if request.args.get('agent') == user.id|string %}selected{% endif %}>{{ user.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-    <!-- Status -->
-    <div class="col-12 col-md-4">
-
-        <label for="status" class="form-label fw-semibold">Status</label>
-        <select name="status" id="status" class="form-select shadow-sm rounded-pill" onchange="this.form.submit()">
-            <option value="">All Status</option>
-            <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>Available</option>
-            <option value="sold" {% if request.args.get('status') == 'sold' %}selected{% endif %}>Sold</option>
-        </select>
-    </div>
-
-    <!-- Filter Button -->
-    <div class="col-12 col-md-4">
-
-        <button type="submit" class="btn btn-primary w-100 shadow-sm rounded-pill">
-            <i class="fas fa-filter me-2"></i> Filter
-        </button>
-    </div>
-
-</div>
-
+            <!-- Filter Button -->
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-primary w-100 shadow-sm rounded-pill">
+                    <i class="fas fa-filter me-2"></i> Filter
+                </button>
+            </div>
 
         </form>
     </div>
 </div>
+
 
 
 
@@ -169,8 +173,7 @@
                         <th>Ram</th>
                         <th>Rom</th>
                         <th>Purchase Price</th>
-                        <th>Cash Price</th>
-                        <th>Credit Price</th>
+                        <th>Selling Price</th>                 
                         <th>Status</th>
                         <th>Arrival Date</th>
                         <th>Actions</th>
@@ -186,8 +189,7 @@
                         <td>{{ device.ram }}</td>
                         <td>{{ device.rom }}</td>
                         <td>Ksh {{ "{:,.2f}".format(device.purchase_price or 0) }}</td>
-                        <td>Ksh {{ "{:,.2f}".format(device.price_cash or 0) }}</td>
-                        <td>Ksh {{ "{:,.2f}".format(device.price_credit or 0) }}</td>
+                        <td>Ksh {{ "{:,.2f}".format(device.selling_price or 0) }}</td>
 
                         <td>
                             <span class="badge fs-6 bg-{{ 'success' if device.status == 'available' else 'secondary' }}">
