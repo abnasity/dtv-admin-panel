@@ -418,17 +418,7 @@ def assign_staff_to_order(order):
     return None
 
 
-# COMPLETED ORDERS
-@bp.route('/orders/completed')
-@login_required
-@admin_required
-def completed_orders():
-    """Admin view: List of all completed orders"""
-    orders = CustomerOrder.query.filter_by(status='completed') \
-        .order_by(CustomerOrder.created_at.desc()) \
-        .all()
-    
-    return render_template('admin/completed_orders.html', orders=orders)
+
 
 
 
@@ -439,22 +429,7 @@ def completed_orders():
 def view_assignments():
     return render_template('admin/view_assignments.html')
 
-# DELETE CUSTOMER
-@bp.route('/<int:id>', methods=['DELETE'])
-@login_required
-@admin_required
-def delete_customer(id):
-    """Delete a customer by ID"""
-    customer = Customer.query.get_or_404(id)
 
-    try:
-        db.session.delete(customer)
-        db.session.commit()
-        return '', 204
-    except Exception as e:
-        db.session.rollback()
-        print(f" Delete failed for customer {id}: {e}")
-        return jsonify({'error': 'Delete failed'}), 500
     
 # ADMIN NOTIFICATIONS
 @bp.route('/admin/notifications')
