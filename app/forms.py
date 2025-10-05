@@ -116,6 +116,17 @@ class SaleForm(FlaskForm):
         validators=[DataRequired(), NumberRange(min=0)],
         places=2
     )
+    payment_type = SelectField(
+        'Payment Type',
+        choices=[('cash', 'Cash'), ('credit', 'Credit')],
+        validators=[DataRequired()]
+    )
+
+    amount_paid = DecimalField(
+        'Amount Paid',
+        validators=[DataRequired(), NumberRange(min=0)],
+        places=2
+    )
   # NEW: shop dropdown
     shop = SelectField(
         "Shop",
