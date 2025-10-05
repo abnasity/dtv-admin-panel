@@ -5,7 +5,8 @@ from app.models import Sale, Device
 from app.routes.reports import bp
 from app import db
 from sqlalchemy import func
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+
 
 @bp.route('/reports/dashboard')
 @login_required
@@ -61,28 +62,42 @@ def dashboard():
     ).order_by(func.date(Sale.sale_date)).all()
     
     # Fill in missing dates with zero values
-    date_dict = {(thirty_days_ago + timedelta(days=i)).date(): {'count': 0, 'revenue': 0.0} 
-                for i in range(31)}
+    date_dict = {
+        (thirty_days_ago + timedelta(days=i)).date(): {'count': 0, 'revenue': 0.0}
+        for i in range(31)
+    }
     
     for row in sales_data:
         date_dict[row.date] = {'count': row.count, 'revenue': float(row.revenue or 0)}
     
+    # --- FIXED: properly indented helper and chart logic ---
+    def safe_parse_date(d):
+        if isinstance(d, date):
+            return d
+        try:
+            return datetime.strptime(d, "%Y-%m-%d").date()
+        except Exception:
+            return None
+
+    parsed_dates = [safe_parse_date(d) for d in date_dict.keys()]
+    parsed_dates = [d for d in parsed_dates if d]
+
     chart_data = {
-        'dates': [str(date) for date in sorted(date_dict.keys())],
+        'dates': [d.strftime("%Y-%m-%d") for d in sorted(parsed_dates)],
         'sales': [data['count'] for data in date_dict.values()],
         'revenue': [data['revenue'] for data in date_dict.values()]
     }
-    
-    # Get payment type breakdown
+
+    # Payment type breakdown
     payment_data = {
         'cash_sales': Sale.query.filter_by(payment_type='cash').count(),
         'credit_sales': Sale.query.filter_by(payment_type='credit').count()
     }
     
-    # Get recent sales
+    # Recent sales
     recent_sales = Sale.query.order_by(Sale.sale_date.desc()).limit(5).all()
     
-    # Get top products
+    # Top products
     top_products = db.session.query(
         Device.brand,
         Device.model,
@@ -95,12 +110,16 @@ def dashboard():
         func.count(Sale.id).desc()
     ).limit(5).all()
     
-    return render_template('reports/dashboard.html',
-                         stats=stats,
-                         chart_data=chart_data,
-                         payment_data=payment_data,
-                         recent_sales=recent_sales,
-                         top_products=top_products)
+    return render_template(
+        'reports/dashboard.html',
+        stats=stats,
+        chart_data=chart_data,
+        payment_data=payment_data,
+        recent_sales=recent_sales,
+        top_products=top_products
+    )
+
+
 @bp.route('/reports/summary')
 @login_required
 @admin_required
@@ -108,26 +127,19 @@ def summary():
     days = request.args.get('days', 30, type=int)
     cutoff_date = datetime.now() - timedelta(days=days)
     
-    # Get current period sales metrics
     total_sales = Sale.query.filter(Sale.sale_date >= cutoff_date).count()
     total_revenue = db.session.query(
         func.sum(Sale.sale_price)
-    ).filter(
-        Sale.sale_date >= cutoff_date
-    ).scalar() or 0
+    ).filter(Sale.sale_date >= cutoff_date).scalar() or 0
     
-    # Get previous period metrics for growth calculation
     prev_cutoff = cutoff_date - timedelta(days=days)
     prev_sales = Sale.query.filter(
         Sale.sale_date.between(prev_cutoff, cutoff_date)
     ).count()
     prev_revenue = db.session.query(
         func.sum(Sale.sale_price)
-    ).filter(
-        Sale.sale_date.between(prev_cutoff, cutoff_date)
-    ).scalar() or 0
+    ).filter(Sale.sale_date.between(prev_cutoff, cutoff_date)).scalar() or 0
     
-    # Calculate growth rates safely
     sales_growth = ((total_sales - prev_sales) / prev_sales * 100) if prev_sales > 0 else 0
     revenue_growth = ((total_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
     
@@ -148,7 +160,8 @@ def summary():
         ).scalar() or 0, 2)
     }
     
-    return render_template('reports/reports_summary.html',
+    return render_template(
+        'reports/reports_summary.html',
         days=days,
         sales_metrics=sales_metrics,
         inventory_metrics=inventory_metrics,
