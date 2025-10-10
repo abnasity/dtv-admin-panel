@@ -2,7 +2,7 @@
 
 **Developer:** Kipngeno Abednego  
 **Project Type:** Capstone Project  
-**Deployment:** Live on [Render](https://diamond-tree-ventures.onrender.com)
+**Deployment:** Live on [diamondtreeventures.top](https://diamondtreeventures.top)
 
 ---
 
@@ -37,7 +37,7 @@
 ## ✅ Features Implemented
 
 ### 🔧 Core System
-- 🟢 Successfully deployed on **Render**
+- 🟢 Successfully deployed on **diamondtreeventures.top**
 
 ### 🧑‍💼 Admin Functionality
 - Add devices to inventory and public homepage  
