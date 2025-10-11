@@ -39,23 +39,34 @@ class ProfileForm(FlaskForm):
             
 # USER REGISTRATION FORM          
 class RegisterForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
-    password = PasswordField('Password', validators=[DataRequired()])
-    role = SelectField('Role', choices=[('staff', 'Staff'), ('admin', 'Admin')], validators=[DataRequired()])
-    address = StringField('Address', validators=[Optional()])
-    submit = SubmitField('Create User')
+    username = StringField("Username", validators=[Optional()])
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    role = SelectField(
+        "Role",
+        choices=[
+            ("admin", "Admin"),
+            ("staff", "Staff")
+        ],
+        validators=[DataRequired()]
+    )
+    address = StringField("Address", validators=[Optional()])
+    submit = SubmitField("Create User")
 
-    def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-        if user:
-            raise ValidationError('Username already in use. Please choose a different one.')
+    def validate(self):
+        rv = super().validate()
+        if not rv:
+            return False
 
-    def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
-        if user:
-            raise ValidationError('Email already registered. Please use a different one.')
-
+        # Require username and address only if staff
+        if self.role.data == "staff":
+            if not self.username.data.strip():
+                self.username.errors.append("Username is required for staff members.")
+                return False
+            if not self.address.data.strip():
+                self.address.errors.append("Address is required for staff members.")
+                return False
+        return True
 
 
     
@@ -77,13 +88,20 @@ class DeviceForm(FlaskForm):
         validators=[Optional(), Length(min=15, max=15, message="IMEI must be exactly 15 digits long.")],
     )
     model = StringField("Model", validators=[DataRequired(), Length(max=50)])
-    ram = StringField("RAM", validators=[DataRequired(), Length(max=20)])
-    rom = StringField("ROM", validators=[DataRequired(), Length(max=20)])
+    ram = SelectField(
+        'RAM',
+        choices=[('4GB', '4GB'), ('6GB', '6GB'), ('8GB', '8GB')],
+        validators=[DataRequired()]
+    )
+    rom = SelectField(
+        'ROM',
+        choices=[('64GB', '64GB'), ('128GB', '128GB'), ('256GB', '256GB'), ('512GB', '512GB')],
+        validators=[DataRequired()]
+    )
     purchase_price = DecimalField("Purchase Price", validators=[DataRequired(), NumberRange(min=0)], places=2)
-    price_cash = DecimalField("Cash Price", validators=[Optional(), NumberRange(min=0)])
+    price_cash = DecimalField("Selling Price", validators=[Optional(), NumberRange(min=0)])
     price_credit = DecimalField("Credit Price", validators=[Optional(), NumberRange(min=0)])
     description = TextAreaField("Description", validators=[Optional()])
-    notes = TextAreaField("Notes")
     assigned_staff_id = SelectField("Assign to Staff", coerce=int, validators=[DataRequired()])
     submit = SubmitField("Save Device")
 
