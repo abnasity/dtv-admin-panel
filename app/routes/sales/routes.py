@@ -8,14 +8,14 @@ from app.utils.helpers import generate_receipt_number
 from app import db
 from decimal import Decimal
 from datetime import datetime
-from xhtml2pdf import pisa
 from io import BytesIO
 import base64
 import os
 from flask import current_app
 from collections import defaultdict
-import imgkit
 import io
+from weasyprint import HTML
+from flask import make_response
 
 
 
@@ -153,14 +153,12 @@ def download_receipt_image(sale_id):
     }
 
     html = render_template('receipt.html', receipt=receipt_data)
-    img_bytes = imgkit.from_string(html, False, options={'format': 'png'})
+    pdf = HTML(string=html).write_pdf()
 
-    return send_file(
-        io.BytesIO(img_bytes),
-        mimetype='image/png',
-        as_attachment=True,
-        download_name=f"receipt_{sale.id}.png"
-    )
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=receipt_{sale.id}.pdf'
+    return response
 
 
 # COMPLETE SALE
