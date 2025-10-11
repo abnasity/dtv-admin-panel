@@ -84,6 +84,7 @@ class Device(db.Model):
     rom = db.Column(db.String(20), nullable=False)
     purchase_price = db.Column(Numeric(10, 2), nullable=False)
     price_cash = db.Column(Numeric(10, 2), nullable=True)
+    price_credit = db.Column(Numeric(10, 2), nullable=True)
     description = db.Column(db.Text, default="No description available.")
     status = db.Column(db.String(20), default='available', index=True)
     arrival_date = db.Column(db.DateTime, default=datetime.utcnow)
