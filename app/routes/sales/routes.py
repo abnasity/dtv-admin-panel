@@ -14,8 +14,7 @@ import base64
 import os
 from flask import current_app
 from collections import defaultdict
-from weasyprint import HTML
-from flask import make_response
+import imgkit
 import io
 
 
@@ -154,12 +153,14 @@ def download_receipt_image(sale_id):
     }
 
     html = render_template('receipt.html', receipt=receipt_data)
-    pdf = HTML(string=html).write_pdf()
+    img_bytes = imgkit.from_string(html, False, options={'format': 'png'})
 
-    response = make_response(pdf)
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'attachment; filename=receipt_{sale.id}.pdf'
-    return response
+    return send_file(
+        io.BytesIO(img_bytes),
+        mimetype='image/png',
+        as_attachment=True,
+        download_name=f"receipt_{sale.id}.png"
+    )
 
 
 # COMPLETE SALE
@@ -194,7 +195,6 @@ def create_sale():
     db.session.add(sale)
     db.session.commit()
 
-    # 2. (Optional) Generate the receipt image here if needed
 
     # 3. Redirect to download route
     return redirect(url_for("download_receipt_image", sale_id=sale.id))
