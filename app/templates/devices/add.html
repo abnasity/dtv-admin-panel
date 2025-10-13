@@ -16,32 +16,39 @@
                 <div class="card-body">
                     <form id="deviceForm" method="POST" enctype="multipart/form-data">
                         {{ form.csrf_token }}
-                       
-                        <!-- Scanner Section -->
-                        <div class="mb-3">
-                            <label for="imeiInputField" class="form-label">IMEI (15-digit)</label>
-                            <input type="text" name="imei" id="imeiInputField" class="form-control" placeholder="Scan or enter 15-digit IMEI" required>
-                        </div>
 
-                        <div class="text-center mb-3">
-                            <button type="button" class="btn btn-success me-2" id="startButton">
-                                <i class="fas fa-camera"></i> Start Scanner
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="stopButton" disabled>
-                                <i class="fas fa-stop"></i> Stop Scanner
-                            </button>
-                        </div>
+                     <!-- IMEI Section (Scanner + Input) -->
+                <div class="mb-3">
+                    {{ form.imei.label(class="form-label") }}
+                    <div class="input-group">
+                        {{ form.imei(class="form-control", id="imeiInputField", placeholder="Scan or enter 15-digit IMEI", required=true) }}
+                        <button type="button" class="btn btn-success" id="startButton">
+                            <i class="fas fa-camera"></i> Scan
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="stopButton" disabled>
+                            <i class="fas fa-stop"></i> Stop
+                        </button>
+                    </div>
 
-                        <div id="scanner-status" class="text-danger"></div>
+                    <!-- ✅ Validation error should be outside the input-group -->
+                    {% if form.imei.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.imei.errors[0] }}
+                    </div>
+                    {% endif %}
 
-                        <!-- Scanner viewport -->
-                        <div id="scanner-container" class="mt-3">
-                            <div class="scan-line"></div>
-                            <div id="interactive"></div>
-                        </div>
-                        
-                        <!-- Rest of your form fields -->
-                        {{ form.brand.label(class="form-label") }}
+                    <div id="scanner-status" class="text-danger mt-2"></div>
+                </div>
+
+                <!-- Scanner viewport -->
+                <div id="scanner-container" class="mt-3">
+                    <div class="scan-line"></div>
+                    <div id="interactive"></div>
+                </div>
+
+
+                        <!-- ✅ Rest of form fields -->
+                        {{ form.brand.label(class="form-label mt-3") }}
                         {{ form.brand(class="form-control", required=true) }}
 
                         {{ form.model.label(class="form-label mt-3") }}
@@ -65,8 +72,6 @@
                             {{ form.price_cash(class="form-control", required=true) }}
                         </div>
 
-                       
-                     
                         {{ form.assigned_staff_id.label(class="form-label mt-3") }}
                         {{ form.assigned_staff_id(class="form-select", required=true) }}
 
@@ -87,7 +92,7 @@
     position: relative;
     width: 100%;
     max-width: 400px;
-    height: 80px; /* thin visible strip */
+    height: 80px;
     margin: 0 auto;
     border: 3px solid #dc3545;
     border-radius: 8px;
@@ -119,9 +124,8 @@
 let activeFieldId = 'imeiInputField';
 let alreadyScanned = false;
 
-// Adjustable scan band settings
-const SCAN_BAND_HEIGHT = 10; // % of frame height
-const SCAN_BAND_CENTER = 50; // % from top (50 = middle)
+const SCAN_BAND_HEIGHT = 10;
+const SCAN_BAND_CENTER = 50;
 
 function startScanner(inputId) {
   activeFieldId = inputId || 'imeiInputField';
@@ -158,10 +162,7 @@ function startScanner(inputId) {
         ]
     },
     locate: true,
-    locator: {
-        patchSize: "small",
-        halfSample: true
-    }
+    locator: { patchSize: "small", halfSample: true }
   }, function(err) {
     if (err) {
         console.error(err);
@@ -170,7 +171,7 @@ function startScanner(inputId) {
     }
     Quagga.start();
     document.getElementById('stopButton').disabled = false;
-    document.getElementById('scanner-status').innerText = "📸 Scanner active. Aim at IMEI 1 (top barcode).";
+    document.getElementById('scanner-status').innerText = "📸 Scanner active. Aim at IMEI barcode.";
   });
 
   Quagga.onDetected(function(result) {
@@ -183,7 +184,6 @@ function startScanner(inputId) {
       document.getElementById('scanner-status').innerText = `✅ IMEI Detected: ${code}`;
       Quagga.stop();
       document.getElementById('stopButton').disabled = true;
-      document.getElementById('deviceForm').submit();
     }
   });
 }
