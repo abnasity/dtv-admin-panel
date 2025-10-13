@@ -183,6 +183,7 @@ class Sale(db.Model):
     payment_type = db.Column(db.String(20), nullable=False)  # 'cash', 'credit'
     amount_paid = db.Column(db.Numeric(10, 2), nullable=False)
     sale_date = db.Column(db.DateTime, default=datetime.utcnow)
+    shop = db.Column(db.String(100), nullable=True)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     notes = db.Column(db.Text)
 

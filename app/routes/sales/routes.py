@@ -100,7 +100,8 @@ def complete_sale():
             sale_price=form.sale_price.data,
             amount_paid=form.amount_paid.data,
             payment_type=form.payment_type.data,
-            sale_date=datetime.utcnow()
+            sale_date=datetime.utcnow(),
+            shop=current_user.shop if hasattr(current_user, 'shop') else form.shop.data
         )
 
         # Mark device as sold
