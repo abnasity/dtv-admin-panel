@@ -83,10 +83,10 @@ class DeviceForm(FlaskForm):
         ],
         validators=[DataRequired()],
     )
-    imei = StringField(
-        "IMEI",
-        validators=[Optional(), Length(min=15, max=15, message="IMEI must be exactly 15 digits long.")],
-    )
+    imei = StringField('IMEI', validators=[
+        DataRequired(message="IMEI is required."),
+        Length(min=15, max=15, message="IMEI must be exactly 15 digits.")
+    ])
     model = StringField("Model", validators=[DataRequired(), Length(max=50)])
     ram = SelectField(
         'RAM',
