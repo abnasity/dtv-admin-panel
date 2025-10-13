@@ -60,10 +60,10 @@ def inventory():
 @admin_required
 def add_device():
     form = DeviceForm()
-    form.set_staff_choices()  # Populate staff choices each time
+    form.set_staff_choices()
 
     if form.validate_on_submit():
-        imei = form.imei.data.strip() if form.imei.data else None
+        imei = form.imei.data.strip()  # IMEI required, no fallback to None
 
         device = Device(
             imei=imei,
@@ -72,21 +72,25 @@ def add_device():
             ram=form.ram.data,
             rom=form.rom.data,
             purchase_price=form.purchase_price.data,
-            price_cash=form.price_cash.data or 0,
-            price_credit=form.price_credit.data or 0,
-            assigned_staff_id=form.assigned_staff_id.data  # Assign the staff user here
+            price_cash=form.price_cash.data,
+            assigned_staff_id=form.assigned_staff_id.data
         )
 
         db.session.add(device)
         try:
             db.session.commit()
-            flash(f'{device.brand} {device.model} added and assigned successfully', 'success')
+            flash(f'{device.brand} {device.model} added successfully.', 'success')
             return redirect(url_for('devices.inventory'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error adding device: {str(e)}', 'danger')
+            flash(f'Error adding device: {e}', 'danger')
+
+    # 👇 Log form errors clearly in terminal
+    if form.errors:
+        print("⚠️ Form errors:", form.errors)
 
     return render_template('devices/add.html', form=form)
+
 
 
 
