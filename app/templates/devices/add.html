@@ -17,37 +17,27 @@
                     <form id="deviceForm" method="POST" enctype="multipart/form-data">
                         {{ form.csrf_token }}
 
-                     <!-- IMEI Section (Scanner + Input) -->
-                <div class="mb-3">
-                    {{ form.imei.label(class="form-label") }}
-                    <div class="input-group">
-                        {{ form.imei(class="form-control", id="imeiInputField", placeholder="Scan or enter 15-digit IMEI", required=true) }}
-                        <button type="button" class="btn btn-success" id="startButton">
-                            <i class="fas fa-camera"></i> Scan
-                        </button>
-                        <button type="button" class="btn btn-secondary" id="stopButton" disabled>
-                            <i class="fas fa-stop"></i> Stop
-                        </button>
-                    </div>
+                        <div class="mb-3">
+                            {{ form.imei.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.imei(class="form-control", id="imeiInputField", placeholder="Enter or scan 15-digit IMEI", required=true) }}
+                                <button type="button" class="btn btn-primary" id="add-device-scan-btn">
+                                    <i class="fas fa-camera"></i> Scan
+                                </button>
+                                <label for="add-device-file-input" class="btn btn-outline-secondary mb-0" style="cursor: pointer;">
+                                    <i class="fas fa-file-upload"></i> Upload
+                                </label>
+                                <input id="add-device-file-input" type="file" accept="image/*" class="d-none">
+                            </div>
+                            
+                            <div id="add-device-imei-status" class="small mt-2 text-muted">Ready to scan</div>
+                            {% if form.imei.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.imei.errors[0] }}
+                            </div>
+                            {% endif %}
+                        </div>
 
-                    <!-- ✅ Validation error should be outside the input-group -->
-                    {% if form.imei.errors %}
-                    <div class="text-danger small mt-1">
-                        {{ form.imei.errors[0] }}
-                    </div>
-                    {% endif %}
-
-                    <div id="scanner-status" class="text-danger mt-2"></div>
-                </div>
-
-                <!-- Scanner viewport -->
-                <div id="scanner-container" class="mt-3">
-                    <div class="scan-line"></div>
-                    <div id="interactive"></div>
-                </div>
-
-
-                        <!-- ✅ Rest of form fields -->
                         {{ form.brand.label(class="form-label mt-3") }}
                         {{ form.brand(class="form-control", required=true) }}
 
@@ -84,115 +74,352 @@
         </div>
     </div>
 </div>
+
+<div id="scannerModal" aria-hidden="true">
+    <div class="scannerBox" role="dialog" aria-modal="true" aria-label="IMEI scanner">
+      <div class="video-wrap" id="videoWrap">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay" class="overlay"></canvas>
+      </div>
+      <div class="hint" style="margin-top:8px; text-align:center; color:#6b7280;">Point the camera at the phone box barcode or IMEI label.</div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px">
+        <div style="display:flex;gap:8px">
+          <button id="flipBtn" class="btn-ghost" type="button">Flip</button>
+          <button id="closeBtn" class="btn-ghost" type="button">Close</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="snapBtn" class="btn-primary" type="button">Snap & Scan</button>
+        </div>
+      </div>
+    </div>
+</div>
+  
+<div id="cropModal" aria-hidden="true">
+    <div class="cropper-card">
+      <h3 style="margin:0 0 8px 0">Crop uploaded image (draw to select)</h3>
+      <div class="cropper-wrap" id="cropWrap">
+        <canvas id="cropCanvas"></canvas>
+        <canvas id="cropOverlay"></canvas>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:10px; align-items:center;">
+        <button id="cropScanBtn" class="btn-primary" type="button">Crop & Scan</button>
+        <button id="resetCropBtn" class="btn-ghost" type="button">Reset</button>
+        <button id="closeCropBtn" class="btn-ghost" type="button">Close</button>
+        <button id="ocrBtn" class="btn-ghost" type="button">OCR (Tesseract)</button>
+        <div style="flex:1"></div>
+        <div id="uploadHint" style="color:var(--muted); font-size:.95rem;"></div>
+      </div>
+    </div>
+</div>
 {% endblock %}
 
+
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js" defer></script>
+
 <style>
-#scanner-container {
-    position: relative;
-    width: 100%;
-    max-width: 400px;
-    height: 80px;
-    margin: 0 auto;
-    border: 3px solid #dc3545;
-    border-radius: 8px;
-    overflow: hidden;
-    background: rgba(0,0,0,0.05);
-}
-.scan-line {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: #28a745;
-    animation: moveLine 2s linear infinite;
-    z-index: 10;
-}
-@keyframes moveLine {
-    from { top: 0; }
-    to { top: 100%; }
-}
-#interactive video {
-    width: 100%;
-    height: auto;
-}
+    .imeiInputField.valid { color: #198754; border-color: #198754; }
+    #add-device-imei-status.valid { color: #198754; font-weight: bold; }
+  
+    #scannerModal { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(2,6,23,0.6); z-index: 1060; visibility:hidden; opacity:0; transition:.18s; }
+    #scannerModal.open { visibility:visible; opacity:1; }
+    .scannerBox { width:96%; max-width:920px; background:#fff; padding:12px; border-radius:12px; box-shadow:0 16px 60px rgba(2,6,23,0.35); }
+    .video-wrap{ position:relative; border-radius:10px; overflow:hidden; background:#000; height:460px; display:flex; align-items:center; justify-content:center; }
+    .video-wrap video { width:100%; height:100%; object-fit:cover; display:block; }
+    canvas.overlay { position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; }
+  
+    #cropModal { display:none; position:fixed; inset:0; align-items:center; justify-content:center; background: rgba(2,6,23,0.6); z-index:1070; }
+    .cropper-card { background:#fff; padding:12px; border-radius:10px; max-width:920px; width:96%; }
+    .cropper-wrap{ position:relative; height:420px; display:flex; align-items:center; justify-content:center; background:#fff; border-radius:8px; overflow:hidden; }
+    #cropCanvas, #cropOverlay { position:absolute; left:0; top:0; display:block; width:100%; height:100%; }
+    
+    .btn-ghost { background:#fff; border:1px solid #dee2e6; padding:.375rem .75rem; border-radius:.25rem; cursor:pointer; }
+    #snapBtn.btn-primary { background-color: #0d6efd; color: #fff; border-color: #0d6efd; }
+    @media (max-width:980px){ .video-wrap{height:320px} .cropper-wrap{height:320px} }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
 <script>
-let activeFieldId = 'imeiInputField';
-let alreadyScanned = false;
+document.addEventListener('DOMContentLoaded', function () {
+    (function(){
+        'use strict';
+        const PERFORMANCE = { SCAN_INTERVAL: 100, MAX_OCR_DIMENSION: 800, FAST_PREPROCESS: true };
+        const $ = id => document.getElementById(id);
 
-const SCAN_BAND_HEIGHT = 10;
-const SCAN_BAND_CENTER = 50;
-
-function startScanner(inputId) {
-  activeFieldId = inputId || 'imeiInputField';
-  alreadyScanned = false;
-
-  document.getElementById('scanner-status').innerText = "Initializing camera...";
-
-  Quagga.init({
-    inputStream: {
-        type: "LiveStream",
-        constraints: {
-            width: 1280,
-            height: 720,
-            facingMode: "environment"
-        },
-        target: document.querySelector('#interactive'),
-        area: {
-            top: (SCAN_BAND_CENTER - SCAN_BAND_HEIGHT / 2) + "%",
-            right: "0%",
-            left: "0%",
-            bottom: (100 - (SCAN_BAND_CENTER + SCAN_BAND_HEIGHT / 2)) + "%"
+        // --- ADAPTATION: Target the correct elements on this page ---
+        const imeiInput = $('imeiInputField');
+        const statusText = $('add-device-imei-status');
+        
+        function setStatus(msg, valid=false){
+            if(statusText){
+                statusText.innerHTML = msg || '';
+                statusText.classList.toggle('valid', !!valid);
+                if (valid) {
+                    statusText.classList.remove('text-muted', 'text-danger');
+                    statusText.classList.add('text-success');
+                }
+            }
         }
-    },
-    decoder: {
-        readers: [
-            "code_128_reader",
-            "code_39_reader",
-            "code_39_vin_reader",
-            "ean_reader",
-            "ean_8_reader",
-            "upc_reader",
-            "upc_e_reader",
-            "i2of5_reader"
-        ]
-    },
-    locate: true,
-    locator: { patchSize: "small", halfSample: true }
-  }, function(err) {
-    if (err) {
-        console.error(err);
-        document.getElementById('scanner-status').innerText = "⚠️ Camera access failed. Allow permissions.";
-        return;
-    }
-    Quagga.start();
-    document.getElementById('stopButton').disabled = false;
-    document.getElementById('scanner-status').innerText = "📸 Scanner active. Aim at IMEI barcode.";
-  });
+        function playBeep(){ try{ const ctx = new (window.AudioContext||window.webkitAudioContext)(); const o = ctx.createOscillator(); const g = ctx.createGain(); o.type='sine'; o.frequency.value=880; g.gain.value=0.02; o.connect(g); g.connect(ctx.destination); o.start(); setTimeout(()=>{ o.stop(); ctx.close(); },120);}catch(e){} }
 
-  Quagga.onDetected(function(result) {
-    if (alreadyScanned) return;
+        const imeiCache = new Map();
+        function validateIMEI(imei){
+            if(imeiCache.has(imei)) return imeiCache.get(imei);
+            if(!/^\d{15}$/.test(imei)){ imeiCache.set(imei,false); return false; }
+            let sum=0;
+            for(let i=0;i<15;i++){ let d=parseInt(imei.charAt(14-i),10); if(i%2===1){ d*=2; if(d>9) d-=9; } sum+=d; }
+            const ok = sum % 10 === 0; imeiCache.set(imei, ok); return ok;
+        }
+        function computeLuhnCheckDigit(first14){
+            if(!/^[0-9]{14}$/.test(first14)) return null;
+            for(let d=0; d<=9; d++) if(validateIMEI(first14 + d)) return String(d);
+            return null;
+        }
 
-    const code = result.codeResult.code;
-    if (/^\d{15}$/.test(code)) {
-      alreadyScanned = true;
-      document.getElementById(activeFieldId).value = code;
-      document.getElementById('scanner-status').innerText = `✅ IMEI Detected: ${code}`;
-      Quagga.stop();
-      document.getElementById('stopButton').disabled = true;
-    }
-  });
-}
+        function extractIMEIFromText(text){
+            if(!text) return null;
+            const fastMatch = text.match(/\d{15}/);
+            if(fastMatch && validateIMEI(fastMatch[0])) return fastMatch[0];
+            const s = String(text).replace(/\u00A0/g,' ');
+            const labelRegex = /IMEI\s*1?\s*[:\-]?\s*([0-9]{14,15})/ig;
+            let match, found=[];
+            while((match = labelRegex.exec(s)) !== null) found.push(match[1]);
+            if(found.length){
+                for(const cand of found) if(cand.length===15 && validateIMEI(cand)) return cand;
+                for(const cand of found) if(cand.length===14){ const cd = computeLuhnCheckDigit(cand); if(cd!==null) return cand + cd; }
+                return found[0];
+            }
+            const seq15 = s.match(/\d{15}/g);
+            if(seq15 && seq15.length){ for(const t of seq15) if(validateIMEI(t)) return t; return seq15[0]; }
+            const seq14 = s.match(/\d{14}/g);
+            if(seq14 && seq14.length){ for(const t of seq14){ const cd = computeLuhnCheckDigit(t); if(cd!==null) return t + cd; } return seq14[0]; }
+            return null;
+        }
 
-document.getElementById('startButton').addEventListener('click', () => startScanner());
-document.getElementById('stopButton').addEventListener('click', () => {
-  Quagga.stop();
-  document.getElementById('stopButton').disabled = true;
-  document.getElementById('scanner-status').innerText = "🛑 Scanner stopped.";
+        const canvasPool = [];
+        function getCanvasFromPool(){ if(canvasPool.length>0) return canvasPool.pop(); const c=document.createElement('canvas'); c.style.display='none'; return c; }
+        function returnCanvasToPool(c){ if(canvasPool.length<5) canvasPool.push(c); }
+
+        function drawVideoToCanvas(canvas, videoEl, scale = 0.7){
+            const w = Math.floor((videoEl.videoWidth || videoEl.clientWidth) * scale);
+            const h = Math.floor((videoEl.videoHeight || videoEl.clientHeight) * scale);
+            if(!w || !h) return false;
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(videoEl, 0, 0, w, h);
+            return true;
+        }
+
+        function preprocessForOCR(srcCanvas, maxDim = PERFORMANCE.MAX_OCR_DIMENSION){
+            const sw = srcCanvas.width, sh = srcCanvas.height;
+            const scale = Math.min(1, maxDim / Math.max(sw, sh));
+            const tw = Math.max(1, Math.round(sw * scale)), th = Math.max(1, Math.round(sh * scale));
+            const out = getCanvasFromPool();
+            out.width = tw; out.height = th;
+            const octx = out.getContext('2d');
+            octx.drawImage(srcCanvas, 0, 0, tw, th);
+            if(PERFORMANCE.FAST_PREPROCESS){
+                const im = octx.getImageData(0,0,tw,th);
+                const d = im.data; const contrast = 1.3;
+                for(let i=0;i<d.length;i+=4){
+                    const lum = (d[i]+d[i+1]+d[i+2]) / 3; let v = (lum - 128) * contrast + 128; v = Math.max(0, Math.min(255, v));
+                    d[i] = d[i+1] = d[i+2] = v;
+                }
+                octx.putImageData(im,0,0);
+            }
+            return out;
+        }
+
+        let tesseractWorker = null;
+        async function loadTesseract(){
+            if(tesseractWorker) return tesseractWorker;
+            if(!window.Tesseract) throw new Error('Tesseract not available');
+            tesseractWorker = window.Tesseract.createWorker({ logger: m => {} });
+            await tesseractWorker.load(); await tesseractWorker.loadLanguage('eng'); await tesseractWorker.initialize('eng');
+            return tesseractWorker;
+        }
+
+        (function warmTesseract(){
+            setTimeout(()=>{ if(window.Tesseract) { loadTesseract().catch(()=>{}); } }, 1200);
+        })();
+
+        function CameraScanner(scope){
+            const { scannerModal, video, overlay } = scope;
+            let currentStream = null, useFront = false, detectionInterval = null, isProcessing = false;
+
+            async function startCamera(isFront = false){
+                useFront = isFront;
+                stopCamera();
+                try{
+                    setStatus('Requesting camera...');
+                    const constraints = { video: { facingMode: useFront ? 'user' : 'environment', width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false };
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    currentStream = stream; video.srcObject = stream;
+                    await new Promise((res, rej) => { video.onloadedmetadata = ()=>res(); video.onerror = e=>rej(e); });
+                    try{ await video.play(); }catch(e){}
+                    overlay.width = video.clientWidth; overlay.height = video.clientHeight;
+                    setStatus('Camera ready — scanning');
+                    if('BarcodeDetector' in window) startOptimizedDetection(); else setStatus('No native barcode support — use Snap & Scan');
+                }catch(e){
+                    setStatus('⚠️ Camera not available. Please check permissions.');
+                }
+            }
+            function stopCamera(){
+                if(detectionInterval){ clearInterval(detectionInterval); detectionInterval=null; }
+                if(currentStream){ currentStream.getTracks().forEach(t=>t.stop()); currentStream=null; }
+                try{ video.srcObject = null; }catch(e){}
+                isProcessing=false;
+            }
+            function startOptimizedDetection(){
+                setStatus('Starting continuous detection');
+                detectionInterval = setInterval(async ()=>{
+                    if(!scannerModal.classList.contains('open') || isProcessing) return;
+                    try{
+                        const c = getCanvasFromPool();
+                        if(!drawVideoToCanvas(c, video, 0.6)){ returnCanvasToPool(c); return; }
+                        const detector = new BarcodeDetector({ formats: ['code_128','ean_13','ean_8','upc_a','upc_e'] });
+                        const results = await detector.detect(c);
+                        if(results && results.length){
+                            const raw = results[0].rawValue || '';
+                            if(results[0].boundingBox) drawOverlayRect(results[0].boundingBox, c, video, overlay);
+                            const candidate = extractIMEIFromText(raw);
+                            if(candidate){ processFound(candidate); returnCanvasToPool(c); return; }
+                        }
+                        returnCanvasToPool(c);
+                    }catch(e){}
+                }, PERFORMANCE.SCAN_INTERVAL);
+            }
+            async function manualSnap(){
+                if(isProcessing){ setStatus('Processing...'); return; }
+                const c = getCanvasFromPool();
+                if(!drawVideoToCanvas(c, video, 0.8)){ setStatus('Camera not ready'); returnCanvasToPool(c); return; }
+                setStatus('Captured frame — scanning');
+                try{
+                    isProcessing=true;
+                    if('BarcodeDetector' in window){
+                        const results = await new BarcodeDetector({ formats: ['code_128','ean_13'] }).detect(c);
+                        if(results && results.length && extractIMEIFromText(results[0].rawValue)){
+                             processFound(extractIMEIFromText(results[0].rawValue)); return;
+                        }
+                    }
+                    const pre = preprocessForOCR(c, 600);
+                    const worker = await loadTesseract();
+                    const result = await worker.recognize(pre);
+                    const candidate = extractIMEIFromText(result.data.text);
+                    if(candidate) processFound(candidate); else setStatus('No IMEI found. Try moving closer.');
+                }catch(e){ setStatus('Snap failed'); } finally { isProcessing=false; returnCanvasToPool(c); }
+            }
+            function drawOverlayRect(bb, srcCanvas, videoEl, overlayEl){
+                try{
+                    const sX = videoEl.clientWidth / srcCanvas.width, sY = videoEl.clientHeight / srcCanvas.height;
+                    const r = { x: bb.x*sX, y: bb.y*sY, width: bb.width*sX, height: bb.height*sY };
+                    const ov = overlayEl;
+                    ov.width = videoEl.clientWidth; ov.height = videoEl.clientHeight;
+                    const ctx = ov.getContext('2d'); ctx.clearRect(0,0,ov.width,ov.height);
+                    ctx.lineWidth = 3; ctx.strokeStyle = '#22c55e'; ctx.fillStyle = '#22c55e22';
+                    ctx.strokeRect(r.x, r.y, r.width, r.height); ctx.fillRect(r.x, r.y, r.width, r.height);
+                    setTimeout(()=>{ try{ ctx.clearRect(0,0,ov.width,ov.height); } catch(e){} }, 1200);
+                }catch(e){}
+            }
+            return { startCamera, stopAll: stopCamera, manualSnap };
+        }
+
+        function UploadScanner(scope){
+            const { cropModal, cropCanvas, cropOverlay, cropWrap, uploadHint } = scope;
+            let uploadedImage = null;
+            let cropState = { drawing:false, startX:0, startY:0, x:0, y:0, w:100, h:60 };
+
+            function openCropModalWithImage(img){
+                uploadedImage = img;
+                const rect = cropWrap.getBoundingClientRect();
+                const cw = Math.floor(rect.width), ch = Math.floor(rect.height);
+                [cropCanvas.width, cropCanvas.height, cropOverlay.width, cropOverlay.height] = [cw,ch,cw,ch];
+                const ctx = cropCanvas.getContext('2d');
+                ctx.fillStyle = '#fff'; ctx.fillRect(0,0,cw,ch);
+                const scale = Math.min(cw / img.width, ch / img.height);
+                const dW = Math.round(img.width*scale), dH = Math.round(img.height*scale);
+                const oX = Math.round((cw-dW)/2), oY = Math.round((ch-dH)/2);
+                ctx.drawImage(img, oX, oY, dW, dH);
+                cropState = { drawing:false, x: oX + Math.round(dW * 0.05), y: oY + Math.round(dH * 0.1), w: Math.round(dW * 0.9), h: Math.round(dH * 0.8) };
+                drawCropOverlay();
+                uploadHint.textContent = `Image ${img.width}×${img.height}`;
+                cropModal.style.display = 'flex';
+                setStatus('Adjust crop then press Crop & Scan');
+            }
+            function closeCropModal(){ cropModal.style.display = 'none'; uploadedImage = null; }
+            function drawCropOverlay(){
+                const ov = cropOverlay, ctx = ov.getContext('2d'), r = cropState;
+                ctx.clearRect(0,0,ov.width,ov.height); ctx.setLineDash([6,4]); ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 2;
+                ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2); ctx.setLineDash([]); ctx.fillStyle = 'rgba(96,165,250,0.08)';
+                ctx.fillRect(r.x, r.y, r.w, r.h);
+            }
+            function setupCropEvents(){
+                const el = cropOverlay;
+                const onPointerMove = (ev)=>{ if(!cropState.drawing) return; ev.preventDefault(); const p = getLocalCoords(ev, el); const sx = Math.min(cropState.startX, p.x), sy = Math.min(cropState.startY, p.y); cropState.x = sx; cropState.y = sy; cropState.w = Math.max(10, Math.max(cropState.startX, p.x) - sx); cropState.h = Math.max(10, Math.max(cropState.startY, p.y) - sy); drawCropOverlay(); };
+                const onPointerEnd = ()=>{ cropState.drawing = false; };
+                el.addEventListener('pointerdown', (ev)=>{ ev.preventDefault(); const p = getLocalCoords(ev, el); cropState = {...cropState, drawing:true, startX:p.x, startY:p.y, x:p.x, y:p.y, w:2, h:2}; drawCropOverlay(); });
+                el.addEventListener('pointermove', onPointerMove);
+                el.addEventListener('pointerup', onPointerEnd); el.addEventListener('pointerleave', onPointerEnd);
+            }
+            const getLocalCoords = (ev, c) => { const r = c.getBoundingClientRect(); return { x: Math.max(0, Math.min(c.width, (ev.clientX-r.left)*(c.width/r.width))), y: Math.max(0, Math.min(c.height, (ev.clientY-r.top)*(c.height/r.height)))}; };
+            async function cropAndScan(useOCR = false){
+                if(!uploadedImage) return setStatus('No image loaded');
+                const { x, y, w, h } = cropState;
+                const temp = getCanvasFromPool(); temp.width=w; temp.height=h;
+                const ctx = temp.getContext('2d');
+                ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(cropCanvas,x,y,w,h,0,0,w,h);
+                setStatus('Scanning cropped area...');
+                try {
+                    if(!useOCR && 'BarcodeDetector' in window){
+                        const results = await new BarcodeDetector({ formats: ['code_128','ean_13'] }).detect(temp);
+                        if(results.length && extractIMEIFromText(results[0].rawValue)){ processFound(extractIMEIFromText(results[0].rawValue)); return; }
+                    }
+                    const pre = preprocessForOCR(temp, 700);
+                    const worker = await loadTesseract();
+                    const result = await worker.recognize(pre);
+                    const imei = extractIMEIFromText(result.data.text);
+                    if(imei) processFound(imei); else setStatus('⚠️ No IMEI detected. Adjust crop and retry.');
+                } catch(e){ setStatus('Scanning failed'); } finally { returnCanvasToPool(temp); }
+            }
+            setupCropEvents();
+            return { openCropModalWithImage, closeCropModal, cropAndScan, resetCrop:()=>openCropModalWithImage(uploadedImage) };
+        }
+
+        function processFound(imei){
+            if(!imei || !imeiInput) return setStatus('No valid IMEI found');
+            imeiInput.value = imei;
+            imeiInput.classList.add('valid');
+            setStatus('✅ IMEI Detected!', true);
+            playBeep();
+            closeAllModals();
+        }
+        function closeAllModals(){
+            $('scannerModal')?.classList.remove('open');
+            cameraScanner.stopAll();
+            uploadScanner.closeCropModal();
+        }
+
+        const cameraScanner = CameraScanner({ scannerModal: $('scannerModal'), video: $('video'), overlay: $('overlay') });
+        const uploadScanner = UploadScanner({ cropModal: $('cropModal'), cropCanvas: $('cropCanvas'), cropOverlay: $('cropOverlay'), cropWrap: $('cropWrap'), uploadHint: $('uploadHint') });
+
+        $('add-device-scan-btn')?.addEventListener('click', ()=>{ $('scannerModal').classList.add('open'); cameraScanner.startCamera(); });
+        $('closeBtn')?.addEventListener('click', closeAllModals);
+        $('flipBtn')?.addEventListener('click', ()=> cameraScanner.startCamera(true));
+        $('snapBtn')?.addEventListener('click', ()=> cameraScanner.manualSnap());
+
+        const fileInput = $('add-device-file-input');
+        fileInput?.addEventListener('change', (ev)=>{
+            const file = ev.target.files[0]; if(!file) return;
+            const img = new Image();
+            img.onload = ()=> uploadScanner.openCropModalWithImage(img);
+            img.onerror = () => setStatus('Failed to load image.');
+            img.src = URL.createObjectURL(file);
+            ev.target.value = '';
+        });
+        $('cropScanBtn')?.addEventListener('click', ()=> uploadScanner.cropAndScan(false));
+        $('ocrBtn')?.addEventListener('click', ()=> uploadScanner.cropAndScan(true));
+        $('resetCropBtn')?.addEventListener('click', ()=> uploadScanner.resetCrop());
+        $('closeCropBtn')?.addEventListener('click', ()=> uploadScanner.closeCropModal());
+    })();
 });
 </script>
 {% endblock %}
