@@ -80,6 +80,7 @@ class DeviceForm(FlaskForm):
             ("samsung", "Samsung"),
             ("tecno", "Tecno"),
             ("infinix", "Infinix"),
+            ("Vivo", "Vivo"),
         ],
         validators=[DataRequired()],
     )
