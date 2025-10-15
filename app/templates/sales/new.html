@@ -229,38 +229,29 @@
                   <h2 class="page-title"><i class="fas fa-cash-register"></i> New Sale</h2>
                 </div>
               
-                <h3 style="margin-bottom: 20px; margin-top: 20px;">Scan Device IMEI</h3>
+                <h3 style="margin-bottom: 20px; margin-top: 20px;">Device IMEI</h3>
                 <div class="form-group">
-                    <div class="scan-container" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                        <div style="flex:1; min-width:220px;">
-                            {{ form.imei(id="sales-imei-input", class="scan-input", placeholder="Enter or scan IMEI number", **{'inputmode': 'numeric', 'maxlength': '20', 'style': 'width:100%; padding:.6rem .8rem; border-radius:8px; border:1px solid #e6eef8;'}) }}
-                            <div id="sales-imei-status" class="imei-status" style="font-size:.9rem; color:#6b7280; margin-top:6px;">
-                                {% if form.imei.errors %}
-                                    <span class="invalid-feedback">{% for error in form.imei.errors %}{{ error }}{% endfor %}</span>
-                                {% else %}
-                                    Ready to scan
-                                {% endif %}
-                            </div>
-                        </div>
-              
-                        <button id="sales-scan-btn" class="btn btn-primary" style="white-space:nowrap;" type="button"><i class="fas fa-camera"></i> Scan</button>
-                        <label for="fileInput" class="btn" style="white-space:nowrap; cursor:pointer; background: #e9ecef; color: var(--dark);"><i class="fas fa-file-upload"></i> Upload</label>
-                        <input id="fileInput" type="file" accept="image/*" style="display:none">
+                    {{ form.imei(id="sales-imei-input", class="form-control", placeholder="Enter IMEI from inventory", **{'inputmode': 'numeric', 'maxlength': '15'}) }}
+                    <div id="sales-imei-status" class="imei-status" style="font-size:.9rem; color:#6b7280; margin-top:6px;">
+                        {% if form.imei.errors %}
+                            <span class="invalid-feedback d-block">{% for error in form.imei.errors %}{{ error }}{% endfor %}</span>
+                        {% else %}
+                            Enter the 15-digit IMEI of the device being sold.
+                        {% endif %}
                     </div>
                 </div>
               
                 <div class="device-preview">
                     <h3 style="margin-bottom: 15px;">Device Preview</h3>
-                    <div class="device-details">
-                        <div class="detail-item"><span class="detail-label">IMEI</span><span class="detail-value">-</span></div>
-                        <div class="detail-item"><span class="detail-label">Brand</span><span class="detail-value">-</span></div>
-                        <div class="detail-item"><span class="detail-label">Model</span><span class="detail-value">-</span></div>
-                        <div class="detail-item"><span class="detail-label">Color</span><span class="detail-value">-</span></div>
-                        <div class="detail-item"><span class="detail-label">Storage</span><span class="detail-value">-</span></div>
-                        <div class="detail-item"><span class="detail-label">Purchase Price</span><span class="detail-value">-</span></div>
-                        <div class="detail-item"><span class="detail-label">Added Date</span><span class="detail-value">-</span></div>
-                        <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value" style="color: var(--success);">-</span></div>
+                    <div id="device-details-content" class="device-details">
+                        <div class="detail-item"><span class="detail-label">IMEI</span><span class="detail-value" id="preview-imei">-</span></div>
+                        <div class="detail-item"><span class="detail-label">Brand</span><span class="detail-value" id="preview-brand">-</span></div>
+                        <div class="detail-item"><span class="detail-label">Model</span><span class="detail-value" id="preview-model">-</span></div>
+                        <div class="detail-item"><span class="detail-label">Storage</span><span class="detail-value" id="preview-storage">-</span></div>
+                        <div class="detail-item"><span class="detail-label">Selling Price</span><span class="detail-value" id="preview-price">-</span></div>
+                        <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value" id="preview-status">-</span></div>
                     </div>
+                    <div id="device-not-found" class="text-danger" style="display: none;">Device not found or is already sold.</div>
                 </div>
               
                 <h3 style="margin-bottom: 20px; margin-top: 30px;">Customer Information</h3>
@@ -411,6 +402,32 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const imeiInput = document.getElementById('sales-imei-input');
+    imeiInput.addEventListener('input', function() {
+        const imei = this.value;
+        if (imei.length === 15) {
+            fetch(`/sales/check_imei/${imei}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.found) {
+                        document.getElementById('preview-imei').textContent = imei;
+                        document.getElementById('preview-brand').textContent = data.brand;
+                        document.getElementById('preview-model').textContent = data.model;
+                        document.getElementById('preview-storage').textContent = data.rom + 'GB';
+                        document.getElementById('preview-price').textContent = 'Ksh ' + data.selling_price;
+                        document.getElementById('preview-status').textContent = 'Available';
+                        document.getElementById('preview-status').style.color = 'var(--success)';
+                        document.getElementById('device-details-content').style.display = 'grid';
+                        document.getElementById('device-not-found').style.display = 'none';
+                        document.getElementById('sale_price').value = data.selling_price;
+                    } else {
+                        document.getElementById('device-details-content').style.display = 'none';
+                        document.getElementById('device-not-found').style.display = 'block';
+                    }
+                });
+        }
+    });
+
     // Original payment selection and amount update logic
     const paymentOptions = document.querySelectorAll('.payment-option');
     const hiddenPaymentTypeInput = document.getElementById('payment_type_input');
@@ -652,23 +669,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
             function openCropModalWithImage(img){
                 uploadedImage = img;
-                const rect = cropWrap.getBoundingClientRect();
-                const cw = Math.floor(rect.width), ch = Math.floor(rect.height);
-                [cropCanvas.width, cropCanvas.height, cropOverlay.width, cropOverlay.height] = [cw,ch,cw,ch];
-                
-                const ctx = cropCanvas.getContext('2d');
-                ctx.fillStyle = '#fff'; ctx.fillRect(0,0,cw,ch);
-                const scale = Math.min(cw / img.width, ch / img.height);
-                const drawW = Math.round(img.width * scale), drawH = Math.round(img.height * scale);
-                const offsetX = Math.round((cw - drawW) / 2), offsetY = Math.round((ch - drawH) / 2);
-                ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
-                
-                cropState = { drawing:false, startX:0, startY:0, x: offsetX + Math.round(drawW * 0.05), y: offsetY + Math.round(drawH * 0.1), w: Math.round(drawW * 0.9), h: Math.round(drawH * 0.8) };
-                
-                drawCropOverlay();
-                uploadHint.textContent = `Image ${img.width}×${img.height}`;
-                cropModal.style.display = 'flex';
-                setStatus('Adjust crop then press Crop & Scan');
+                cropModal.style.display = 'flex'; // Show modal first
+
+                // Defer canvas drawing until after the modal is visible
+                setTimeout(() => {
+                    const rect = cropWrap.getBoundingClientRect();
+                    const cw = Math.floor(rect.width), ch = Math.floor(rect.height);
+                    [cropCanvas.width, cropCanvas.height, cropOverlay.width, cropOverlay.height] = [cw,ch,cw,ch];
+                    
+                    const ctx = cropCanvas.getContext('2d');
+                    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,cw,ch);
+                    const scale = Math.min(cw / img.width, ch / img.height);
+                    const drawW = Math.round(img.width * scale), drawH = Math.round(img.height * scale);
+                    const offsetX = Math.round((cw - drawW) / 2), offsetY = Math.round((ch - drawH) / 2);
+                    ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+                    
+                    cropState = { drawing:false, startX:0, startY:0, x: offsetX + Math.round(drawW * 0.05), y: offsetY + Math.round(drawH * 0.1), w: Math.round(drawW * 0.9), h: Math.round(drawH * 0.8) };
+                    
+                    drawCropOverlay();
+                    uploadHint.textContent = `Image ${img.width}×${img.height}`;
+                    setStatus('Adjust crop then press Crop & Scan');
+                }, 50); // 50ms delay is a small buffer to ensure rendering
             }
             function closeCropModal(){ cropModal.style.display = 'none'; uploadedImage = null; }
             function drawCropOverlay(){

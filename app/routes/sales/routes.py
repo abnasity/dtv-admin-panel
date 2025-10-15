@@ -209,7 +209,8 @@ def check_imei(imei):
             'found': True,
             'brand': device.brand,
             'model': device.model,
-            'purchase_price': device.purchase_price
+            'rom': device.rom,
+            'selling_price': device.price_cash,
         })
     return jsonify({'found': False})
 

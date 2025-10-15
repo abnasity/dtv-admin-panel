@@ -184,7 +184,14 @@
                         
                         <td>{{ device.brand }}</td>
                         <td>{{ device.model }}</td>
-                        <td>{{ device.imei }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span id="imei-{{ device.imei }}">{{ device.imei }}</span>
+                                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard('{{ device.imei }}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </td>
                         <td>{{ device.ram }}</td>
                         <td>{{ device.rom }}</td>
                         <td>Ksh {{ "{:,.2f}".format(device.purchase_price or 0) }}</td>
@@ -239,6 +246,21 @@
 
 {% block extra_js %}
 <script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        /* success */
+        const button = document.querySelector(`button[onclick="copyToClipboard('${text}')"]`);
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+        }, 2000);
+    }, function(err) {
+        /* error */
+        alert('Could not copy text: ', err);
+    });
+}
+
 function viewDevice(imei) {
     const url = "{{ url_for('devices.view_device_by_imei', imei='__IMEI__') }}".replace('__IMEI__', imei);
     window.location.href = url;
