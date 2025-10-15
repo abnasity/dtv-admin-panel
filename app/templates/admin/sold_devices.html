@@ -2,43 +2,47 @@
 
 {% block content %}
 <div class="container">
-    <h3 class="mb-4">Sold Devices</h3>
+  <h3 class="mb-4">Sold Devices</h3>
 
-    <div class="mb-3">
-        <input type="text" id="deviceSearch" class="form-control" placeholder="Search sold devices...">
-    </div>
+  <div class="mb-3">
+      <input type="text" id="deviceSearch" class="form-control" placeholder="Search sold devices...">
+  </div>
 
-    <table class="table table-bordered table-hover">
-        <thead class="table-light">
-            <tr>
-                <th>IMEI</th>
-                <th>Brand</th>
-                <th>Model</th>
-                <th>Purchase Price</th>
-                <th>Status</th>
-                <th>Shop</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for device in devices %}
-            <tr>
-                <td>{{ device.imei }}</td>
-                <td>{{ device.brand }}</td>
-                <td>{{ device.model }}</td>
-                <td>Ksh {{ device.purchase_price }}</td>
-                <td><span class="badge bg-success fs-6">{{ device.status }}</span></td>
-                <td>
-                    {% if device.sale and device.sale.shop %}
-                        {{ device.sale.shop }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <!-- 👇 Make table responsive -->
+  <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle">
+          <thead class="table-light">
+              <tr>
+                  <th>IMEI</th>
+                  <th>Brand</th>
+                  <th>Model</th>
+                  <th>Purchase Price</th>
+                  <th>Status</th>
+                  <th>Shop</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for device in devices %}
+              <tr>
+                  <td>{{ device.imei }}</td>
+                  <td>{{ device.brand }}</td>
+                  <td>{{ device.model }}</td>
+                  <td>Ksh {{ device.purchase_price }}</td>
+                  <td><span class="badge bg-success fs-6">{{ device.status }}</span></td>
+                  <td>
+                      {% if device.sale and device.sale.shop %}
+                          {{ device.sale.shop }}
+                      {% else %}
+                          -
+                      {% endif %}
+                  </td>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+  </div>
 </div>
+
 
 <script>
 document.getElementById("deviceSearch").addEventListener("keyup", function () {
