@@ -114,8 +114,6 @@ def edit_device(imei):
             device.rom = form.rom.data
             device.purchase_price = form.purchase_price.data
             device.price_cash = form.price_cash.data or 0
-            device.price_credit = form.price_credit.data or 0
-            device.notes = form.notes.data
             device.assigned_staff_id = form.assigned_staff_id.data
 
             db.session.commit()
