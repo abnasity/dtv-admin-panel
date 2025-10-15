@@ -84,7 +84,6 @@
         <h2><i class="fas fa-warehouse me-2"></i>Device Inventory</h2>
     </div>
     <div class="col-md-6 col-12 text-md-end text-center d-flex flex-wrap justify-content-md-end justify-content-center gap-2 mt-2">
-        <a href="{{ url_for('devices.scan_page') }}" class="btn btn-primary"><i class="fas fa-camera"></i> Scan</a>
         {% if current_user.is_admin() %}
         <a href="{{ url_for('devices.add_device') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add New Device</a>
         {% endif %}
