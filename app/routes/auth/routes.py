@@ -191,16 +191,19 @@ def assigned_orders():
 @login_required
 def dashboard():
     print(f"Current user: {current_user}, authenticated: {current_user.is_authenticated}")
-    total_users = User.query.count()
-    total_devices = Device.query.filter(
-    Device.status == 'available'
-).count()
 
-  
-    return render_template('auth/dashboard.html',
-                           total_users=total_users,
-                           total_devices=total_devices,
-                           )
+    total_users = User.query.count()
+
+    total_devices = Device.query.filter(
+        Device.status == 'available',
+        Device.deleted == False
+    ).count()
+
+    return render_template(
+        'auth/dashboard.html',
+        total_users=total_users,
+        total_devices=total_devices,
+    )
 
 
 # USER MANAGEMENT
