@@ -258,27 +258,22 @@ def users():
 @admin_required
 def create_user():
     form = RegisterForm()
+    print("POST received")
 
     if form.validate_on_submit():
-        # Check duplicate email
+        print("Form validated!")
+
+        # Check for duplicate email
         existing_user = User.query.filter_by(email=form.email.data).first()
         if existing_user:
             flash('A user with this email already exists.', 'warning')
             return redirect(url_for('auth.users'))
 
-        # Only require and use address for staff
-        address = None
-        if form.role.data == 'staff':
-            address = form.address.data
-            if address == '__new__':
-                address = form.new_address.data
-
-        # Only set username and address for staff
+        # Create the user (no address)
         user = User(
             username=form.username.data if form.role.data == 'staff' else None,
             email=form.email.data,
-            role=form.role.data,
-            address=address if form.role.data == 'staff' else None
+            role=form.role.data
         )
         user.set_password(form.password.data)
 
@@ -292,11 +287,10 @@ def create_user():
             print(f"[ERROR] User creation failed: {e}")
 
         return redirect(url_for('auth.users'))
+    else:
+        print("Form errors:", form.errors)
 
-    # Render form
-    addresses = ["Address1", "Address2"]  # optional — only relevant for staff
-    return render_template('auth/create_user.html', form=form, addresses=addresses)
-
+    return render_template('auth/create_user.html', form=form)
 
 
 # TOGGLE USER STATUS

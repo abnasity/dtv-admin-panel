@@ -37,7 +37,8 @@ class ProfileForm(FlaskForm):
             if user:
                 raise ValidationError('Email already registered. Please use a different one.')
             
-# USER REGISTRATION FORM          
+       
+# USER REGISTRATION FORM
 class RegisterForm(FlaskForm):
     username = StringField("Username", validators=[Optional()])
     email = StringField("Email", validators=[DataRequired(), Email()])
@@ -50,24 +51,20 @@ class RegisterForm(FlaskForm):
         ],
         validators=[DataRequired()]
     )
-    address = StringField("Address", validators=[Optional()])
     submit = SubmitField("Create User")
 
-    def validate(self):
-        rv = super().validate()
+    def validate(self, extra_validators=None):  # ✅ keep this line
+        rv = super().validate(extra_validators=extra_validators)
         if not rv:
             return False
 
-        # Require username and address only if staff
+        # Require username only if staff
         if self.role.data == "staff":
             if not self.username.data.strip():
                 self.username.errors.append("Username is required for staff members.")
                 return False
-            if not self.address.data.strip():
-                self.address.errors.append("Address is required for staff members.")
-                return False
-        return True
 
+        return True
 
     
 
