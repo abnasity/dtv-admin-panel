@@ -150,6 +150,7 @@ class SaleForm(FlaskForm):
             ("Wachumba", "Wachumba"),
             ("ANC", "ANC"),
             ("Oasis", "Oasis"),
+            ("Onfon", "Onfon"),
         ],
         validators=[DataRequired()]
     )
