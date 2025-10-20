@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, DecimalField, RadioField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, DecimalField, HiddenField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, NumberRange, EqualTo, Optional
 from app.models import User, Device
 from flask_wtf.file import FileField, FileAllowed
@@ -158,6 +158,7 @@ class SaleForm(FlaskForm):
     customer_name = StringField('Customer Name', validators=[DataRequired(), Length(max=100)])
     customer_phone = StringField('Phone Number', validators=[DataRequired(), Length(max=15)])
     id_number = StringField('ID Number', validators=[DataRequired(), Length(max=20)])
+    staff = HiddenField('Staff')
     submit = SubmitField('Record Sale')
 
     def validate_imei(self, imei):

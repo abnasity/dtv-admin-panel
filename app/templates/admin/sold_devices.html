@@ -19,6 +19,7 @@
                   <th>Purchase Price</th>
                   <th>Status</th>
                   <th>Shop</th>
+                  <th>Sold By</th> 
               </tr>
           </thead>
           <tbody>
@@ -36,13 +37,22 @@
                           -
                       {% endif %}
                   </td>
+                  <td>
+                      {% if device.assigned_staff %}
+                          {{ device.assigned_staff.username }}
+                          {% if device.assigned_staff.email %}
+                              <small class="text-muted">({{ device.assigned_staff.email }})</small>
+                          {% endif %}
+                      {% else %}
+                          <em>Not assigned</em>
+                      {% endif %}
+                  </td>
               </tr>
               {% endfor %}
           </tbody>
       </table>
   </div>
 </div>
-
 
 <script>
 document.getElementById("deviceSearch").addEventListener("keyup", function () {

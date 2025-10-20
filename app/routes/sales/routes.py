@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, make_response, Response, send_file, abort
 from flask_login import login_required, current_user
-from app.models import Device, Sale
+from app.models import Device, Sale, User, InventoryTransaction
 from app.forms import SaleForm
 from app.routes.sales import bp
 from app.utils.decorators import staff_required
@@ -34,30 +34,31 @@ def index():
 @staff_required
 def new_sale():
     form = SaleForm()
+    device = None  # <-- ADD THIS LINE
     imei = request.args.get('imei')
 
     if imei:
         form.imei.data = imei
+        # Optionally prefetch device for display:
+        device = Device.query.filter_by(imei=imei).first()
 
     if form.validate_on_submit():
         device = Device.query.filter_by(imei=form.imei.data, status='available').first()
         if not device:
             flash('Device not found or not available', 'danger')
-            return render_template('sales/new.html', form=form)
+            return render_template('sales/new.html', form=form, device=device)
 
         try:
-            # Create sale
             sale = Sale(
                 device=device,
                 seller=current_user,
                 sale_price=form.sale_price.data,
                 payment_type=form.payment_type.data,
                 amount_paid=form.amount_paid.data,
-                shop=form.shop.data ,
+                shop=form.shop.data,
                 notes=form.notes.data
             )
             device.mark_as_sold()
-
             db.session.add(sale)
             db.session.commit()
 
@@ -67,9 +68,33 @@ def new_sale():
             db.session.rollback()
             flash(f'Error recording sale: {str(e)}', 'danger')
 
-    return render_template('sales/new.html', form=form)
+    return render_template('sales/new.html', form=form, device=device)
 
 
+# Merge imei to sale details
+@bp.route('/sales/check_imei/<imei>')
+@login_required
+def check_imei(imei):
+    """AJAX route to check device availability and assigned staff"""
+    device = Device.query.filter_by(imei=imei.strip()).first()
+
+    if not device:
+        return jsonify({'found': False, 'message': 'Device not found in inventory.'})
+
+    if device.status.lower() == 'sold':
+        return jsonify({'found': False, 'message': 'Device is already sold.'})
+
+    return jsonify({
+        'found': True,
+        'brand': device.brand,
+        'model': device.model,
+        'ram': device.ram,
+        'rom': device.rom,
+        'selling_price': float(device.price_cash or 0),
+        # the same logic that works in the device details page
+        'assigned_staff': device.assigned_staff.username if device.assigned_staff else 'Not assigned',
+        'assigned_staff_id': device.assigned_staff.id if device.assigned_staff else None
+    })
 
 
 # COMPLETE SALE
@@ -77,22 +102,23 @@ def new_sale():
 @login_required
 def complete_sale():
     form = SaleForm()
+    device = None  # define for template use
 
     if form.validate_on_submit():
-        # Check if device exists and is available
-        device = Device.query.filter_by(imei=form.imei.data).first()
+        imei = form.imei.data.strip()
+        device = Device.query.filter_by(imei=imei).first()
+
         if not device:
-            form.imei.errors.append('Device with this IMEI not found in inventory.')
-            return render_template('sales/new_sale.html', form=form)
+            flash('Device not found in inventory.', 'danger')
+            return render_template('sales/complete_sale.html', form=form)
 
-        # OPTIONAL: Ensure device isn't already sold
         if device.status.lower() == "sold":
-            form.imei.errors.append('This device is already sold.')
-            return render_template('sales/new_sale.html', form=form)
+            flash('This device is already sold.', 'danger')
+            return render_template('sales/complete_sale.html', form=form)
 
-        # Create the sale record
+        # ✅ Create the sale
         sale = Sale(
-            seller_id=current_user.id,
+            seller_id=device.assigned_staff.id if device.assigned_staff else current_user.id,
             customer_name=form.customer_name.data,
             customer_phone=form.customer_phone.data,
             id_number=form.id_number.data,
@@ -104,16 +130,25 @@ def complete_sale():
             shop=current_user.shop if hasattr(current_user, 'shop') else form.shop.data
         )
 
-        # Mark device as sold
-        device.status = "sold"  # assuming your Device model has a 'status' field
+        # ✅ Mark device as sold
+        device.status = 'sold'
 
-        db.session.add(sale)
-        db.session.commit()  # This saves both the sale and the updated device status
+        # ✅ Log transaction
+        transaction = InventoryTransaction(
+            device_id=device.id,
+            staff_id=device.assigned_staff_id or current_user.id,
+            type='sale',
+            notes=f"Device sold to {form.customer_name.data}"
+        )
 
-        # Redirect to sale details
+        db.session.add_all([sale, transaction])
+        db.session.commit()
+
+        flash('Sale recorded successfully.', 'success')
         return redirect(url_for('sales.sale_details', sale_id=sale.id))
 
-    return render_template('sales/new.html', form=form)
+    return render_template('sales/complete_sale.html', form=form, device=device)
+
 
 
 # SALE DETAILS
@@ -199,20 +234,6 @@ def create_sale():
     return redirect(url_for("download_receipt_image", sale_id=sale.id))
 
 
-# CHECK IMEI
-@bp.route('/sales/check_imei/<imei>')
-@login_required
-def check_imei(imei):
-    device = Device.query.filter_by(imei=imei, status='available').first()
-    if device:
-        return jsonify({
-            'found': True,
-            'brand': device.brand,
-            'model': device.model,
-            'rom': device.rom,
-            'selling_price': device.price_cash,
-        })
-    return jsonify({'found': False})
 
 # GET DEVICE
 @bp.route('/device/<imei>', methods=['GET'])
