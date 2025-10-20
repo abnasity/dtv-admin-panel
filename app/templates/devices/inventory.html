@@ -195,7 +195,8 @@
                         <td>{{ device.ram }}</td>
                         <td>{{ device.rom }}</td>
                         <td>Ksh {{ "{:,.2f}".format(device.purchase_price or 0) }}</td>
-                        <td>Ksh {{ "{:,.2f}".format(device.selling_price or 0) }}</td>
+                        <td>Ksh {{ "{:,.2f}".format(device.price_cash or 0) }}</td>
+
 
                         <td>
                             <span class="badge fs-6 bg-{{ 'success' if device.status == 'available' else 'secondary' }}">
