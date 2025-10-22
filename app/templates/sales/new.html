@@ -297,29 +297,7 @@
                             {% if form.shop.errors %}<div class="invalid-feedback">{% for error in form.shop.errors %}{{ error }}{% endfor %}</div>{% endif %}
                         </div>
                     </div>
-                </div>
-              
-                <h3 style="margin-bottom: 15px;">Payment Method</h3>
-                 {{ form.payment_type(id="payment_type_input", style="display:none;") }}
-                <div class="payment-method">
-                    <div class="payment-option active" data-payment="cash">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <h4>Cash Payment</h4>
-                        <p>Full amount paid immediately</p>
-                    </div>
-                    <div class="payment-option" data-payment="credit">
-                        <i class="fas fa-credit-card"></i>
-                        <h4>Credit Payment</h4>
-                        <p>Partial payment with installment plan</p>
-                    </div>
-                </div>
-                {% if form.payment_type.errors %}<div class="invalid-feedback" style="margin-top:-15px; margin-bottom:15px;">{% for error in form.payment_type.errors %}{{ error }}{% endfor %}</div>{% endif %}
-
-                <div class="form-group">
-                    <label for="amount_paid">Amount Paid (KES)</label>
-                    {{ form.amount_paid(id="amount_paid", type="number") }}
-                    {% if form.amount_paid.errors %}<div class="invalid-feedback">{% for error in form.amount_paid.errors %}{{ error }}{% endfor %}</div>{% endif %}
-                </div>
+                </div>             
               
                 <div class="form-group" style="margin-top: 30px;">
                     <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 18px;">
