@@ -180,8 +180,8 @@ class Sale(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     sale_price = db.Column(db.Numeric(10, 2), nullable=False)
-    payment_type = db.Column(db.String(20), nullable=False)  # 'cash', 'credit'
-    amount_paid = db.Column(db.Numeric(10, 2), nullable=False)
+    payment_type = db.Column(db.String(20), nullable=True)  # 'cash', 'credit'
+    amount_paid = db.Column(db.Numeric(10, 2), nullable=True)
     sale_date = db.Column(db.DateTime, default=datetime.utcnow)
     shop = db.Column(db.String(100), nullable=True)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
