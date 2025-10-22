@@ -53,8 +53,8 @@ def new_sale():
                 device=device,
                 seller=current_user,
                 sale_price=form.sale_price.data,
-                payment_type=form.payment_type.data,
-                amount_paid=form.amount_paid.data,
+                payment_type='cash',
+                amount_paid=form.sale_price.data,
                 shop=form.shop.data,
                 notes=form.notes.data
             )
@@ -124,8 +124,8 @@ def complete_sale():
             id_number=form.id_number.data,
             device_id=device.id,
             sale_price=form.sale_price.data,
-            amount_paid=form.amount_paid.data,
-            payment_type=form.payment_type.data,
+            amount_paid=form.sale_price.data,
+            payment_type='cash',
             sale_date=datetime.utcnow(),
             shop=current_user.shop if hasattr(current_user, 'shop') else form.shop.data
         )
@@ -165,27 +165,32 @@ def sale_details(sale_id):
 def download_receipt_image(sale_id):
     sale = Sale.query.get_or_404(sale_id)
 
+    # Only admin or seller can access
     if not current_user.is_admin() and sale.seller_id != current_user.id:
         abort(403)
+
+    # Handle missing payment type or amount_paid safely
+    payment_type = sale.payment_type or "Not specified"
+    amount_paid = float(sale.amount_paid or 0.0)
 
     receipt_data = {
         'sale_id': sale.id,
         'number': generate_receipt_number(),
         'date': sale.sale_date.strftime('%Y-%m-%d'),
         'time': sale.sale_date.strftime('%H:%M'),
-        'user': sale.seller.username,
-        'customer_name': sale.customer_name,
-        'customer_phone': sale.customer_phone,
-        'id_number': sale.id_number,
-        'brand': sale.device.brand,
-        'device': sale.device.model,
-        'ram': sale.device.ram,
-        'storage': sale.device.rom,
-        'imei': sale.device.imei,
-        'sale_price': float(sale.sale_price),
-        'amount_paid': float(sale.amount_paid),
-        'payment_type': sale.payment_type,
-        'total': float(sale.sale_price),
+        'user': sale.seller.username if sale.seller else "Unknown",
+        'customer_name': sale.customer_name or "N/A",
+        'customer_phone': sale.customer_phone or "N/A",
+        'id_number': sale.id_number or "N/A",
+        'brand': sale.device.brand if sale.device else "N/A",
+        'device': sale.device.model if sale.device else "N/A",
+        'ram': sale.device.ram if sale.device else "N/A",
+        'storage': sale.device.rom if sale.device else "N/A",
+        'imei': sale.device.imei if sale.device else "N/A",
+        'sale_price': float(sale.sale_price or 0.0),
+        'amount_paid': amount_paid,
+        'payment_type': payment_type,
+        'total': float(sale.sale_price or 0.0),
     }
 
     html = render_template('receipt.html', receipt=receipt_data)
@@ -195,7 +200,6 @@ def download_receipt_image(sale_id):
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename=receipt_{sale.id}.pdf'
     return response
-
 
 # COMPLETE SALE
 @bp.route('/sales/<int:sale_id>/complete', methods=['POST'])
