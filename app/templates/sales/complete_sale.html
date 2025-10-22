@@ -1,0 +1,45 @@
+{% extends "layouts/base.html" %}
+{% block title %}Complete Sale{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Record Sale</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.imei.label(class="form-label") }}
+      {{ form.imei(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.sale_price.label(class="form-label") }}
+      {{ form.sale_price(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.shop.label(class="form-label") }}
+      {{ form.shop(class="form-select") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.customer_name.label(class="form-label") }}
+      {{ form.customer_name(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.customer_phone.label(class="form-label") }}
+      {{ form.customer_phone(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.id_number.label(class="form-label") }}
+      {{ form.id_number(class="form-control") }}
+    </div>
+
+    {{ form.staff }}
+    <button type="submit" class="btn btn-primary">Record Sale</button>
+  </form>
+</div>
+{% endblock %}
+
