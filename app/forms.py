@@ -4,6 +4,7 @@ from wtforms.validators import DataRequired, Email, Length, ValidationError, Num
 from app.models import User, Device
 from flask_wtf.file import FileField, FileAllowed
 
+
 # USER LOGIN FORM
 class LoginForm(FlaskForm):
     identifier = StringField('Username or Email', validators=[DataRequired(), Length(min=3, max=120)])
@@ -122,27 +123,19 @@ class DeviceForm(FlaskForm):
             if device:
                 raise ValidationError("This IMEI is already registered in the system.")
 
+# SAle form
 class SaleForm(FlaskForm):
     imei = StringField('IMEI', validators=[
         DataRequired(),
         Length(min=15, max=15, message='IMEI must be exactly 15 digits')
     ])
-    sale_price = DecimalField('Sale Price',
+
+    sale_price = DecimalField(
+        'Selling Price',
         validators=[DataRequired(), NumberRange(min=0)],
         places=2
-    )
-    payment_type = SelectField(
-        'Payment Type',
-        choices=[('cash', 'Cash'), ('credit', 'Credit')],
-        validators=[DataRequired()]
     )
 
-    amount_paid = DecimalField(
-        'Amount Paid',
-        validators=[DataRequired(), NumberRange(min=0)],
-        places=2
-    )
-  # NEW: shop dropdown
     shop = SelectField(
         "Shop",
         choices=[
@@ -165,14 +158,9 @@ class SaleForm(FlaskForm):
         from app.models import Device
         device = Device.query.filter_by(imei=imei.data).first()
         if not device:
-            raise ValidationError('Device with this IMEI not found in inventory.')
+            raise ValidationError('Device with this IMEI was not found in inventory.')
         if not device.is_available:
             raise ValidationError('This device has already been sold.')
-
-    def validate_amount_paid(self, amount_paid):
-        if self.payment_type.data == 'cash' and amount_paid.data < self.sale_price.data:
-            raise ValidationError('For cash payments, the amount paid must equal the sale price.')
-        
 
 
         
