@@ -24,7 +24,7 @@ def inventory():
     # Base query (exclude deleted devices)
     query = Device.query.filter(Device.deleted == False)
 
-    # If current user is staff (not admin), restrict to assigned devices
+    # Restrict staff users to their own devices
     if not current_user.is_admin():
         query = query.filter_by(assigned_staff_id=current_user.id)
 
@@ -36,8 +36,13 @@ def inventory():
     if imei:
         query = query.filter(Device.imei.ilike(f"%{imei}%"))
     if agent_id:
-        query = query.filter(Device.assigned_staff_id == agent_id)
+        try:
+            agent_id = int(agent_id)
+            query = query.filter(Device.assigned_staff_id == agent_id)
+        except ValueError:
+            pass
 
+    # Get filtered devices
     devices = query.order_by(Device.id.desc()).all()
 
     # Distinct brand list for dropdown
@@ -52,6 +57,7 @@ def inventory():
         brands=brands,
         staff=staff
     )
+
 
 
 # ADD DEVICE
