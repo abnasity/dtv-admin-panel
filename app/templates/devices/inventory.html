@@ -137,7 +137,7 @@
                 <select name="agent" id="agent" class="form-select shadow-sm rounded-pill" onchange="this.form.submit()">
                     <option value="">All Agents</option>
                     {% for user in staff %}
-                        <option value="{{ user.id }}" {% if request.args.get('agent') == user.id|string %}selected{% endif %}>{{ user.name }}</option>
+                        <option value="{{ user.id }}" {% if request.args.get('agent') == user.id|string %}selected{% endif %}>{{ user.username }}</option>
                     {% endfor %}
                 </select>
             </div>
