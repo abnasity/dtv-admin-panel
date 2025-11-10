@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, a
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_wtf.csrf import validate_csrf, ValidationError
 from app.extensions import db
-from app.models import User, Notification, Device
+from app.models import User, Notification, Device, Expense
 from app.forms import LoginForm, ProfileForm, RegisterForm, ResetPasswordForm, RequestResetForm, EditUserForm
 from app.decorators  import admin_required
 from app.utils.decorators import staff_required
@@ -14,6 +14,7 @@ from sqlalchemy.orm import joinedload
 from flask_mail import Message
 from app.extensions import mail
 from sqlalchemy.exc import SQLAlchemyError
+from datetime import date
 import traceback
 
 
@@ -191,6 +192,7 @@ def assigned_orders():
 @login_required
 def dashboard():
     print(f"Current user: {current_user}, authenticated: {current_user.is_authenticated}")
+    today_expenses_total = db.session.query(db.func.sum(Expense.amount)).filter(Expense.date==date.today()).scalar() or 0
 
     total_users = User.query.count()
 
@@ -203,6 +205,7 @@ def dashboard():
         'auth/dashboard.html',
         total_users=total_users,
         total_devices=total_devices,
+        today_expenses_total=today_expenses_total
     )
 
 

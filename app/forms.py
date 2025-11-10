@@ -192,7 +192,18 @@ class EditUserForm(FlaskForm):
 
 
 
-    
+#EXPENSES FORM
+class ExpenseForm(FlaskForm):
+    category = SelectField('Category', choices=[
+        ('Transport', 'Transport'),
+        ('Lunch', 'Lunch'),
+        ('Airtime', 'Airtime'),
+        ('Purchase', 'Purchase'),
+        ('Other', 'Other')
+    ], validators=[DataRequired()])
+    description = TextAreaField('Description')
+    amount = DecimalField('Amount (KSh)', validators=[DataRequired(), NumberRange(min=0)])
+    submit = SubmitField('Add Expense')
     
 # RESET PASSWORD FORMS
 class RequestResetForm(FlaskForm):

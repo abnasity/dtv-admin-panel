@@ -1,7 +1,8 @@
-from flask import render_template, jsonify, request
-from flask_login import login_required
+from flask import render_template, jsonify, request, redirect, flash, url_for
+from flask_login import login_required, current_user
 from app.utils.decorators import admin_required
-from app.models import Sale, Device
+from app.models import Sale, Device, Expense
+from app.forms import ExpenseForm
 from app.routes.reports import bp
 from app import db
 from sqlalchemy import func
@@ -167,3 +168,25 @@ def summary():
         inventory_metrics=inventory_metrics,
         credit_metrics=credit_metrics
     )
+
+
+@bp.route('/reports/expenses', methods=['GET', 'POST'])
+@login_required
+def manage_expenses():
+    form = ExpenseForm()
+    if form.validate_on_submit():
+        expense = Expense(
+            category=form.category.data,
+            description=form.description.data,
+            amount=form.amount.data,
+            recorded_by=current_user.id
+        )
+        db.session.add(expense)
+        db.session.commit()
+        flash('Expense added successfully!', 'success')
+        return redirect(url_for('reports.manage_expenses'))
+
+    # show today’s expenses
+    today_expenses = Expense.query.filter_by(date=date.today()).all()
+    total_today = sum(e.amount for e in today_expenses)
+    return render_template('reports/expenses.html', form=form, expenses=today_expenses, total_today=total_today)

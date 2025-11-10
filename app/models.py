@@ -229,6 +229,21 @@ class Receipt(db.Model):
     items = db.relationship('ReceiptItem', backref='receipt', lazy=True)
 
 
+#EXPENSES MODEL
+class Expense(db.Model):
+    __tablename__ = 'expenses'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, default=datetime.utcnow)
+    category = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    amount = db.Column(db.Float, nullable=False)
+    recorded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User', backref='expenses')
+
+    def __repr__(self):
+        return f"<Expense {self.category} - {self.amount}>"
+
+
   
 # NOTIFICATION MODEL
 class Notification(db.Model):
