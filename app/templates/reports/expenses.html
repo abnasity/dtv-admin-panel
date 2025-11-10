@@ -1,0 +1,42 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-3">💰 Daily Expenses</h3>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="row">
+          <div class="col-md-3">{{ form.category.label }} {{ form.category(class="form-control") }}</div>
+          <div class="col-md-5">{{ form.description.label }} {{ form.description(class="form-control") }}</div>
+          <div class="col-md-2">{{ form.amount.label }} {{ form.amount(class="form-control") }}</div>
+          <div class="col-md-2 mt-4">{{ form.submit(class="btn btn-primary w-100") }}</div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <h5>Today’s Expenses — {{ total_today|round(2) }} KSh</h5>
+  <div class="table-responsive mt-3">
+    <table class="table table-bordered table-striped">
+      <thead class="table-light">
+        <tr>
+          <th>Date</th><th>Category</th><th>Description</th><th>Amount (KSh)</th><th>Recorded By</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in expenses %}
+        <tr>
+          <td>{{ e.date.strftime('%Y-%m-%d') }}</td>
+          <td>{{ e.category }}</td>
+          <td>{{ e.description or '-' }}</td>
+          <td>{{ e.amount }}</td>
+          <td>{{ e.user.username }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
