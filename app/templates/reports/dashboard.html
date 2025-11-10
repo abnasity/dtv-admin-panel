@@ -165,8 +165,8 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const chartData = {{ chart_data | tojson }};
-    const paymentData = {{ payment_data | tojson }};
+    const chartData = JSON.parse('{{ chart_data | tojson | safe }}');
+    const paymentData = JSON.parse('{{ payment_data | tojson | safe }}');
 
     const ctxSales = document.getElementById('salesChart').getContext('2d');
     new Chart(ctxSales, {
