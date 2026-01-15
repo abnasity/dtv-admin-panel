@@ -79,6 +79,12 @@ class DeviceForm(FlaskForm):
             ("tecno", "Tecno"),
             ("infinix", "Infinix"),
             ("Vivo", "Vivo"),
+            ("neon", "Neon"),
+            ("iphone", "Iphone"),
+            ("oppo", "Oppo"),
+            ("iphone", "iPhone"),
+            ("zte", "Zte"),
+
         ],
         validators=[DataRequired()],
     )
