@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
-from app.models import Device, User
+from app.models import Device, User, InventoryTransaction
 from app.decorators import admin_required
 from app.forms import DeviceForm
 from app.routes.devices import bp
@@ -9,6 +9,8 @@ from app import db
 from slugify import slugify
 from cloudinary.uploader import upload
 from app.utils.cloudinary_utils import init_cloudinary
+from app import db
+
 
 @bp.route('/inventory')
 @login_required
@@ -59,6 +61,28 @@ def inventory():
     )
 
 
+#DEVICE DETAIL PAGE
+
+from app.forms import TransferDeviceForm
+
+@bp.route('/devices/<imei>/detail', methods=['GET'])
+@login_required
+def device_detail_page(imei):
+    device = Device.query.filter_by(imei=imei).first_or_404()
+    staff_list = User.query.filter_by(role='staff').all()
+    form = TransferDeviceForm()
+    form.set_staff_choices(staff_list, assigned_staff_id=device.assigned_staff_id)
+    return render_template(
+        'devices/detail.html',
+        device=device,
+        staff_list=staff_list,
+        form=form
+    )
+
+
+
+
+
 
 # ADD DEVICE
 @bp.route('/device/add', methods=['GET', 'POST'])
@@ -97,6 +121,46 @@ def add_device():
 
     return render_template('devices/add.html', form=form)
 
+
+
+#TRANSFER DEVICE
+def transfer_device(
+    device_id,
+    new_staff_id,
+    performed_by,
+    reason=None
+):
+    device = Device.query.get_or_404(device_id)
+
+    old_staff_id = device.assigned_staff_id
+
+    if old_staff_id == new_staff_id:
+        raise ValueError("Device already assigned to this staff")
+
+    # Log transfer OUT
+    if old_staff_id:
+        out_tx = InventoryTransaction(
+            device_id=device.id,
+            staff_id=old_staff_id,
+            type="transfer_out",
+            notes=reason
+        )
+        db.session.add(out_tx)
+
+    # Log transfer IN
+    in_tx = InventoryTransaction(
+        device_id=device.id,
+        staff_id=new_staff_id,
+        type="transfer_in",
+        notes=reason
+    )
+    db.session.add(in_tx)
+
+    # Update device state
+    device.assigned_staff_id = new_staff_id
+    device.status = "assigned"
+
+    db.session.commit()
 
 
 

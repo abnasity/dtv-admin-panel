@@ -8,7 +8,7 @@ from config import Config
 from app.extensions import db, migrate, login_manager, bcrypt, csrf, mail
 from flask_login import current_user
 from werkzeug.exceptions import HTTPException
-from app.models import User
+from app.models import User,Device
 import cloudinary
 
 load_dotenv()
@@ -51,9 +51,21 @@ def create_app(config_class=Config):
         app.logger.error(f"❌ Missing Cloudinary env var: {e}")
         raise RuntimeError("Missing required Cloudinary credentials.")
 
+
+ # CSRF token context processor
     @app.context_processor
     def inject_csrf_token():
         return dict(csrf_token=generate_csrf())
+    
+  # Recent devices context processor
+    @app.context_processor
+    def inject_recent_devices():
+        # Get the 5 most recently added devices that are not deleted
+        recent_devices = Device.query.filter_by(deleted=False)\
+            .order_by(Device.arrival_date.desc())\
+            .limit(5).all()
+        return dict(recent_devices=recent_devices)
+    
 
     # Logging to stdout for Vercel
     handler = logging.StreamHandler(sys.stdout)

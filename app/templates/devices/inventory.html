@@ -203,7 +203,14 @@
                                 {{ device.status }}
                             </span>
                         </td>
-                        <td>{{ device.arrival_date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <!-- Link to device detail (transfer form is on that page) -->
+                        <a href="{{ url_for('devices.device_detail_page', imei=device.imei) }}">
+                            <i class="fas fa-exchange-alt"></i> Transfer
+                        </a>
+                    </td>
+
+                    <td>{{ device.arrival_date.strftime('%Y-%m-%d') }}</td>
                         <td>
                             <div class="btn-group">
                                 <button type="button" class="btn btn-sm btn-info" 

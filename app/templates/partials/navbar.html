@@ -80,6 +80,22 @@
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
+                       
+                          <!-- Recent Devices -->
+                        {% if recent_devices %}
+                            <li class="dropdown-header">Recent Devices</li>
+                            {% for device in recent_devices %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('devices.device_detail_page', imei=device.imei) }}">
+                                        <i class="fas fa-info-circle me-2"></i> {{ device.brand }} {{ device.model }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                            <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+
+
+
                         <li>
                             <a class="dropdown-item" href="{{ url_for('auth.view_sold_devices') }}">
                                 <i class="fas fa-mobile-alt me-2"></i> Sold Devices

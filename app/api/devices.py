@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from app.models import Device
+from app.models import Device, InventoryTransaction, User
 from app import db
 from app.decorators import admin_required
 
@@ -173,3 +173,80 @@ def upload_device_image(device_id):
         }), 201
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
+    
+
+#TRANSFER OF DEVICES
+
+
+from flask import flash, redirect, url_for
+from app.forms import TransferDeviceForm
+
+
+@bp.route('/<imei>/transfer', methods=['POST'])
+@login_required
+@admin_required
+def transfer_device(imei):
+    device = Device.query.filter_by(imei=imei).first()
+    if not device:
+        flash('Device not found.', 'danger')
+        return redirect(url_for('devices.device_detail_page', imei=imei))
+    if device.deleted:
+        flash('Device is deleted.', 'danger')
+        return redirect(url_for('devices.device_detail_page', imei=imei))
+    if device.status not in ['available', 'assigned']:
+        flash('Device cannot be transferred in current state.', 'danger')
+        return redirect(url_for('devices.device_detail_page', imei=imei))
+
+    form = TransferDeviceForm()
+    staff_list = User.query.filter_by(role='staff').all()
+    form.set_staff_choices(staff_list, assigned_staff_id=device.assigned_staff_id)
+
+    if form.validate_on_submit():
+        new_staff_id = form.staff_id.data
+        notes = form.notes.data or ''
+
+        # Validate staff
+        new_staff = User.query.get(new_staff_id)
+        if not new_staff:
+            flash('Target staff not found.', 'danger')
+            return redirect(url_for('devices.device_detail_page', imei=imei))
+        if device.sale:
+            flash('Cannot transfer a sold device.', 'danger')
+            return redirect(url_for('devices.device_detail_page', imei=imei))
+        if device.assigned_staff_id == new_staff_id:
+            flash('Device already assigned to this staff.', 'warning')
+            return redirect(url_for('devices.device_detail_page', imei=imei))
+
+        old_staff_id = device.assigned_staff_id
+        try:
+            if old_staff_id:
+                db.session.add(
+                    InventoryTransaction(
+                        device_id=device.id,
+                        staff_id=old_staff_id,
+                        type='transfer_out',
+                        notes=notes
+                    )
+                )
+            db.session.add(
+                InventoryTransaction(
+                    device_id=device.id,
+                    staff_id=new_staff_id,
+                    type='transfer_in',
+                    notes=notes
+                )
+            )
+            device.assigned_staff_id = new_staff_id
+            device.status = 'assigned'
+            db.session.commit()
+            flash('Device transferred successfully.', 'success')
+        except Exception:
+            db.session.rollback()
+            flash('Transfer failed.', 'danger')
+        return redirect(url_for('devices.device_detail_page', imei=imei))
+    else:
+        # Show form errors as flash messages
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"{getattr(form, field).label.text}: {error}", 'danger')
+        return redirect(url_for('devices.device_detail_page', imei=imei))
