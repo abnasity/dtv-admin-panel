@@ -1,44 +1,33 @@
 from app import create_app, db
-from app.models import User, Device
-
+from app.models import User
 
 def seed_database():
-    """Seed the database with initial data"""
     app = create_app()
     with app.app_context():
-        # Create admin user if doesn't exist
-        admin = User.query.filter_by(username='admin').first()
-        if not admin:
-            admin = User(
-                username='admin',
-                email='admin@example.com',
-                role='admin',
-                is_active=True
-            )
-            admin.set_password('admin123')
-            db.session.add(admin)
-            print("✅ Created admin user")
-        
-        # Create test staff user if doesn't exist
-        staff = User.query.filter_by(username='staff').first()
-        if not staff:
-            staff = User(
-                username='staff',
-                email='staff@example.com',
-                role='staff',
-                is_active=True
-            )
-            staff.set_password('staff123')
-            db.session.add(staff)
-            print("✅ Created staff user")
-       
-            
+
+        def create_user(username, email, role, password):
+            user = User.query.filter_by(username=username).first()
+            if not user:
+                user = User(
+                    username=username,
+                    email=email,
+                    role=role,
+                    is_active=True
+                )
+                user.set_password(password)
+                db.session.add(user)
+                print(f"✅ Created {role} user: {username}")
+
+        create_user("admin", "admin@example.com", "admin", "admin123")
+        create_user("staff", "staff@example.com", "staff", "staff123")
+        create_user("Diamond", "kiptokorir@gmail.com", "admin", "Dtv@2026")
+
         try:
             db.session.commit()
-            print("Database seeded successfully!")
+            print("🎉 Database seeded successfully")
         except Exception as e:
             db.session.rollback()
-            print(f"Error seeding database: {e}")
+            print(f"❌ Error seeding database: {e}")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     seed_database()
