@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, a
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_wtf.csrf import validate_csrf, ValidationError
 from app.extensions import db
-from app.models import User, Notification, Device, Expense, InventoryTransaction
+from app.models import User, Notification, Device, Expense, InventoryTransaction,Sale
 from app.forms import LoginForm, ProfileForm, RegisterForm, ResetPasswordForm, RequestResetForm, EditUserForm, EmptyForm
 from app.decorators  import admin_required
 from app.utils.decorators import staff_required
@@ -473,19 +473,20 @@ def view_sold_devices():
 @login_required
 @admin_required
 def revert_sold_device(device_id):
+    # Fetch the device
     device = Device.query.get_or_404(device_id)
 
     if device.status != 'sold':
         flash('Only sold devices can be reverted.', 'warning')
         return redirect(url_for('auth.view_sold_devices'))
 
-    # ✅ Delete any existing sale for this device
+    # Delete any existing sale linked to this device
     existing_sale = Sale.query.filter_by(device_id=device.id).first()
     if existing_sale:
         db.session.delete(existing_sale)
-        db.session.flush()  # Ensures deletion happens in the DB immediately
+        db.session.flush()  # ensure DB knows it's deleted
 
-    # 🔁 Revert device state
+    # Reset device status
     device.status = 'available'
     device.sale_id = None
     device.assigned_staff_id = None
@@ -493,7 +494,7 @@ def revert_sold_device(device_id):
 
     db.session.commit()
 
-    flash(f'Device IMEI {device.imei} reverted successfully. Device is now available for sale.', 'success')
+    flash(f'Device IMEI {device.imei} reverted successfully.', 'success')
     return redirect(url_for('auth.view_sold_devices'))
 
 
