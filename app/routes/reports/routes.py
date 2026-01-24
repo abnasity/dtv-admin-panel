@@ -5,7 +5,7 @@ from app.models import Sale, Device, Expense
 from app.forms import ExpenseForm
 from app.routes.reports import bp
 from app import db
-from sqlalchemy import func
+from sqlalchemy import func, extract
 from datetime import datetime, timedelta, date
 
 
@@ -174,6 +174,7 @@ def summary():
 @login_required
 def manage_expenses():
     form = ExpenseForm()
+    today = date.today() 
     if form.validate_on_submit():
         expense = Expense(
             category=form.category.data,
@@ -186,7 +187,24 @@ def manage_expenses():
         flash('Expense added successfully!', 'success')
         return redirect(url_for('reports.manage_expenses'))
 
-    # show today’s expenses
+    # Today's expenses
     today_expenses = Expense.query.filter_by(date=date.today()).all()
     total_today = sum(e.amount for e in today_expenses)
-    return render_template('reports/expenses.html', form=form, expenses=today_expenses, total_today=total_today)
+
+    # Current month expenses
+    today = date.today()
+    monthly_expenses = Expense.query.filter(
+        extract('year', Expense.date) == today.year,
+        extract('month', Expense.date) == today.month
+    ).all()
+    total_month = sum(e.amount for e in monthly_expenses)
+
+    return render_template(
+        'reports/expenses.html',
+        form=form,
+        expenses=today_expenses,
+        total_today=total_today,
+        monthly_expenses=monthly_expenses,
+        total_month=total_month,
+        today=today
+    )

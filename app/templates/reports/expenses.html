@@ -1,42 +1,93 @@
 {% extends 'layouts/base.html' %}
 {% block content %}
 <div class="container mt-4">
-  <h3 class="mb-3">💰 Daily Expenses</h3>
+    <h2>Manage Expenses</h2>
 
-  <div class="card mb-4">
-    <div class="card-body">
-      <form method="POST">
-        {{ form.hidden_tag() }}
-        <div class="row">
-          <div class="col-md-3">{{ form.category.label }} {{ form.category(class="form-control") }}</div>
-          <div class="col-md-5">{{ form.description.label }} {{ form.description(class="form-control") }}</div>
-          <div class="col-md-2">{{ form.amount.label }} {{ form.amount(class="form-control") }}</div>
-          <div class="col-md-2 mt-4">{{ form.submit(class="btn btn-primary w-100") }}</div>
+    <!-- Add Expense Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.category.label(class="form-label") }}
+                    {{ form.category(class="form-control") }}
+                </div>
+                <div class="mb-3">
+                    {{ form.description.label(class="form-label") }}
+                    {{ form.description(class="form-control") }}
+                </div>
+                <div class="mb-3">
+                    {{ form.amount.label(class="form-label") }}
+                    {{ form.amount(class="form-control") }}
+                </div>
+                <button type="submit" class="btn btn-primary">Add Expense</button>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
 
-  <h5>Today’s Expenses — {{ total_today|round(2) }} KSh</h5>
-  <div class="table-responsive mt-3">
-    <table class="table table-bordered table-striped">
-      <thead class="table-light">
-        <tr>
-          <th>Date</th><th>Category</th><th>Description</th><th>Amount (KSh)</th><th>Recorded By</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for e in expenses %}
-        <tr>
-          <td>{{ e.date.strftime('%Y-%m-%d') }}</td>
-          <td>{{ e.category }}</td>
-          <td>{{ e.description or '-' }}</td>
-          <td>{{ e.amount }}</td>
-          <td>{{ e.user.username }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+    <!-- Today's Expenses -->
+    <h4>Today's Expenses ({{ today.strftime('%B %d, %Y') }})</h4>
+    <div class="table-responsive mb-4">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Recorded By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in expenses %}
+                <tr>
+                    <td>{{ exp.category }}</td>
+                    <td>{{ exp.description }}</td>
+                    <td>{{ exp.amount }}</td>
+                    <td>{{ exp.recorded_by_user.username if exp.recorded_by_user else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2">Total Today</th>
+                    <th colspan="2">{{ total_today }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Monthly Expenses -->
+    <h4>This Month's Expenses</h4>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Recorded By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in monthly_expenses %}
+                <tr>
+                    <td>{{ exp.date.strftime('%d-%m-%Y') }}</td>
+                    <td>{{ exp.category }}</td>
+                    <td>{{ exp.description }}</td>
+                    <td>{{ exp.amount }}</td>
+                    <td>{{ exp.recorded_by_user.username if exp.recorded_by_user else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3">Total This Month</th>
+                    <th colspan="2">{{ total_month }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
 </div>
 {% endblock %}

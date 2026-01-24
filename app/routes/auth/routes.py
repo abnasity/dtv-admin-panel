@@ -2,8 +2,8 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, a
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_wtf.csrf import validate_csrf, ValidationError
 from app.extensions import db
-from app.models import User, Notification, Device, Expense
-from app.forms import LoginForm, ProfileForm, RegisterForm, ResetPasswordForm, RequestResetForm, EditUserForm
+from app.models import User, Notification, Device, Expense, InventoryTransaction
+from app.forms import LoginForm, ProfileForm, RegisterForm, ResetPasswordForm, RequestResetForm, EditUserForm, EmptyForm
 from app.decorators  import admin_required
 from app.utils.decorators import staff_required
 from app.utils.mixins import ResetTokenMixin 
@@ -16,6 +16,7 @@ from app.extensions import mail
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import date
 import traceback
+
 
 
 
@@ -74,7 +75,12 @@ from sqlalchemy import or_
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    # Immediately clean up any ?next=... query
+    if request.args.get('next'):
+        return redirect(url_for('auth.login'))
+
     form = LoginForm()
+
     if form.validate_on_submit():
         try:
             identifier = form.identifier.data
@@ -85,24 +91,15 @@ def login():
             if user and user.check_password(form.password.data):
                 login_user(user, remember=form.remember_me.data)
 
-                # Role-based redirection logic
-                next_page = request.args.get('next')
-                if next_page:
-                    return redirect(next_page)
-                elif user.role == 'admin':
+                # Role-based redirection ONLY
+                if user.role == 'admin':
                     return redirect(url_for('auth.dashboard'))
                 elif user.role == 'staff':
-                    try:
-                        return redirect(url_for('staff.dashboard'))
-                    except Exception:
-                        # fallback if staff dashboard route doesn't exist
-                        return redirect(url_for('auth.dashboard'))
+                    return redirect(url_for('staff.dashboard'))
                 else:
-                    # fallback if role doesn't match known types
                     return redirect(url_for('auth.dashboard'))
 
-            else:
-                flash('Invalid username/email or password', 'danger')
+            flash('Invalid username/email or password', 'danger')
 
         except SQLAlchemyError as e:
             print("SQLAlchemy error:", e)
@@ -467,7 +464,37 @@ def mark_all_notifications_read():
 @admin_required
 def view_sold_devices():
     sold_devices = Device.query.filter_by(status='sold').order_by(Device.id.desc()).all()
-    return render_template('admin/sold_devices.html', devices=sold_devices)
+    form = EmptyForm()
+    return render_template('admin/sold_devices.html', devices=sold_devices, form=form)
+
+
+# Delete a sold device (mark it as deleted or remove)
+@bp.route('/devices/sold/revert/<int:device_id>', methods=['POST'])
+@login_required
+@admin_required
+def revert_sold_device(device_id):
+    device = Device.query.get_or_404(device_id)
+
+    if device.status != 'sold':
+        flash('Only sold devices can be reverted.', 'warning')
+        return redirect(url_for('auth.view_sold_devices'))
+
+    # ✅ Delete any existing sale for this device
+    existing_sale = Sale.query.filter_by(device_id=device.id).first()
+    if existing_sale:
+        db.session.delete(existing_sale)
+        db.session.flush()  # Ensures deletion happens in the DB immediately
+
+    # 🔁 Revert device state
+    device.status = 'available'
+    device.sale_id = None
+    device.assigned_staff_id = None
+    device.sold_at = None
+
+    db.session.commit()
+
+    flash(f'Device IMEI {device.imei} reverted successfully. Device is now available for sale.', 'success')
+    return redirect(url_for('auth.view_sold_devices'))
 
 
 # LIST OF FAILED ORDERS

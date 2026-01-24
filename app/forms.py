@@ -235,4 +235,6 @@ class ResetPasswordForm(FlaskForm):
         DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset Password')
 
-
+# EMPTY FORM FOR CSRF PROTECTION
+class EmptyForm(FlaskForm):
+    pass

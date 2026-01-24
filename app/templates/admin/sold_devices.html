@@ -19,7 +19,8 @@
                   <th>Purchase Price</th>
                   <th>Status</th>
                   <th>Shop</th>
-                  <th>Sold By</th> 
+                  <th>Sold By</th>
+                  <th>Actions</th> <!-- Added column -->
               </tr>
           </thead>
           <tbody>
@@ -46,6 +47,22 @@
                       {% else %}
                           <em>Not assigned</em>
                       {% endif %}
+                  </td>
+                  <td>
+                      <!-- Revert Sale button -->
+        <form action="{{ url_for('auth.revert_sold_device', device_id=device.id) }}"
+            method="POST"
+            onsubmit="return confirm('Revert sale for IMEI {{ device.imei }}?');">
+            {{ form.hidden_tag() }}
+            <button class="btn btn-warning btn-sm">
+                Revert Sale
+            </button>
+        </form>
+
+
+
+
+
                   </td>
               </tr>
               {% endfor %}

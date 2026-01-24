@@ -34,21 +34,35 @@ def index():
 @staff_required
 def new_sale():
     form = SaleForm()
-    device = None  # <-- ADD THIS LINE
+    device = None
     imei = request.args.get('imei')
 
     if imei:
         form.imei.data = imei
-        # Optionally prefetch device for display:
         device = Device.query.filter_by(imei=imei).first()
 
     if form.validate_on_submit():
-        device = Device.query.filter_by(imei=form.imei.data, status='available').first()
+        device = Device.query.filter_by(imei=form.imei.data).first()
         if not device:
-            flash('Device not found or not available', 'danger')
-            return render_template('sales/new.html', form=form, device=device)
+            flash('Device not found', 'danger')
+            return render_template('sales/new.html', form=form, device=None)
 
-        try:
+        if device.status == 'sold':
+            # Device already sold — update existing sale
+            existing_sale = Sale.query.filter_by(device_id=device.id).first()
+            existing_sale.sale_price = form.sale_price.data
+            existing_sale.payment_type = 'cash'
+            existing_sale.amount_paid = form.sale_price.data
+            existing_sale.shop = form.shop.data
+            existing_sale.notes = form.notes.data
+            existing_sale.modified_at = datetime.utcnow()
+
+            db.session.commit()
+            flash(f'Sale for device IMEI {device.imei} updated successfully!', 'success')
+            return redirect(url_for('sales.sale_detail', sale_id=existing_sale.id))
+
+        else:
+            # Device is available — create new sale
             sale = Sale(
                 device=device,
                 seller=current_user,
@@ -58,17 +72,22 @@ def new_sale():
                 shop=form.shop.data,
                 notes=form.notes.data
             )
-            device.mark_as_sold()
-            db.session.add(sale)
-            db.session.commit()
 
-            flash('Sale recorded successfully!', 'success')
+            db.session.add(sale)
+            db.session.flush()  # Generates sale.id before commit
+
+            # Mark device as sold
+            device.status = 'sold'
+            device.sale_id = sale.id
+            device.sold_at = datetime.utcnow()
+
+            db.session.commit()
+            flash(f'Sale recorded for device IMEI {device.imei}!', 'success')
             return redirect(url_for('sales.sale_detail', sale_id=sale.id))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error recording sale: {str(e)}', 'danger')
 
     return render_template('sales/new.html', form=form, device=device)
+
+
 
 
 # Merge imei to sale details
@@ -102,7 +121,7 @@ def check_imei(imei):
 @login_required
 def complete_sale():
     form = SaleForm()
-    device = None  # define for template use
+    device = None  # For template rendering
 
     if form.validate_on_submit():
         imei = form.imei.data.strip()
@@ -112,42 +131,62 @@ def complete_sale():
             flash('Device not found in inventory.', 'danger')
             return render_template('sales/complete_sale.html', form=form)
 
-        if device.status.lower() == "sold":
-            flash('This device is already sold.', 'danger')
-            return render_template('sales/complete_sale.html', form=form)
+        # Check for an existing sale
+        existing_sale = Sale.query.filter_by(device_id=device.id).first()
+        if existing_sale:
+            flash('This device already has a sale record. Updating existing sale.', 'info')
+            
+            # Update existing sale
+            existing_sale.customer_name = form.customer_name.data
+            existing_sale.customer_phone = form.customer_phone.data
+            existing_sale.id_number = form.id_number.data
+            existing_sale.sale_price = form.sale_price.data
+            existing_sale.amount_paid = form.sale_price.data
+            existing_sale.payment_type = 'cash'
+            existing_sale.sale_date = datetime.utcnow()
+            existing_sale.shop = current_user.shop if hasattr(current_user, 'shop') else form.shop.data
 
-        # ✅ Create the sale
-        sale = Sale(
-            seller_id=device.assigned_staff.id if device.assigned_staff else current_user.id,
-            customer_name=form.customer_name.data,
-            customer_phone=form.customer_phone.data,
-            id_number=form.id_number.data,
-            device_id=device.id,
-            sale_price=form.sale_price.data,
-            amount_paid=form.sale_price.data,
-            payment_type='cash',
-            sale_date=datetime.utcnow(),
-            shop=current_user.shop if hasattr(current_user, 'shop') else form.shop.data
-        )
+            # Ensure device is marked as sold
+            device.status = 'sold'
+            db.session.commit()
 
-        # ✅ Mark device as sold
-        device.status = 'sold'
+            flash('Existing sale updated successfully.', 'success')
+            return redirect(url_for('sales.sale_details', sale_id=existing_sale.id))
 
-        # ✅ Log transaction
-        transaction = InventoryTransaction(
-            device_id=device.id,
-            staff_id=device.assigned_staff_id or current_user.id,
-            type='sale',
-            notes=f"Device sold to {form.customer_name.data}"
-        )
+        else:
+            # Create new sale if none exists
+            sale = Sale(
+                seller_id=device.assigned_staff.id if device.assigned_staff else current_user.id,
+                customer_name=form.customer_name.data,
+                customer_phone=form.customer_phone.data,
+                id_number=form.id_number.data,
+                device_id=device.id,
+                sale_price=form.sale_price.data,
+                amount_paid=form.sale_price.data,
+                payment_type='cash',
+                sale_date=datetime.utcnow(),
+                shop=current_user.shop if hasattr(current_user, 'shop') else form.shop.data
+            )
 
-        db.session.add_all([sale, transaction])
-        db.session.commit()
+            # Mark device as sold
+            device.status = 'sold'
 
-        flash('Sale recorded successfully.', 'success')
-        return redirect(url_for('sales.sale_details', sale_id=sale.id))
+            # Log inventory transaction
+            transaction = InventoryTransaction(
+                device_id=device.id,
+                staff_id=device.assigned_staff_id or current_user.id,
+                type='sale',
+                notes=f"Device sold to {form.customer_name.data}"
+            )
+
+            db.session.add_all([sale, transaction])
+            db.session.commit()
+
+            flash('Sale recorded successfully.', 'success')
+            return redirect(url_for('sales.sale_details', sale_id=sale.id))
 
     return render_template('sales/complete_sale.html', form=form, device=device)
+
 
 
 
