@@ -165,7 +165,7 @@
     
                 <thead>
                     <tr>
-                        
+                        <th>No.</th>
                         <th>Brand</th>
                         <th>Model</th>
                         <th>IMEI</th>
@@ -174,6 +174,7 @@
                         <th>Purchase Price</th>
                         <th>Selling Price</th>                 
                         <th>Status</th>
+                        <th>Transfer</th>
                         <th>Arrival Date</th>
                         <th>Actions</th>
                     </tr>
@@ -181,7 +182,7 @@
                 <tbody>
                     {% for device in devices %}
                     <tr>
-                        
+                        <td class="fw-semibold text-muted">{{ loop.index }}</td>
                         <td>{{ device.brand }}</td>
                         <td>{{ device.model }}</td>
                         <td>
