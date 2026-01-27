@@ -34,7 +34,7 @@
                     <th>Category</th>
                     <th>Description</th>
                     <th>Amount</th>
-                    <th>Recorded By</th>
+                    
                 </tr>
             </thead>
             <tbody>
@@ -43,7 +43,7 @@
                     <td>{{ exp.category }}</td>
                     <td>{{ exp.description }}</td>
                     <td>{{ exp.amount }}</td>
-                    <td>{{ exp.recorded_by_user.username if exp.recorded_by_user else 'N/A' }}</td>
+                    
                 </tr>
                 {% endfor %}
             </tbody>
