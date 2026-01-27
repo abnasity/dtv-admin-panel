@@ -4,6 +4,7 @@ from app.models import User
 def seed_database():
     app = create_app()
     with app.app_context():
+        db.create_all()  # <-- create tables if not exist
 
         def create_user(username, email, role, password):
             user = User.query.filter_by(username=username).first()
