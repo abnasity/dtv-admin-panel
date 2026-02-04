@@ -34,6 +34,14 @@
 
 <h2>Device Details</h2>
 
+<a href="{{ url_for('devices.inventory') }}"
+   class="btn"
+   style="margin-bottom: 16px; display: inline-block; background:#2b6800;">
+    ← Back to Devices
+</a>
+
+
+
 <div class="card">
     <p><strong>IMEI:</strong> {{ device.imei }}</p>
     <p><strong>Brand:</strong> {{ device.brand }}</p>
@@ -54,12 +62,12 @@
 
     {% if device.deleted %}
         <p class="danger">This device is deleted and cannot be transferred.</p>
-    {% elif device.status not in ['available', 'assigned'] %}
-        <p class="danger">Device cannot be transferred in its current state.</p>
-    {% elif staff_list|length == 0 %}
+    {% elif device.status in ['sold', 'retired', 'damaged'] %}
+       <p class="danger">Device cannot be transferred in its current state.</p>
+     {% elif staff_list|length == 0 %}
         <p class="danger">No staff available for transfer.</p>
     {% else %}
-        <form method="POST" action="{{ url_for('api_devices.transfer_device', imei=device.imei) }}">
+        <form method="POST" action="{{ url_for('devices.transfer_device', imei=device.imei) }}">
             {{ form.csrf_token }}
             <div class="form-group">
                 {{ form.staff_id.label }}
