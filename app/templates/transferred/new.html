@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diamond Tree - Complete Transferred Sale</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* --- Basic styling --- */
+    body { font-family: 'Segoe UI', sans-serif; background: #f5f7fb; padding: 20px; color: #212529; }
+    .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.08);}
+    h2 { margin-bottom: 20px; color: #4361ee; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: 500; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #e9ecef; border-radius: 5px; font-size: 16px; }
+    button { padding: 10px 20px; background: #4361ee; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+    button:hover { opacity: 0.9; }
+    .device-preview { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Complete Transferred Sale</h2>
+
+  <form id="transferred-sale-form" method="POST" action="{{ url_for('transferred_sales.new_transferred_sale') }}">
+    {{ form.hidden_tag() }}
+
+    <!-- Device IMEI with datalist -->
+    <div class="form-group">
+      <label for="imei">Device IMEI</label>
+      <input list="imei_list" name="imei" id="imei" class="form-control" value="{{ form.imei.data or '' }}" required>
+      <datalist id="imei_list">
+        {% for i in imeis %}
+          <option value="{{ i }}"></option>
+        {% endfor %}
+      </datalist>
+    </div>
+
+    <!-- Staff (hidden) -->
+    {{ form.staff(id="staff") }}
+
+    <!-- Customer Info -->
+    <div class="form-group">
+      {{ form.customer_name.label }} {{ form.customer_name(class="form-control") }}
+    </div>
+    <div class="form-group">
+      {{ form.customer_phone.label }} {{ form.customer_phone(class="form-control") }}
+    </div>
+    <div class="form-group">
+      {{ form.id_number.label }} {{ form.id_number(class="form-control") }}
+    </div>
+
+    <!-- Sale Price -->
+    <div class="form-group">
+      {{ form.sale_price.label }} {{ form.sale_price(class="form-control") }}
+    </div>
+
+    <!-- Submit -->
+    <button type="submit">Complete Sale & Download Receipt</button>
+  </form>
+
+  <!-- Device preview (optional) -->
+  <div id="device-preview" class="device-preview" style="display:none;">
+    <h4>Device Details</h4>
+    <p><strong>Brand:</strong> <span id="device-brand"></span></p>
+    <p><strong>Model:</strong> <span id="device-model"></span></p>
+    <p><strong>RAM:</strong> <span id="device-ram"></span></p>
+    <p><strong>Storage:</strong> <span id="device-storage"></span></p>
+    <p><strong>Assigned Staff:</strong> <span id="device-staff"></span></p>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const imeiInput = document.getElementById("imei");
+  const staffInput = document.getElementById("staff");
+
+  const devicePreview = document.getElementById("device-preview");
+  const brandEl = document.getElementById("device-brand");
+  const modelEl = document.getElementById("device-model");
+  const ramEl = document.getElementById("device-ram");
+  const storageEl = document.getElementById("device-storage");
+  const staffEl = document.getElementById("device-staff");
+
+  const currentUserId = "{{ current_user.id }}";
+
+  function updateDevicePreview(data) {
+    if (!data.found) {
+      devicePreview.style.display = "none";
+      staffInput.value = currentUserId;
+      return;
+    }
+    devicePreview.style.display = "block";
+    brandEl.textContent = data.brand || "N/A";
+    modelEl.textContent = data.model || "N/A";
+    ramEl.textContent = data.ram || "N/A";
+    storageEl.textContent = data.selling_price || "N/A";
+    staffEl.textContent = data.assigned_staff || "Not assigned";
+    staffInput.value = data.assigned_staff_id || currentUserId;
+  }
+
+  function fetchDevice(imei) {
+    fetch(`/sales/check_imei/${imei}`)
+      .then(r => r.json())
+      .then(updateDevicePreview)
+      .catch(err => {
+        console.error(err);
+        staffInput.value = currentUserId;
+        devicePreview.style.display = "none";
+      });
+  }
+
+  imeiInput.addEventListener("change", () => {
+    const imei = imeiInput.value.trim();
+    if (imei) fetchDevice(imei);
+  });
+
+  // Trigger fetch if prefilled
+  if (imeiInput.value) fetchDevice(imeiInput.value);
+});
+</script>
+
+</body>
+</html>
