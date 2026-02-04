@@ -104,18 +104,34 @@ class Device(db.Model):
     
     @staticmethod
     def get_available():
-        return Device.query.filter(Device.deleted == False, Device.status == 'available').all()
+        return Device.query.filter(
+            Device.deleted == False,
+            Device.status == 'available'
+        ).all()
 
     @property
     def is_available(self):
-     """Check if device is available for sale"""
-     return str(self.status).lower() == 'available'
-     
+        """True if device status is exactly 'available'"""
+        return self.status == 'available'
+
+    @property
+    def is_transferred(self):
+        return self.status == 'transferred'
+
+    @property
+    def can_be_sold(self):
+        """True if device can be sold"""
+        return self.status in ('available', 'transferred')
+
     def mark_as_sold(self):
-        """Mark device as sold and update timestamp"""
+        """Mark device as sold"""
+        if self.status == 'sold':
+            raise ValueError("Device already sold")
+
         self.status = 'sold'
         self.modified_at = datetime.utcnow()
         db.session.commit()
+
 
   
 
