@@ -1,0 +1,90 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Transfer Device{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Transfer Device</h4>
+        </div>
+        <div class="card-body">
+
+            <!-- Device Info -->
+            <div class="mb-4">
+                <h5>Device Details</h5>
+                <ul class="list-group">
+                    <li class="list-group-item"><strong>IMEI:</strong> {{ device.imei }}</li>
+                    <li class="list-group-item"><strong>Brand:</strong> {{ device.brand }}</li>
+                    <li class="list-group-item"><strong>Model:</strong> {{ device.model }}</li>
+                    <li class="list-group-item"><strong>Status:</strong> 
+                        <span class="badge 
+                            {% if device.status == 'available' %}bg-success
+                            {% elif device.status == 'transferred' %}bg-info
+                            {% elif device.status == 'sold' %}bg-secondary
+                            {% else %}bg-dark{% endif %}">
+                            {{ device.status | capitalize }}
+                        </span>
+                    </li>
+                    <li class="list-group-item"><strong>Current Staff:</strong> 
+                        <span id="current-staff">
+                            {{ device.assigned_staff.username if device.assigned_staff else "Not assigned" }}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Transfer Form -->
+            <form method="POST" action="" id="transfer-form">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    {{ form.staff_id.label(class="form-label") }}
+                    {{ form.staff_id(class="form-select", id="staff-select") }}
+                    <div class="form-text text-danger" id="staff-warning" style="display:none;">
+                        Device is already assigned to this staff!
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form.notes.label(class="form-label") }}
+                    {{ form.notes(class="form-control", rows="3", placeholder="Optional: reason for transfer") }}
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="transfer-btn">
+                    <i class="fas fa-exchange-alt"></i> Transfer Device
+                </button>
+                <a href="{{ url_for('devices.device_detail_page', imei=device.imei) }}" class="btn btn-secondary ms-2">
+                    Cancel
+                </a>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const staffSelect = document.getElementById("staff-select");
+    const currentStaff = "{{ device.assigned_staff.id if device.assigned_staff else '' }}";
+    const warning = document.getElementById("staff-warning");
+    const transferBtn = document.getElementById("transfer-btn");
+
+    function checkStaffSelection() {
+        if(staffSelect.value === currentStaff) {
+            warning.style.display = "block";
+            transferBtn.disabled = true;
+        } else {
+            warning.style.display = "none";
+            transferBtn.disabled = false;
+        }
+    }
+
+    // Initial check
+    checkStaffSelection();
+
+    // On change
+    staffSelect.addEventListener("change", checkStaffSelection);
+});
+</script>
+{% endblock %}
