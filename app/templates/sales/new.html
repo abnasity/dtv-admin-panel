@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhoneHub - Complete Sale</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diamond Tree - Complete Sale</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
         :root {
             --primary: #4361ee;
             --secondary: #3f37c9;
@@ -222,52 +222,64 @@
 
 <div class="container">
     <div id="sales" class="page active">
-        <form method="POST" action="{{ url_for('sales.complete_sale') }}">
+        <form method="POST"
+      action="{% if device and device.status == 'transferred' %}
+                  {{ url_for('transferred_sales.new_transferred_sale') }}
+              {% else %}
+                  {{ url_for('sales.complete_sale') }}
+              {% endif %}">
+
             {{ form.hidden_tag() }}
+
+            <!-- Hidden staff_id input -->
+            <input type="hidden" id="staff" name="staff_id" value="{{ device.assigned_staff_id if device and device.assigned_staff else current_user.id }}">
+
             <div class="form-container">
-                <div class="page-header" style="margin-bottom:0;">
-                  <h2 class="page-title"><i class="fas fa-cash-register"></i> New Sale</h2>
+                <div class="page-header">
+                    <h2 class="page-title"><i class="fas fa-cash-register"></i> New Sale</h2>
                 </div>
-              
-                <h3 style="margin-bottom: 20px; margin-top: 20px;">Device IMEI</h3>
+
+                <!-- Device IMEI -->
+                <h3>Device IMEI</h3>
                 <div class="form-group">
-                    {{ form.imei(id="sales-imei-input", class="form-control", placeholder="Enter IMEI from inventory", **{'inputmode': 'numeric', 'maxlength': '15'}) }}
-                    <div id="sales-imei-status" class="imei-status" style="font-size:.9rem; color:#6b7280; margin-top:6px;">
+                    {{ form.imei(id="sales-imei-input", class="form-control", placeholder="Enter IMEI", **{'inputmode':'numeric','maxlength':'15'}) }}
+                    <div id="sales-imei-status" class="imei-status">
                         {% if form.imei.errors %}
                             <span class="invalid-feedback d-block">{% for error in form.imei.errors %}{{ error }}{% endfor %}</span>
                         {% else %}
-                            Enter the 15-digit IMEI of the device being sold.
+                            Enter the 15-digit IMEI from inventory.
                         {% endif %}
                     </div>
                 </div>
-              
-              
-                <h3 style="margin-bottom: 20px; margin-top: 30px;">Customer Information</h3>
+
+                <!-- Customer Info -->
+                <h3>Customer Information</h3>
                 <div class="form-row">
                     <div class="form-col">
                         <div class="form-group">
                             <label for="customer_name">Customer Name</label>
-                            {{ form.customer_name(id="customer_name", placeholder="Enter full name") }}
+                            {{ form.customer_name(id="customer_name", placeholder="Full name") }}
                             {% if form.customer_name.errors %}<div class="invalid-feedback">{% for error in form.customer_name.errors %}{{ error }}{% endfor %}</div>{% endif %}
                         </div>
                     </div>
                     <div class="form-col">
                         <div class="form-group">
                             <label for="id_number">ID Number</label>
-                            {{ form.id_number(id="id_number", placeholder="Enter ID number") }}
+                            {{ form.id_number(id="id_number", placeholder="ID number") }}
                             {% if form.id_number.errors %}<div class="invalid-feedback">{% for error in form.id_number.errors %}{{ error }}{% endfor %}</div>{% endif %}
                         </div>
                     </div>
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="customer_phone">Phone Number</label>
-                            {{ form.customer_phone(id="customer_phone", placeholder="Enter phone number", type="tel") }}
+                            <label for="customer_phone">Phone</label>
+                            {{ form.customer_phone(id="customer_phone", placeholder="Phone number") }}
                             {% if form.customer_phone.errors %}<div class="invalid-feedback">{% for error in form.customer_phone.errors %}{{ error }}{% endfor %}</div>{% endif %}
                         </div>
                     </div>
                 </div>
-              
-                <h3 style="margin-bottom: 20px; margin-top: 20px;">Sale Information</h3>
+
+                <!-- Sale Info -->
+                <h3>Sale Information</h3>
                 <div class="form-row">
                     <div class="form-col">
                         <div class="form-group">
@@ -277,30 +289,28 @@
                         </div>
                     </div>
                     <div class="form-col">
-                       <div class="form-group">
-                            <label for="staff">Selling Staff</label>
-                            <p><strong>Assigned Staff:</strong> <span id="assigned-staff">-</span></p>
-                        {% if device.assigned_staff %}
-                {{ device.assigned_staff.username }} ({{ device.assigned_staff.email }})
-                {% else %}
-                <em>Not assigned</em>
-                {% endif %}
-                        </div>
-
-
+                        <div class="form-group">
+                            <label>Assigned Staff</label>
+                            <p><span id="assigned-staff">
+                                {% if device and device.assigned_staff %}
+                                    {{ device.assigned_staff.username }} ({{ device.assigned_staff.email }})
+                                {% else %}
+                                    <em>Not assigned</em>
+                                {% endif %}
+                            </span></p>
                         </div>
                     </div>
                     <div class="form-col">
                         <div class="form-group">
-                            <label for="shop">Select Shop</label>
+                            <label for="shop">Shop</label>
                             {{ form.shop(id="shop") }}
                             {% if form.shop.errors %}<div class="invalid-feedback">{% for error in form.shop.errors %}{{ error }}{% endfor %}</div>{% endif %}
                         </div>
                     </div>
-                </div>             
-              
-                <div class="form-group" style="margin-top: 30px;">
-                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 18px;">
+                </div>
+
+                <div class="form-group mt-3">
+                    <button type="submit" class="btn btn-primary" style="width:100%; font-size:18px;">
                         <i class="fas fa-check-circle"></i> Complete Sale
                     </button>
                 </div>
@@ -309,52 +319,44 @@
     </div>
 </div>
 
-
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    // Wrap current_user.id in quotes for JS safety
+    const current_user_id = "{{ current_user.id }}";
+
     const imeiInput = document.getElementById("sales-imei-input");
     const staffDisplay = document.getElementById("assigned-staff");
-    const staffSelect = document.getElementById("staff"); // hidden select field
+    const staffInput = document.getElementById("staff");
+
+    function updateStaff(data) {
+        if (!data.found) {
+            staffDisplay.textContent = "Not available";
+            staffInput.value = current_user_id;
+            return;
+        }
+        staffDisplay.textContent = data.assigned_staff || "Not assigned";
+        staffInput.value = data.assigned_staff_id || current_user_id;
+    }
 
     imeiInput.addEventListener("change", () => {
         const imei = imeiInput.value.trim();
         if (!imei) return;
 
         fetch(`/sales/check_imei/${imei}`)
-            .then(response => response.json())
-            .then(data => {
-                if (!data.found) {
-                    staffDisplay.textContent = "Not available";
-                    staffSelect.value = ""; // clear staff ID
-                    return;
-                }
-
-                // ✅ Update UI
-                staffDisplay.textContent = data.assigned_staff || "Not assigned";
-
-                // ✅ Automatically select staff ID in hidden form field
-                if (data.assigned_staff_id) {
-                    staffSelect.value = data.assigned_staff_id;
-                } else {
-                    staffSelect.value = "";
-                }
-
-                // ✅ Update device preview
-                document.getElementById("preview-imei").textContent = imei;
-                document.getElementById("preview-brand").textContent = data.brand || "-";
-                document.getElementById("preview-model").textContent = data.model || "-";
-                document.getElementById("preview-storage").textContent = data.rom || "-";
-                document.getElementById("preview-price").textContent = data.selling_price || "-";
-                document.getElementById("preview-status").textContent = "Available";
-            })
+            .then(r => r.json())
+            .then(data => updateStaff(data))
             .catch(err => {
-                console.error("Error checking IMEI:", err);
+                console.error(err);
                 staffDisplay.textContent = "Error fetching data";
-                staffSelect.value = "";
+                staffInput.value = current_user_id;
             });
     });
-});
 
+    // Trigger change on page load if device is pre-filled
+    if (imeiInput.value) {
+        imeiInput.dispatchEvent(new Event("change"));
+    }
+});
 </script>
 
 </body>
