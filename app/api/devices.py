@@ -1,8 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify,flash, redirect, url_for
 from flask_login import login_required, current_user
 from app.models import Device, InventoryTransaction, User
 from app import db
 from app.decorators import admin_required
+from app.forms import TransferDeviceForm
+
 
 
 
@@ -176,12 +178,8 @@ def upload_device_image(device_id):
     
 
 #TRANSFER OF DEVICES
-
-
 from flask import flash, redirect, url_for
 from app.forms import TransferDeviceForm
-
-
 @bp.route('/<imei>/transfer', methods=['POST'])
 @login_required
 @admin_required
