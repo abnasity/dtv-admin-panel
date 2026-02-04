@@ -10,7 +10,7 @@ from slugify import slugify
 from cloudinary.uploader import upload
 from app.utils.cloudinary_utils import init_cloudinary
 from app import db
-
+from datetime import datetime
 
 @bp.route('/inventory')
 @login_required
@@ -23,20 +23,25 @@ def inventory():
     # Fetch all staff (for dropdown)
     staff = User.query.filter(User.role == 'staff').all()
 
-    # Base query (exclude deleted devices)
+    # Base query: exclude deleted devices
     query = Device.query.filter(Device.deleted == False)
 
-    # Restrict staff users to their own devices
-    if not current_user.is_admin():
-        query = query.filter_by(assigned_staff_id=current_user.id)
-
-    # Apply filters
-    if brand:
-        query = query.filter_by(brand=brand)
+    # Apply status filter if selected
     if status:
-        query = query.filter_by(status=status)
+        query = query.filter(Device.status == status)
+    else:
+        # Default: include all statuses
+        query = query.filter(Device.status.in_(["available", "sold", "transferred"]))
+
+    # Apply brand filter
+    if brand:
+        query = query.filter(Device.brand == brand)
+
+    # Apply IMEI search
     if imei:
         query = query.filter(Device.imei.ilike(f"%{imei}%"))
+
+    # Apply agent/staff filter
     if agent_id:
         try:
             agent_id = int(agent_id)
@@ -44,7 +49,7 @@ def inventory():
         except ValueError:
             pass
 
-    # Get filtered devices
+    # Get filtered devices ordered by newest first
     devices = query.order_by(Device.id.desc()).all()
 
     # Distinct brand list for dropdown
@@ -59,6 +64,7 @@ def inventory():
         brands=brands,
         staff=staff
     )
+
 
 
 #DEVICE DETAIL PAGE
@@ -103,7 +109,8 @@ def add_device():
             rom=form.rom.data,
             purchase_price=form.purchase_price.data,
             price_cash=form.price_cash.data,
-            assigned_staff_id=form.assigned_staff_id.data
+            assigned_staff_id=form.assigned_staff_id.data,
+            status="available"
         )
 
         db.session.add(device)
@@ -124,43 +131,47 @@ def add_device():
 
 
 #TRANSFER DEVICE
-def transfer_device(
-    device_id,
-    new_staff_id,
-    performed_by,
-    reason=None
-):
-    device = Device.query.get_or_404(device_id)
+@bp.route('/device/<string:imei>/transfer', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def transfer_device(imei):
+    device = Device.query.filter_by(imei=imei).first_or_404()
+    form = TransferDeviceForm()
 
-    old_staff_id = device.assigned_staff_id
+    # Staff choices
+    all_staff = User.query.filter_by(role='staff').all()
+    form.set_staff_choices(all_staff, assigned_staff_id=device.assigned_staff_id)
 
-    if old_staff_id == new_staff_id:
-        raise ValueError("Device already assigned to this staff")
+    if form.validate_on_submit():
+        new_staff_id = form.staff_id.data
+        new_staff = User.query.get_or_404(new_staff_id)
 
-    # Log transfer OUT
-    if old_staff_id:
-        out_tx = InventoryTransaction(
-            device_id=device.id,
-            staff_id=old_staff_id,
-            type="transfer_out",
-            notes=reason
+        if device.assigned_staff_id == new_staff_id:
+            flash("Device is already assigned to this staff.", "warning")
+            return redirect(url_for('devices.device_detail_page', imei=device.imei))
+
+        # Transfer logic
+        device.assigned_staff_id = new_staff_id
+
+        # Do NOT override sold devices
+        if device.status != 'sold':
+            device.status = 'transferred'
+
+        device.transfer_notes = form.notes.data
+        device.transferred_at = datetime.utcnow()
+
+        db.session.commit()
+
+        flash(
+            f"Device IMEI {device.imei} successfully transferred to {new_staff.username}.",
+            "success"
         )
-        db.session.add(out_tx)
 
-    # Log transfer IN
-    in_tx = InventoryTransaction(
-        device_id=device.id,
-        staff_id=new_staff_id,
-        type="transfer_in",
-        notes=reason
-    )
-    db.session.add(in_tx)
+        return redirect(url_for('devices.device_detail_page', imei=device.imei))
 
-    # Update device state
-    device.assigned_staff_id = new_staff_id
-    device.status = "assigned"
+    return render_template('devices/transfer.html', form=form, device=device)
 
-    db.session.commit()
+
 
 
 
