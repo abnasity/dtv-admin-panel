@@ -11,9 +11,10 @@ class TransferDeviceForm(FlaskForm):
     submit = SubmitField('Transfer Device')
 
     def set_staff_choices(self, staff_list, assigned_staff_id=None):
-        # Exclude currently assigned staff from choices (disable in template)
         self.staff_id.choices = [
-            (staff.id, staff.username) for staff in staff_list
+            (staff.id, staff.username)
+            for staff in staff_list
+            if staff.id != assigned_staff_id
         ]
 
 
