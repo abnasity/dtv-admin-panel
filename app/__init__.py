@@ -11,6 +11,9 @@ from werkzeug.exceptions import HTTPException
 from app.models import User,Device
 import cloudinary
 
+
+
+
 load_dotenv()
 
 # Login manager hooks
@@ -98,6 +101,10 @@ def create_app(config_class=Config):
     from app.routes.devices import bp as devices_bp
     from app.routes.sales import bp as sales_bp
     from app.routes.reports import bp as reports_bp
+    from app.routes.transferred_sales import bp as transferred_sales_bp
+
+
+
    
     # Register web blueprints
     app.register_blueprint(main_bp)
@@ -105,7 +112,7 @@ def create_app(config_class=Config):
     app.register_blueprint(devices_bp)
     app.register_blueprint(sales_bp)
     app.register_blueprint(reports_bp)
-
+    app.register_blueprint(transferred_sales_bp)
 
 
     # Import API blueprints
