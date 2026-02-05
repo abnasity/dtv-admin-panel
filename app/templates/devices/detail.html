@@ -82,28 +82,7 @@
     {% endif %}
 </div>
 
-<div class="card">
-    <h3>Transfer History</h3>
 
-    {% if device.transactions %}
-        <ul>
-            {% for tx in device.transactions %}
-                <li>
-                    {{ tx.timestamp.strftime('%Y-%m-%d %H:%M') }} — 
-                    <strong>{{ tx.type }}</strong>
-                    {% if tx.staff %}
-                        ({{ tx.staff.username }})
-                    {% endif %}
-                    {% if tx.notes %}
-                        – {{ tx.notes }}
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No transaction history.</p>
-    {% endif %}
-</div>
 {% endif %}
 
 </body>
