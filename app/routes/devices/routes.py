@@ -7,8 +7,6 @@ from app.forms import DeviceForm
 from app.routes.devices import bp
 from app import db
 from slugify import slugify
-from cloudinary.uploader import upload
-from app.utils.cloudinary_utils import init_cloudinary
 from app import db
 from datetime import datetime
 

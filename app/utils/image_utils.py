@@ -91,12 +91,3 @@ def generate_thumbnails(image_path, size=(200, 200)):
     except Exception as e:
         logging.warning(f"Could not generate thumbnail for {image_path}: {e}")
 
-
-def cloudinary_or_default(path, thumbnail=False):
-    if path:
-        options = {'format': 'jpg', 'secure': True}
-        if thumbnail:
-            options.update({'width': 300, 'height': 300, 'crop': 'fill', 'gravity': 'auto'})
-        url, _ = cloudinary_url(path, **options)
-        return url
-    return static_image_path('images/default-device.jpg')

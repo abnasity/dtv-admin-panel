@@ -6,8 +6,7 @@ from app import bcrypt, login_manager
 from sqlalchemy import text, Numeric, func
 from itsdangerous import URLSafeTimedSerializer
 import os
-from app.utils.image_utils import save_device_image, cloudinary_or_default
-from cloudinary.utils import cloudinary_url  
+from app.utils.image_utils import save_device_image
 from app.utils.mixins import ResetTokenMixin
 
 

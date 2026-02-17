@@ -9,7 +9,6 @@ from app.extensions import db, migrate, login_manager, bcrypt, csrf, mail
 from flask_login import current_user
 from werkzeug.exceptions import HTTPException
 from app.models import User,Device
-import cloudinary
 
 
 
@@ -43,16 +42,6 @@ def create_app(config_class=Config):
         SESSION_COOKIE_SAMESITE='Lax'
     )
 
-     # Initialize Cloudinary inside app context
-    try:
-        cloudinary.config(
-            cloud_name=os.environ['CLOUDINARY_CLOUD_NAME'],
-            api_key=os.environ['CLOUDINARY_API_KEY'],
-            api_secret=os.environ['CLOUDINARY_API_SECRET']
-        )
-    except KeyError as e:
-        app.logger.error(f"❌ Missing Cloudinary env var: {e}")
-        raise RuntimeError("Missing required Cloudinary credentials.")
 
 
  # CSRF token context processor
