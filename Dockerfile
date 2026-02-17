@@ -1,46 +1,39 @@
+# Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Set working directory
-WORKDIR /app
-
-# Install system dependencies (including pycairo build deps)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install system dependencies for WeasyPrint and general build tools
+RUN apt-get update && apt-get install -y \
     build-essential \
+    libpango-1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf2.0-0 \
+    libffi-dev \
+    shared-mime-info \
     curl \
-    wget \
-    libxrender1 \
-    libxext6 \
-    libfontconfig1 \
-    libjpeg-dev \
-    zlib1g-dev \
-    libfreetype6-dev \
-    libx11-dev \
-    libxcomposite-dev \
-    libxrandr-dev \
-    libxcursor-dev \
-    libxdamage-dev \
-    libxtst-dev \
-    xfonts-75dpi \
-    xfonts-base \
-    ca-certificates \
-    pkg-config \
-    libcairo2-dev \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+# Set work directory
+WORKDIR /app
 
-# Copy the rest of the application code
-COPY . .
+# Copy requirements
+COPY requirements.txt /app/
 
-# Expose port (optional, for local dev)
+# Install Python dependencies
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+# Copy project files
+COPY . /app/
+
+# Expose the port (change if your app uses a different port)
 EXPOSE 8000
 
-# Start the app with Gunicorn
-CMD ["gunicorn", "wsgi:app"]
+# Set environment variables for Flask (optional, adjust as needed)
+ENV FLASK_APP=wsgi.py
+
+# Start the application with Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "wsgi:app"]
