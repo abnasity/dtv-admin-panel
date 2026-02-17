@@ -1,4 +1,3 @@
-# Use official slim Python base image
 FROM python:3.10-slim
 
 # Set environment variables
@@ -8,7 +7,7 @@ ENV PYTHONUNBUFFERED=1
 # Set working directory
 WORKDIR /app
 
-# Install dependencies
+# Install system dependencies (including pycairo build deps)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
@@ -30,28 +29,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     pkg-config \
     libcairo2-dev \
- && rm -rf /var/lib/apt/lists/*
-
-
-# Install wkhtmltopdf (contains wkhtmltoimage) — use static binary
-RUN wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz && \
-    tar -xJf wkhtmltox-0.12.4_linux-generic-amd64.tar.xz && \
-    mv wkhtmltox/bin/wkhtmlto* /usr/local/bin/ && \
-    chmod +x /usr/local/bin/wkhtmlto* && \
-    rm -rf wkhtmltox*
-
-
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-
-# Copy project files
+# Copy the rest of the application code
 COPY . .
 
-# Expose port
-EXPOSE 5000
+# Expose port (optional, for local dev)
+EXPOSE 8000
 
-# Start the app
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wsgi:app"]
+# Start the app with Gunicorn
+CMD ["gunicorn", "wsgi:app"]
