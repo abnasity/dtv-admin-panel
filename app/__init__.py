@@ -95,29 +95,13 @@ def create_app(config_class=Config):
 
 
    
-    # Register web blueprints
+    # Register web blueprints (only once)
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(devices_bp)
     app.register_blueprint(sales_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(transferred_sales_bp)
-
-
-    # Import API blueprints
-    from app.api.auth import bp as auth_api_bp
-    from app.api.devices import bp as devices_api_bp
-    from app.api.sales import bp as sales_api_bp
-    from app.api.reports import bp as reports_api_bp
-    from app.api.users import bp as users_api_bp
-        
-   # Register API blueprints
-    app.register_blueprint(auth_api_bp, url_prefix='/api/auth', name='api_auth')
-    app.register_blueprint(devices_api_bp, url_prefix='/api/devices', name='api_devices')
-    app.register_blueprint(sales_api_bp, url_prefix='/api/sales', name='api_sales')
-    app.register_blueprint(reports_api_bp, url_prefix='/api/reports', name='api_reports')
-    app.register_blueprint(users_api_bp, url_prefix='/api/users', name='api_users')
-    
 
     # Initialize extensions
     db.init_app(app)
@@ -126,5 +110,45 @@ def create_app(config_class=Config):
     bcrypt.init_app(app)
     csrf.init_app(app)
     mail.init_app(app)
+
+    # --- Automatic table creation and user seeding ---
+    with app.app_context():
+        db.create_all()
+
+        def create_user(username, email, role, password):
+            user = User.query.filter_by(username=username).first()
+            if not user:
+                user = User(
+                    username=username,
+                    email=email,
+                    role=role,
+                    is_active=True
+                )
+                user.set_password(password)
+                db.session.add(user)
+                print(f"✅ Created {role} user: {username}")
+
+        # Seed only if users don't exist
+        create_user("admin", "admin@example.com", "admin", "admin123")
+        create_user("staff", "staff@example.com", "staff", "staff123")
+        create_user("Diamond", "kiptokorir@gmail.com", "admin", "Dtv@2026")
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Error seeding database: {e}")
+    # --- End auto table creation and seeding ---
+
+    # Import and register API blueprints
+    from app.api.auth import bp as auth_api_bp
+    from app.api.devices import bp as devices_api_bp
+    from app.api.sales import bp as sales_api_bp
+    from app.api.reports import bp as reports_api_bp
+    from app.api.users import bp as users_api_bp
+    app.register_blueprint(auth_api_bp, url_prefix='/api/auth', name='api_auth')
+    app.register_blueprint(devices_api_bp, url_prefix='/api/devices', name='api_devices')
+    app.register_blueprint(sales_api_bp, url_prefix='/api/sales', name='api_sales')
+    app.register_blueprint(reports_api_bp, url_prefix='/api/reports', name='api_reports')
+    app.register_blueprint(users_api_bp, url_prefix='/api/users', name='api_users')
 
     return app
