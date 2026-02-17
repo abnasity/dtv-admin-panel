@@ -28,7 +28,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xfonts-75dpi \
     xfonts-base \
     ca-certificates \
-    && apt-get clean
+    pkg-config \
+    libcairo2-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 
 # Install wkhtmltopdf (contains wkhtmltoimage) — use static binary
