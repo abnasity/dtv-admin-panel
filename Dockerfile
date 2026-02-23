@@ -1,45 +1,55 @@
-# Pinned to the most stable Debian release (Bookworm) for Python 3.10
-FROM python:3.10-slim-bookworm
+# Use official slim Python base image
+FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
-# Added: libpq-dev (for psycopg2) and libcairo2-dev (for pycairo)
+# Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    python3-dev \
-    libpango-1.0-0 \
-    libpangoft2-1.0-0 \
-    libcairo2 \
-    libcairo2-dev \
-    libgdk-pixbuf2.0-0 \
-    libglib2.0-0 \
+    curl \
+    wget \
+    libxrender1 \
+    libxext6 \
+    libfontconfig1 \
     libjpeg-dev \
-    libopenjp2-7-dev \
-    shared-mime-info \
-    fonts-liberation \
-    libffi-dev \
-    libpq-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    zlib1g-dev \
+    libfreetype6-dev \
+    libx11-dev \
+    libxcomposite-dev \
+    libxrandr-dev \
+    libxcursor-dev \
+    libxdamage-dev \
+    libxtst-dev \
+    xfonts-75dpi \
+    xfonts-base \
+    ca-certificates \
+    && apt-get clean
 
-# Install Python dependencies
+
+# Install wkhtmltopdf (contains wkhtmltoimage) — use static binary
+RUN wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz && \
+    tar -xJf wkhtmltox-0.12.4_linux-generic-amd64.tar.xz && \
+    mv wkhtmltox/bin/wkhtmlto* /usr/local/bin/ && \
+    chmod +x /usr/local/bin/wkhtmlto* && \
+    rm -rf wkhtmltox*
+
+
+
+# Copy requirements and install Python dependencies
 COPY requirements.txt .
-# We upgrade pip and setuptools to ensure the newest wheels are used
-RUN pip install --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+
+# Copy project files
 COPY . .
 
-# Railway dynamic port binding
-EXPOSE 8080
+# Expose port
+EXPOSE 5000
 
 # Start the app
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 2 --threads 4 --timeout 120 wsgi:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wsgi:app"]
