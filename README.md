@@ -69,7 +69,71 @@
 
 ---
 
-## 🛠️ Tech Stack
+## � Setup Instructions
+
+### Prerequisites
+- Python 3.8+
+- pip (Python package manager)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd dtv-admin-panel
+   ```
+
+2. **Create a virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment variables:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+5. **Initialize the database:**
+   ```bash
+   flask db init
+   flask db migrate
+   flask db upgrade
+   ```
+
+6. **Create admin user:**
+   ```bash
+   python create_admin.py
+   ```
+
+7. **Run the application:**
+   ```bash
+   python run.py
+   ```
+
+### Database Configuration
+
+This project supports both SQLite (development) and PostgreSQL (production):
+
+- **SQLite (Default for development):**
+  - Set `DB_TYPE=sqlite` in your `.env` file
+  - Database file will be created as `app.db` in the project root
+  - No additional setup required
+
+- **PostgreSQL (For production):**
+  - Set `DB_TYPE=postgresql` in your `.env` file
+  - Configure `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME`
+  - Or use `DATABASE_URL` for connection string
+
+---
+
+## �🛠️ Tech Stack
 
 - **Backend:** Flask 3.1.1, Flask-Login, SQLAlchemy  
 - **Frontend:** Jinja2 Templates, Bootstrap 5  

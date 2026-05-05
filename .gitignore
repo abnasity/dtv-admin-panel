@@ -20,5 +20,5 @@ app/static/images/devices/
 *.deb
 *.tar.xz
 wkhtmltox*
-env/
+venv/
 

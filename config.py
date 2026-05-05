@@ -7,6 +7,14 @@ from urllib.parse import quote_plus
 load_dotenv()
 
 def get_database_uri():
+    # Check database type
+    db_type = os.environ.get('DB_TYPE', 'postgresql').lower()
+    
+    if db_type == 'sqlite':
+        # Use SQLite database
+        db_path = os.environ.get('DB_PATH', 'app.db')
+        return f'sqlite:///{db_path}'
+    
     # Priority: Use DATABASE_URL if provided (like on Vercel)
     db_url = os.environ.get('DATABASE_URL')
     if db_url:
@@ -22,19 +30,32 @@ def get_database_uri():
     
     return f"postgresql://{db_user}:{quote_plus(db_password)}@{db_host}:{db_port}/{db_name}"
 
-class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-please-change-in-production'
+def get_engine_options():
+    """Get database engine options based on database type"""
+    db_type = os.environ.get('DB_TYPE', 'postgresql').lower()
     
-    # Unified database URI
-    SQLALCHEMY_DATABASE_URI = get_database_uri()
-
-    SQLALCHEMY_ENGINE_OPTIONS = {
+    if db_type == 'sqlite':
+        # SQLite-specific options
+        return {
+            'connect_args': {'check_same_thread': False},
+        }
+    
+    # PostgreSQL connection pooling options
+    return {
         'pool_pre_ping': True,
         'pool_recycle': 300,
         'pool_size': 5,
         'max_overflow': 10,
         'pool_timeout': 30,
     }
+
+class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-please-change-in-production'
+    
+    # Unified database URI
+    SQLALCHEMY_DATABASE_URI = get_database_uri()
+
+    SQLALCHEMY_ENGINE_OPTIONS = get_engine_options()
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
